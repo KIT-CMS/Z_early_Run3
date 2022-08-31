@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import argparse
 import logging
-import os
 import pickle
 import re
 import yaml
+import os
 
 from ntuple_processor import Histogram
 from ntuple_processor import (
@@ -17,6 +17,9 @@ from ntuple_processor import (
 )
 
 from config.shapes.channel_selection import channel_selection
+from config.shapes.run_selection import run_selection
+from config.shapes.run_selection import run_group_selection
+from config.shapes.group_runs import run_lumi_selection
 from config.shapes.file_names import files
 from config.shapes.process_selection import (
     DY_process_selection,
@@ -27,13 +30,18 @@ from config.shapes.process_selection import (
     TTL_process_selection,
     VVL_process_selection,
 )
+from config.shapes.data_selection import (
+    data_process_selection,
+    data_group_process_selection,
+)
+
 
 # Muon ID weight uncertainties
 from config.shapes.variations import (
     mu_id_weight,
 )
 
-from config.shapes.control_binning import control_binning, minimal_control_plot_set
+from config.shapes.control_binning import get_control_binning, seperateVariables
 
 logger = logging.getLogger("")
 
@@ -87,11 +95,32 @@ def parse_arguments():
         help="Directories arranged as Artus output and containing a friend tree for tt.",
     )
     parser.add_argument(
+        "--mmet-friend-directory",
+        type=str,
+        default=[],
+        nargs="+",
+        help="Directories arranged as Artus output and containing a friend tree for mmet.",
+    )
+    parser.add_argument(
+        "--emet-friend-directory",
+        type=str,
+        default=[],
+        nargs="+",
+        help="Directories arranged as Artus output and containing a friend tree for emet.",
+    )
+    parser.add_argument(
         "--mm-friend-directory",
         type=str,
         default=[],
         nargs="+",
-        help="Directories arranged as Artus output and containing a friend tree for tt.",
+        help="Directories arranged as Artus output and containing a friend tree for mm.",
+    )
+    parser.add_argument(
+        "--ee-friend-directory",
+        type=str,
+        default=[],
+        nargs="+",
+        help="Directories arranged as Artus output and containing a friend tree for ee.",
     )
     parser.add_argument(
         "--em-friend-directory",
@@ -129,10 +158,42 @@ def parse_arguments():
         help="Produce shapes for control plots. Default is production of analysis shapes.",
     )
     parser.add_argument(
+        "--run-plot",
+        default=1,
+        help="If true this will stack all runs on that same plot rather than separate run by run plots",
+    )
+    parser.add_argument(
+        "--group-runs",
+        default=0,
+        help="If true this will group runs by luminosity which you can set below",
+    )
+    parser.add_argument(
+        "--seperate-variables",
+        default=0,
+        help="If true this will seperate variables",
+    )
+    parser.add_argument(
         "--control-plot-set",
-        default=minimal_control_plot_set,
+        default="pt_1",
         type=lambda varlist: [variable for variable in varlist.split(",")],
         help="Variables the shapes should be produced for.",
+    )
+    parser.add_argument(
+        "--total-lumi",
+        default=0.001,
+        help="Luminosity value of the total runs summed",
+    )
+    parser.add_argument(
+        "--run-list",
+        default='',
+        type=lambda runlist: [run_number for run_number in runlist.split(",")],
+        help="List of run numbers being used",
+    )
+    parser.add_argument(
+        "--lumi-list",
+        default='',
+        type=lambda lumilist: [lumi for lumi in lumilist.split(",")],
+        help="List of luminosities which correspond to the run numbers",
     )
     parser.add_argument(
         "--only-create-graphs",
@@ -167,11 +228,13 @@ def parse_arguments():
     )
     return parser.parse_args()
 
-
 def main(args):
     # Parse given arguments.
     friend_directories = {
         "mm": args.mm_friend_directory,
+        "ee": args.ee_friend_directory,
+        "mmet": args.mmet_friend_directory,
+        "emet": args.emet_friend_directory,
     }
 
     if ".root" in args.output_file:
@@ -185,6 +248,9 @@ def main(args):
     nominals[args.era] = {}
     nominals[args.era]["datasets"] = {}
     nominals[args.era]["units"] = {}
+    runPlot = bool(int(args.run_plot))
+    groupRuns = float(args.group_runs)
+    totalLumi = float(args.total_lumi)
 
     def get_nominal_datasets(era, channel):
         datasets = dict()
@@ -228,31 +294,28 @@ def main(args):
                 )
         return datasets
 
-    def get_control_units(channel, era, datasets):
-        return {
-            "data": [
-                Unit(
-                    datasets["data"],
-                    [channel_selection(channel, era)],
-                    [
-                        control_binning[channel][v]
-                        for v in set(control_binning[channel].keys())
-                        & set(args.control_plot_set)
-                    ],
-                )
-            ],
+
+    def get_control_units(channel, era, datasets, control_binning):
+        run_list = args.run_list
+        lumi_list = args.lumi_list
+        run_lumi = {run_list[i]: float(lumi_list[i]) for i in range(len(run_list))}
+        temp_prev_run_number = float(run_list[0])
+        list_of_run_lists = list()
+
+        #adds the MC samples first to the dictionary of histograms to be made
+        data_dict = {
             "zl": [
                 Unit(
                     datasets["DY"],
                     [
                         channel_selection(channel, era),
-                        DY_process_selection(channel, era),
+                        DY_process_selection(channel, era, runPlot, totalLumi),
                         ZL_process_selection(channel),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(args.control_plot_set)
+                        & set(variable_list)
                     ],
                 )
             ],
@@ -261,81 +324,198 @@ def main(args):
                     datasets["TT"],
                     [
                         channel_selection(channel, era),
-                        TT_process_selection(channel, era),
+                        TT_process_selection(channel, era, runPlot, totalLumi),
                         TTL_process_selection(channel),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(args.control_plot_set)
+                        & set(variable_list)
                     ],
                 )
             ],
-            "vvl": [
-                Unit(
-                    datasets["VV"],
-                    [
-                        channel_selection(channel, era),
-                        VV_process_selection(channel, era),
-                        VVL_process_selection(channel),
-                    ],
-                    [
-                        control_binning[channel][v]
-                        for v in set(control_binning[channel].keys())
-                        & set(args.control_plot_set)
-                    ],
-                )
-            ],
+            # "vvl": [
+            #     Unit(
+            #         datasets["VV"],
+            #         [
+            #             channel_selection(channel, era),
+            #             VV_process_selection(channel, era),
+            #             VVL_process_selection(channel),
+            #         ],
+            #         [
+            #             control_binning[channel][v]
+            #             for v in set(control_binning[channel].keys())
+            #             & set(variable_list)
+            #         ],
+            #     )
+            # ],
             "w": [
                 Unit(
                     datasets["W"],
                     [
                         channel_selection(channel, era),
-                        W_process_selection(channel, era),
+                        W_process_selection(channel, era, runPlot, totalLumi),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(args.control_plot_set)
+                        & set(variable_list)
                     ],
                 )
             ],
         }
 
+        #sums the runs and returns data as its own histogram
+        if not runPlot:
+            data_dict["data"] = [Unit(
+                datasets["data"],
+                [
+                    channel_selection(channel, era),
+                ],
+                [
+                    control_binning[channel][v]
+                    for v in set(control_binning[channel].keys())
+                    & set(variable_list)
+                ],
+            )]
+        #seperates run by run and plots them seperatly
+        else:
+            if groupRuns:
+                while temp_prev_run_number < float(run_list[-1]):
+                    list_of_run_lists.append(run_lumi_selection(temp_prev_run_number, run_list, run_lumi, groupRuns)) 
+                    temp_prev_run_number = float(list_of_run_lists[-1][-1])
+                for run_list in list_of_run_lists:
+                    if run_list[0] == run_list[-1]:
+                        data_dict[run_list[0]] = [Unit(
+                            datasets["data"],
+                            [
+                                channel_selection(channel, era),
+                                run_selection(run_list[0]),
+                                data_process_selection(channel, era, run_list[0], run_lumi),
+                            ],
+                            [
+                                control_binning[channel][v]
+                                for v in set(control_binning[channel].keys())
+                                & set(variable_list)
+                            ],
+                        )]
+                    else:
+                        data_dict[run_list[0] + "-" + run_list[-1]] = [Unit(
+                                datasets["data"],
+                                [
+                                    channel_selection(channel, era),
+                                    run_group_selection(run_list[0], run_list[-1]),
+                                    data_group_process_selection(channel, era, run_list, run_lumi)
+                                ],
+                                [
+                                    control_binning[channel][v]
+                                    for v in set(control_binning[channel].keys())
+                                    & set(variable_list)
+                                ],
+                            )]
+            else:
+                for run_number in run_list:
+                    data_dict[run_number] = [Unit(
+                        datasets["data"],
+                        [
+                            channel_selection(channel, era),
+                            run_selection(run_number),
+                            data_process_selection(channel, era, run_number, run_lumi),
+                        ],
+                        [
+                            control_binning[channel][v]
+                            for v in set(control_binning[channel].keys())
+                            & set(variable_list)
+                        ],
+                    )]
+        return data_dict
+
     # Step 1: create units and book actions
     for channel in args.channels:
+        control_binning = get_control_binning(channel, variable_list)
+        print(control_binning)
         nominals[args.era]["datasets"][channel] = get_nominal_datasets(
             args.era, channel
         )
         if args.control_plots:
             nominals[args.era]["units"][channel] = get_control_units(
-                channel, args.era, nominals[args.era]["datasets"][channel]
+                channel, args.era, nominals[args.era]["datasets"][channel], control_binning
             )
     um = UnitManager()
 
     # available sm processes are: {"data", "emb", "ztt", "zl", "zj", "ttt", "ttl", "ttj", "vvt", "vvl", "vvj", "w", "ggh", "qqh","vh","tth"}
     # necessary processes for analysis with emb and ff method are: {"data", "emb", "zl", "ttl","ttt", "vvl","ttt" "ggh", "qqh","vh","tth"}
     if args.process_selection is None:
-        procS = {
-            "data",
-            "zl",
-            "ttl",
-            "vvl",
-            "w",
-        }
+        if runPlot:
+            run_nums = set()
+            for run_key in nominals[args.era]["units"][channel].keys():
+                run_nums.add(run_key)
+
+        if runPlot:
+            procS = {
+                *run_nums,
+                "zl",
+                "ttl",
+                #"vvl",
+                "w",
+            }
+        else:
+            procS = {
+                "data",
+                "zl",
+                "ttl",
+                #"vvl",
+                "w",
+            }
+
     else:
         procS = args.process_selection
 
     print("Processes to be computed: ", procS)
-    dataS = {"data"} & procS
+    dataS = set()
+    if runPlot:
+        for run_key in nominals[args.era]["units"][channel].keys():
+            if run_key != "zl" and run_key != "ttl" and run_key != "vvl" and run_key != "w":
+                dataS.add(run_key)
+    else: dataS = {"data"} & procS
+
+    #exports the names of the data plots to a text file
+    plot_names = ["{}\n".format(plot_name) for plot_name in dataS]
+    with open(r'data_plot_names.txt', 'w') as fp:
+        fp.writelines(plot_names)
+
+    # data_names_file = open("data_plot_names.txt", "w")
+    # for plot_name in dataS: data_names_file.write(plot_name + "\n") 
+    # data_names_file.close()
+
+
     simulatedProcsDS = {
         "mm": {
             "zl",
             "ttl",
-            "vvl",
+            # "vvl",
+            "w",
+        },
+        "ee": {
+            "zl",
+            "ttl",
+            # "vvl",
+            #"w",
+        },
+        "mmet": {
+            "zl",
+            "ttl",
+            # "vvl",
+            "w",
+        },
+        "emet": {
+            "zl",
+            "ttl",
+            # "vvl",
             "w",
         }
     }
+
     for ch_ in args.channels:
         um.book(
             [
@@ -388,15 +568,18 @@ def main(args):
             pickle.dump(graphs, f)
     else:
         # Step 3: convert to RDataFrame and run the event loop
+        print("GRAPHS:", graphs)
         r_manager = RunManager(graphs)
         r_manager.run_locally(output_file, args.num_processes, args.num_threads)
     return
-
 
 if __name__ == "__main__":
     # from multiprocessing import set_start_method
     # set_start_method("spawn")
     args = parse_arguments()
+    seperateVariable = bool(int(args.seperate_variables))
+    if seperateVariable: variable_list = seperateVariables(args.control_plot_set)
+    else: variable_list = args.control_plot_set
     if ".root" in args.output_file:
         log_file = args.output_file.replace(".root", ".log")
     else:

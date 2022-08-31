@@ -163,6 +163,6 @@ dmypy.json
 .pyre/
 # Root files and plots.
 *.root
-*.png
-*.pdf
+# *.png
+# *.pdf
 *.html

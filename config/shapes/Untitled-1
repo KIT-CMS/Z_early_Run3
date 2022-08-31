@@ -1,0 +1,5 @@
+
+sel = "(xxx)"
+
+
+full_var = "({base})*({sel}) -1.e9*(!({sel}))"
