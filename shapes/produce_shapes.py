@@ -23,12 +23,12 @@ from config.shapes.group_runs import run_lumi_selection
 from config.shapes.file_names import files
 from config.shapes.process_selection import (
     DY_process_selection,
-    TT_process_selection,
-    VV_process_selection,
     W_process_selection,
-    ZL_process_selection,
-    TTL_process_selection,
-    VVL_process_selection,
+    TT_process_selection,
+    ST_process_selection,
+    VV_process_selection,
+    DYtau_process_selection,
+    Wtau_process_selection,
 )
 from config.shapes.data_selection import (
     data_process_selection,
@@ -264,53 +264,31 @@ def main(args):
                     return False
             return True
 
-        if "artus" in args.ntuple_type:
-            for key, names in files[era][channel].items():
-                datasets[key] = dataset_from_artusoutput(
-                    key,
-                    names,
-                    channel + "_nominal",
-                    args.directory,
-                    [
-                        fdir
-                        for fdir in friend_directories[channel]
-                        if filter_friends(key, fdir)
-                    ],
-                )
-        else:
-            for key, names in files[era][channel].items():
-                datasets[key] = dataset_from_crownoutput(
-                    key,
-                    names,
-                    args.era,
-                    channel,
-                    channel + "_nominal",
-                    args.directory,
-                    [
-                        fdir
-                        for fdir in friend_directories[channel]
-                        if filter_friends(key, fdir)
-                    ],
-                )
+        for key, names in files[era][channel].items():
+            datasets[key] = dataset_from_crownoutput(
+                key,
+                names,
+                args.era,
+                channel,
+                channel + "_nominal",
+                args.directory,
+                [
+                    fdir
+                    for fdir in friend_directories[channel]
+                    if filter_friends(key, fdir)
+                ],
+            )
         return datasets
 
-
     def get_control_units(channel, era, datasets, control_binning):
-        run_list = args.run_list
-        lumi_list = args.lumi_list
-        run_lumi = {run_list[i]: float(lumi_list[i]) for i in range(len(run_list))}
-        temp_prev_run_number = float(run_list[0])
-        list_of_run_lists = list()
-
         #adds the MC samples first to the dictionary of histograms to be made
         data_dict = {
-            "zl": [
+            "dy": [
                 Unit(
                     datasets["DY"],
                     [
                         channel_selection(channel, era),
-                        DY_process_selection(channel, era, runPlot, totalLumi),
-                        ZL_process_selection(channel),
+                        DY_process_selection(channel, era, runPlot, totalLumi)
                     ],
                     [
                         control_binning[channel][v]
@@ -319,36 +297,6 @@ def main(args):
                     ],
                 )
             ],
-            "ttl": [
-                Unit(
-                    datasets["TT"],
-                    [
-                        channel_selection(channel, era),
-                        TT_process_selection(channel, era, runPlot, totalLumi),
-                        TTL_process_selection(channel),
-                    ],
-                    [
-                        control_binning[channel][v]
-                        for v in set(control_binning[channel].keys())
-                        & set(variable_list)
-                    ],
-                )
-            ],
-            # "vvl": [
-            #     Unit(
-            #         datasets["VV"],
-            #         [
-            #             channel_selection(channel, era),
-            #             VV_process_selection(channel, era),
-            #             VVL_process_selection(channel),
-            #         ],
-            #         [
-            #             control_binning[channel][v]
-            #             for v in set(control_binning[channel].keys())
-            #             & set(variable_list)
-            #         ],
-            #     )
-            # ],
             "w": [
                 Unit(
                     datasets["W"],
@@ -363,9 +311,77 @@ def main(args):
                     ],
                 )
             ],
+            "tt": [
+                Unit(
+                    datasets["TT"],
+                    [
+                        channel_selection(channel, era),
+                        TT_process_selection(channel, era, runPlot, totalLumi),
+                    ],
+                    [
+                        control_binning[channel][v]
+                        for v in set(control_binning[channel].keys())
+                        & set(variable_list)
+                    ],
+                )
+            ],
+            "st": [
+                Unit(
+                    datasets["ST"],
+                    [
+                        channel_selection(channel, era),
+                        ST_process_selection(channel, era, runPlot, totalLumi),
+                    ],
+                    [
+                        control_binning[channel][v]
+                        for v in set(control_binning[channel].keys())
+                        & set(variable_list)
+                    ],
+                )
+            ],
+            "vv": [
+                Unit(
+                    datasets["VV"],
+                    [
+                        channel_selection(channel, era),
+                        VV_process_selection(channel, era, runPlot, totalLumi),
+                    ],
+                    [
+                        control_binning[channel][v]
+                        for v in set(control_binning[channel].keys())
+                        & set(variable_list)
+                    ],
+                )
+            ],
+            "ewktau": [
+                Unit(
+                    datasets["DYtau"],
+                    [
+                        channel_selection(channel, era),
+                        DYtau_process_selection(channel, era, runPlot, totalLumi)
+                    ],
+                    [
+                        control_binning[channel][v]
+                        for v in set(control_binning[channel].keys())
+                        & set(variable_list)
+                    ],
+                ),
+                Unit(
+                    datasets["Wtau"],
+                    [
+                        channel_selection(channel, era),
+                        Wtau_process_selection(channel, era, runPlot, totalLumi),
+                    ],
+                    [
+                        control_binning[channel][v]
+                        for v in set(control_binning[channel].keys())
+                        & set(variable_list)
+                    ],
+                )
+            ],
         }
 
-        #sums the runs and returns data as its own histogram
+        # sums the runs and returns data as its own histogram
         if not runPlot:
             data_dict["data"] = [Unit(
                 datasets["data"],
@@ -378,8 +394,13 @@ def main(args):
                     & set(variable_list)
                 ],
             )]
-        #seperates run by run and plots them seperatly
+        # seperates run by run and plots them seperatly
         else:
+            run_list = args.run_list
+            lumi_list = args.lumi_list
+            run_lumi = {run_list[i]: float(lumi_list[i]) for i in range(len(run_list))}
+            temp_prev_run_number = float(run_list[0])
+            list_of_run_lists = list()
             if groupRuns:
                 while temp_prev_run_number < float(run_list[-1]):
                     list_of_run_lists.append(run_lumi_selection(temp_prev_run_number, run_list, run_lumi, groupRuns)) 
@@ -443,8 +464,6 @@ def main(args):
             )
     um = UnitManager()
 
-    # available sm processes are: {"data", "emb", "ztt", "zl", "zj", "ttt", "ttl", "ttj", "vvt", "vvl", "vvj", "w", "ggh", "qqh","vh","tth"}
-    # necessary processes for analysis with emb and ff method are: {"data", "emb", "zl", "ttl","ttt", "vvl","ttt" "ggh", "qqh","vh","tth"}
     if args.process_selection is None:
         if runPlot:
             run_nums = set()
@@ -454,67 +473,77 @@ def main(args):
         if runPlot:
             procS = {
                 *run_nums,
-                "zl",
-                "ttl",
-                #"vvl",
+                "dy",
                 "w",
+                "tt",
+                "st",
+                "vv",
+                "ewktau",
             }
         else:
             procS = {
                 "data",
-                "zl",
-                "ttl",
-                #"vvl",
+                "dy",
                 "w",
+                "tt",
+                "st",
+                "vv",
+                "ewktau",
             }
 
     else:
         procS = args.process_selection
 
     print("Processes to be computed: ", procS)
-    dataS = set()
-    if runPlot:
-        for run_key in nominals[args.era]["units"][channel].keys():
-            if run_key != "zl" and run_key != "ttl" and run_key != "vvl" and run_key != "w":
-                dataS.add(run_key)
-    else: dataS = {"data"} & procS
-
-    #exports the names of the data plots to a text file
-    plot_names = ["{}\n".format(plot_name) for plot_name in dataS]
-    with open(r'data_plot_names.txt', 'w') as fp:
-        fp.writelines(plot_names)
-
-    # data_names_file = open("data_plot_names.txt", "w")
-    # for plot_name in dataS: data_names_file.write(plot_name + "\n") 
-    # data_names_file.close()
-
 
     simulatedProcsDS = {
         "mm": {
-            "zl",
-            "ttl",
-            # "vvl",
+            "dy",
             "w",
+            "tt",
+            "st",
+            "vv",
+            "ewktau",
         },
         "ee": {
-            "zl",
-            "ttl",
-            # "vvl",
-            #"w",
+            "dy",
+            "w",
+            "tt",
+            "st",
+            "vv",
+            "ewktau",
         },
         "mmet": {
-            "zl",
-            "ttl",
-            # "vvl",
+            "dy",
             "w",
+            "tt",
+            "st",
+            "vv",
+            "ewktau",
         },
         "emet": {
-            "zl",
-            "ttl",
-            # "vvl",
+            "dy",
             "w",
+            "tt",
+            "st",
+            "vv",
+            "ewktau",
         }
     }
+
+    dataS = set()
+    if runPlot:
+        for run_key in nominals[args.era]["units"][channel].keys():
+            if run_key not in simulatedProcsDS[channel]:
+                dataS.add(run_key)
+    else: dataS = {"data"} & procS
+
+    # exports the names of the data plots to a text file
+    plot_names = ["{}\n".format(plot_name) for plot_name in dataS]
+    plot_names.sort()
+    with open(r'data_plot_names.txt', 'w') as fp:
+        fp.writelines(plot_names)
+        fp.close()
 
     for ch_ in args.channels:
         um.book(
@@ -529,20 +558,17 @@ def main(args):
             pass
         else:
             # Book variations common to all channels
-            if "artus" in args.ntuple_type:
-                pass
-            else:
-                um.book(
-                    [
-                        unit
-                        for d in simulatedProcsDS[ch_]
-                        for unit in nominals[args.era]["units"][ch_][d]
-                    ],
-                    [
-                        *mu_id_weight,
-                    ],
-                    enable_check=args.enable_booking_check,
-                )
+            um.book(
+                [
+                    unit
+                    for d in simulatedProcsDS[ch_]
+                    for unit in nominals[args.era]["units"][ch_][d]
+                ],
+                [
+                    *mu_id_weight,
+                ],
+                enable_check=args.enable_booking_check,
+            )
 
     # Step 2: convert units to graphs and merge them
     g_manager = GraphManager(um.booked_units, True)

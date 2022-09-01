@@ -1,8 +1,8 @@
 import os
 
 #function that writes code to the end of control-plots-slides.tex to make an automatic slideshow
-def plots_to_latex(tag, era, postfix, channel):
-    directory = "plots/%s/%s_plots_%s/%s" % (tag, era, postfix, channel)
+def plots_to_latex(tag, era, channel):
+    directory = "plots/%s/%s/%s" % (tag, era, channel)
     plotsPath = "plots/earlyRun3" + channel + "/Run2018_plots_fully_classic/"  + channel + "/"
     latex_slides_file = open("presentation/control-plots-slides.tex", "a+")
     list_of_plots = []

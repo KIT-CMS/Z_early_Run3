@@ -123,14 +123,10 @@ def main(info):
     channel = info["channel"]
     draw_list = list()
     channel_dict = {
-        "ee": "#font[42]{#scale[0.85]{ee}}",
-        "emet": "#scale[0.85]{e} met",
-        "mmet": "#mu met",
-        "em": "#scale[0.85]{e}#mu",
-        "et": "#font[42]{#scale[0.85]{e}}#tau_{#font[42]{h}}",
-        "mm": "#mu#mu",
-        "mt": "#mu#tau_{#font[42]{h}}",
-        "tt": "#tau_{#font[42]{h}}#tau_{#font[42]{h}}",
+        "ee": "#font[42]{#scale[1.0]{ee}}",
+        "emet": "#font[42]{#scale[1.0]{single-e}}",
+        "mmet": "#font[42]{#scale[1.0]{single-#mu}}",
+        "mm": "#font[42]{#scale[1.0]{#mu#mu}}",
     }
     if args.linear == True:
         split_value = 0.1
@@ -140,92 +136,21 @@ def main(info):
         else:
             split_value = 101
 
-    split_dict = {c: split_value for c in ["et", "mt", "tt", "em", "mm", "mmet", "emet", "ee"]}
+    split_dict = {c: split_value for c in ["mm", "mmet", "emet", "ee"]}
 
-    bkg_processes = [
-        "VVL",
-        "TTL",
-        "ZL",
-        "jetFakesEMB",
-        "EMB",
-        "HTT",
-    ]  # "ggH125", "qqH125"
-
-    if not args.fake_factor and args.embedding:
-        bkg_processes = ["QCDEMB", "VVL", "VVJ", "W", "TTL", "TTJ", "ZJ", "ZL", "EMB"]
-    if not args.embedding and args.fake_factor:
-        bkg_processes = ["VVT", "VVL", "TTT", "TTL", "ZL", "jetFakes", "ZTT"]
-    if not args.embedding and not args.fake_factor:
-        bkg_processes = [
-            # "VVL",
-            "W",
-            "TTL",
-            "ZL",
-        ]
-    if args.draw_jet_fake_variation is not None:
-        bkg_processes = ["VVL", "TTL", "ZL", "EMB"]
-        if not args.fake_factor and args.embedding:
-            bkg_processes = ["VVL", "VVJ", "W", "TTL", "TTJ", "ZJ", "ZL", "EMB"]
-        if not args.embedding and args.fake_factor:
-            bkg_processes = ["VVT", "VVL", "TTT", "TTL", "ZL", "ZTT"]
-        if not args.embedding and not args.fake_factor:
-            bkg_processes = [
-                "VV",
-                "W",
-                "TTT",
-                "TTL",
-                "TTJ",
-                "ZJ",
-                "ZL",
-                "ZTT",
-            ]
-    all_bkg_processes = [b for b in bkg_processes]
-    legend_bkg_processes = copy.deepcopy(bkg_processes)
-    legend_bkg_processes.reverse()
-    if "2016" in args.era:
-        era = "Run2016"
-    elif "2017" in args.era:
-        era = "Run2017"
-    elif "2018" in args.era:
-        era = "Run2018"
-    else:
-        logger.critical("Era {} is not implemented.".format(args.era))
-        raise Exception
+    doLogy = {
+        "mm": True,
+        "ee": True,
+        "mmet": True,
+        "emet": True,
+    }
 
     category = "_".join([channel, variable])
     if args.category_postfix is not None:
         category += "_%s" % args.category_postfix
     rootfile = rootfile_parser.Rootfile_parser(args.input, variable)
-    bkg_processes = [b for b in all_bkg_processes]
-    if "em" in channel:
-        if not args.embedding:
-            bkg_processes = ["QCD", "VVT", "VVL", "W", "TTT", "TTL", "ZL", "ZTT"]
-        if args.embedding:
-            bkg_processes = ["QCDEMB", "VVL", "W", "TTL", "ZL", "EMB"]
-        if args.draw_jet_fake_variation is not None:
-            if not args.embedding:
-                bkg_processes = ["VVT", "VVL", "W", "TTT", "TTL", "ZL", "ZTT"]
-            if args.embedding:
-                bkg_processes = ["VVL", "W", "TTL", "ZL", "EMB"]
 
-    if "mmet" in channel:
-        # bkg_processes = ["ZL", "TTL"]
-        bkg_processes = ["ZL", "TTL", "W"]
-        # bkg_processes = ["VVL", "W", "TTL", "ZL"]
-    elif "emet" in channel:
-        bkg_processes = ["ZL", "TTL", "W"]
-        # bkg_processes = ["VVL", "W", "TTL", "ZL"]
-    elif "mm" in channel:
-        bkg_processes = ["TTL", "ZL"]
-        # bkg_processes = ["W", "TTL", "ZL"]
-        # bkg_processes = ["VVL", "W", "TTL", "ZL"]
-    elif "ee" in channel:
-        # bkg_processes = ["W", "TTL", "ZL"]
-        bkg_processes = ["TTL", "ZL"]
-        # bkg_processes = ["VVL", "W", "TTL", "ZL"]
-
-    legend_bkg_processes = copy.deepcopy(bkg_processes)
-    legend_bkg_processes.reverse()
+    bkg_processes = ["Wtau", "DYtau", "VV", "ST", "TT", "W", "DY"]
 
     # create plot
     width = 600
@@ -235,13 +160,30 @@ def main(info):
         plot = dd.Plot([0.5, [0.3, 0.28]], "ModTDR", r=0.04, l=0.14, width=width)
 
     # get background histograms
-    total_bkg = None
     if args.draw_jet_fake_variation is None:
         stype = "Nominal"
     else:
         stype = args.draw_jet_fake_variation
+
+    is_first_total = True
+    total_bkg = None
+    
+    is_first_ewk = True
+    ewk_bkg = None
+
+    ewk_processes = None
+    if channel in ["mm", "ee"]:
+        ewk_processes = ["Wtau", "DYtau", "VV", "ST", "W"]
+    elif channel in ["mmet", "emet"]:
+        ewk_processes = ["Wtau", "DYtau", "VV", "ST", "DY"]
+    stack_processes = ["EWK"] + [p for p in bkg_processes if p not in ewk_processes]
+
+    print("stack_processes:", stack_processes)
+    legend_bkg_processes = copy.deepcopy(stack_processes)
+    legend_bkg_processes.reverse()
+
     for index, process in enumerate(bkg_processes):
-        if index == 0:
+        if is_first_total:
             total_bkg = rootfile.get(
                 channel, process, args.category_postfix, shape_type=stype
             ).Clone()
@@ -250,35 +192,39 @@ def main(info):
                 process,
                 "bkg",
             )
+            is_first_total = False
         else:
-            if process == "HTT":
-                HTT = rootfile.get(
-                    channel, "ggH125", args.category_postfix, shape_type=stype
+            total_bkg.Add(
+                rootfile.get(
+                    channel, process, args.category_postfix, shape_type=stype
+                )
+            )
+            plot.add_hist(
+                rootfile.get(
+                    channel, process, args.category_postfix, shape_type=stype
+                ),
+                process,
+                "bkg",
+            )
+
+        if process in ewk_processes:
+            if is_first_ewk:
+                ewk_bkg = rootfile.get(
+                    channel, process, args.category_postfix, shape_type=stype
                 ).Clone()
-                HTT.Add(
-                    rootfile.get(
-                        channel, "qqH125", args.category_postfix, shape_type=stype
-                    )
-                )
-                total_bkg.Add(HTT)
-                plot.add_hist(HTT, "HTT", "bkg")
+                is_first_ewk = False
             else:
-                total_bkg.Add(
+                ewk_bkg.Add(
                     rootfile.get(
                         channel, process, args.category_postfix, shape_type=stype
                     )
-                )
-                plot.add_hist(
-                    rootfile.get(
-                        channel, process, args.category_postfix, shape_type=stype
-                    ),
-                    process,
-                    "bkg",
                 )
 
         plot.setGraphStyle(process, "hist", fillcolor=styles.color_dict[process])
 
     plot.add_hist(total_bkg, "total_bkg")
+    plot.add_hist(ewk_bkg, "EWK", "bkg")
+    plot.setGraphStyle("EWK", "hist", fillcolor=styles.color_dict["EWK"])
 
     for index, category in enumerate(plot_names):
         print("PROCESS VALUES: ", category)
@@ -287,27 +233,29 @@ def main(info):
             category,
         )
 
+    if matchData:
+        mc_norm = plot.subplot(0).get_hist("total_bkg").Integral()
+        assert mc_norm > 0.
+        plot.subplot(0).get_hist("total_bkg").Scale(1/mc_norm)
+        plot.subplot(1).get_hist("total_bkg").Scale(1/mc_norm)
+        plot.subplot(2).get_hist("total_bkg").Scale(1/mc_norm)
+        for _proc in stack_processes:
+            plot.subplot(0).get_hist(_proc).Scale(1/mc_norm)
+            plot.subplot(1).get_hist(_proc).Scale(1/mc_norm)
+            plot.subplot(2).get_hist(_proc).Scale(1/mc_norm)
+
     for data_name in plot_names:
         if matchData:
             data_norm = plot.subplot(0).get_hist(data_name).Integral()
             entry_number = plot.subplot(0).get_hist(data_name).GetEntries()
-            mc_norm = plot.subplot(0).get_hist("total_bkg").Integral()
-            assert mc_norm > 0.
-            plot.subplot(0).get_hist("total_bkg").Scale(1/mc_norm)
-            plot.subplot(1).get_hist("total_bkg").Scale(1/mc_norm)
-            plot.subplot(2).get_hist("total_bkg").Scale(1/mc_norm)
             if data_norm != 0:
                 plot.subplot(0).get_hist(data_name).Scale(1/data_norm)
                 plot.subplot(1).get_hist(data_name).Scale(1/data_norm)
                 plot.subplot(2).get_hist(data_name).Scale(1/data_norm)
-            for _proc in bkg_processes:
-                plot.subplot(0).get_hist(_proc).Scale(1/mc_norm)
-                plot.subplot(1).get_hist(_proc).Scale(1/mc_norm)
-                plot.subplot(2).get_hist(_proc).Scale(1/mc_norm)
         else:
             plot.subplot(0).get_hist(data_name).GetXaxis().SetMaxDigits(4) 
             entry_number = plot.subplot(0).get_hist(data_name).GetEntries()
-        if entry_number > 50:
+        if entry_number > 10000:
             draw_list.append(data_name)
         if args.blinded:
             plot.subplot(0).setGraphStyle(data_name, "e0", markercolor=styles.color_dict[data_name], markersize=0, linewidth=0)
@@ -325,7 +273,6 @@ def main(info):
 
         plot.subplot(2).normalize([data_name], "total_bkg")
         plot.subplot(2).setGraphStyle(data_name, "e0", markercolor=styles.color_dict[data_name])
-        plot.subplot(2).setGraphStyle(data_name, "e0", markercolor=styles.color_dict[data_name])
 
         # set axes limits and labels
         plot.subplot(0).setYlims(
@@ -342,59 +289,34 @@ def main(info):
     )
 
     # stack background processes
-    plot.create_stack(bkg_processes, "stack")
+    plot.create_stack(stack_processes, "stack")
 
     # normalize stacks by bin-width
     if args.normalize_by_bin_width:
         plot.subplot(0).normalizeByBinWidth()
         plot.subplot(1).normalizeByBinWidth()
 
-    # plot.subplot(2).setYlims(0.75, 1.55)
-    plot.subplot(2).setYlims(0.00, 2)
-    if channel == "mmet":
+    # plot.subplot(2).setYlims(0.5, 1.5)
+    plot.subplot(2).setYlims(0.01, 1.99)
+    ymin_list = list()
+    ymax_list = list()
+    for i in plot_names:
+        ymax_list.append(plot.subplot(0).get_hist(i).GetMaximum())
+        ymin_list.append(plot.subplot(0).get_hist(i).GetMinimum(1e-5))
+    ymax = max(ymax_list)
+    ymin = min(ymin_list)
+    ymin = min(ymin, 1e-2)
+    plot.subplot(0).setYlims(0, ymax*1.7)
+
+    if doLogy[channel]:
         plot.subplot(0).setLogY()
-        #ymax = plot.subplot(0).get_hist("355206").GetMaximum()
-        #plot.subplot(0).setYlims(0, ymax*1.5)
-        ymax_list = list()
-        for i in plot_names:
-            ymax_list.append(plot.subplot(0).get_hist(i).GetMaximum())
-        ymax = max(ymax_list)
-        plot.subplot(0).setYlims(0, ymax*20000000)
-        # plot.subplot(0).setXlims(50, 150)
-        # plot.subplot(1).setXlims(50, 150)
-        # plot.subplot(2).setXlims(50, 150)
-    elif channel == "emet":
-        plot.subplot(0).setLogY()
-        ymax_list = list()
-        for i in plot_names:
-            ymax_list.append(plot.subplot(0).get_hist(i).GetMaximum())
-        ymax = max(ymax_list)
-        plot.subplot(0).setYlims(0, ymax*20000000)
-        #plot.subplot(0).setYlims(0,1)
-        # plot.subplot(0).setXlims(50, 150)
-        # plot.subplot(1).setXlims(50, 150)
-        # plot.subplot(2).setXlims(50, 150)
-    elif channel == "mm":
-        #plot.subplot(0).setLogY()
-        ymax_list = list()
-        for i in plot_names:
-            ymax_list.append(plot.subplot(0).get_hist(i).GetMaximum())
-        ymax = max(ymax_list)
-        plot.subplot(0).setYlims(0, ymax*1.7)
-        #plot.subplot(0).setYlims(0, 15000)
-        # plot.subplot(0).setXlims(50, 150)
-        # plot.subplot(1).setXlims(50, 150)
-        # plot.subplot(2).setXlims(50, 150)
-    elif channel == "ee":
-        #plot.subplot(0).setLogY()
-        ymax_list = list()
-        for i in plot_names:
-            ymax_list.append(plot.subplot(0).get_hist(i).GetMaximum())
-        ymax = max(ymax_list)
-        plot.subplot(0).setYlims(0, ymax*1.7)
-        # plot.subplot(0).setXlims(50, 150)
-        # plot.subplot(1).setXlims(50, 150)
-        # plot.subplot(2).setXlims(50, 150)
+        if len(plot_names) == 1:
+            plot.subplot(0).setYlims(0.5, ymax*1.e4)
+        else:
+            plot.subplot(0).setYlims(0.4*ymin, ymax*1.e4)
+    if matchData:
+        plot.subplot(0).setYlims(1e-5, 1e2)
+
 
     if args.linear != True:
         plot.subplot(1).setYlims(0.1, split_dict[channel])
@@ -414,14 +336,14 @@ def main(info):
     elif matchData:
         plot.subplot(0).setYlabel("a.u.")
     else:
-        plot.subplot(0).setYlabel("N_{events}")
+        plot.subplot(0).setYlabel("# events")
 
     plot.subplot(2).setYlabel("Data/MC")
     plot.subplot(2).setGrid()
     plot.scaleYLabelSize(0.8)
     plot.scaleYTitleOffset(0.8)
-    plot.scaleXTitleOffset(1.5)
-    plot.scaleXTitleSize(0.5)
+    plot.scaleXTitleOffset(1.2)
+    plot.scaleXTitleSize(0.8)
 
     # draw subplots. Argument contains names of objects to be drawn in corresponding order.
     path = "chi_square_data/data_outfile.csv"
@@ -452,7 +374,6 @@ def main(info):
             
 
     # create legends
-    suffix = ["", "_top"]
     for i in range(2):
         plot.add_legend(width=0.5, height=0.15)
         for process in legend_bkg_processes:
@@ -465,7 +386,7 @@ def main(info):
                 "f",
             )
         plot.legend(i).add_entry(0, "total_bkg", "Bkg. stat. unc.", "f")
-        for index in plot_names:
+        for index in draw_list:
             data_label_name = "Observed" if plot_names[0] == "data" else "Run " + index
             plot.legend(i).add_entry(0, index, data_label_name, "PE2L")
         plot.legend(i).setNColumns(2)
@@ -489,78 +410,92 @@ def main(info):
         plot.DrawLumi("35.9 fb^{-1} (2016, 13 TeV)")
     elif "2017" in args.era:
         plot.DrawLumi("41.5 fb^{-1} (2017, 13 TeV)")
-    elif "2018" in args.era and matchData:
-        plot.DrawLumi("(2022, 13.6 TeV)")
-    elif "2018" in args.era and not matchData:
-        lumiString = "1 pb^{-1}" if len(plot_names) != 1 else args.lumi_label + " fb^{-1}"
-        plot.DrawLumi(lumiString + "(2022, 13.6 TeV)")
+    elif "2018" in args.era:
+        plot.DrawLumi("59.8 fb^{-1} (2018, 13 TeV)")
+    elif "2022" in args.era:
+        if matchData or len(plot_names) != 1:
+            plot.DrawLumi("(2022, 13.6 TeV)")
+        else:
+            lumiString = "{:.1f}".format(float(args.lumi_label))+" pb^{-1}"
+            plot.DrawLumi(lumiString + " (2022, 13.6 TeV)")
     else:
         logger.critical("Era {} is not implemented.".format(args.era))
         raise Exception
 
     posChannelCategoryLabelLeft = None
     plot.DrawChannelCategoryLabel(
-        "%s, %s" % (channel_dict[channel], "{cat}".format(cat=args.category_postfix)),
+        "%s" % (channel_dict[channel]),  # "{cat}".format(cat=args.category_postfix)
         begin_left=posChannelCategoryLabelLeft,
     )
+
+    if matchData:
+        plot.DrawText(0.17, 0.73, "#bf{#font[42]{Normalized to 1}}", 0.03)
+    else:
+        if len(plot_names) != 1:
+            plot.DrawText(0.17, 0.73, "#bf{#font[42]{Normalized to 1 pb^{-1}}}", 0.03)
+        else:
+            plot.DrawText(0.17, 0.73, "#bf{#font[42]{Normalized to online lumi}}", 0.03)
+
     # save plot
-    if not args.embedding and not args.fake_factor:
-        postfix = "fully_classic"
-    if args.embedding and not args.fake_factor:
-        postfix = "emb_classic"
-    if not args.embedding and args.fake_factor:
-        postfix = "classic_ff"
-    if args.embedding and args.fake_factor:
-        postfix = "emb_ff"
-    if args.draw_jet_fake_variation is not None:
-        postfix = postfix + "_" + args.draw_jet_fake_variation
+    # if not args.embedding and not args.fake_factor:
+    #     postfix = "fully_classic"
+    # if args.embedding and not args.fake_factor:
+    #     postfix = "emb_classic"
+    # if not args.embedding and args.fake_factor:
+    #     postfix = "classic_ff"
+    # if args.embedding and args.fake_factor:
+    #     postfix = "emb_ff"
+    # if args.draw_jet_fake_variation is not None:
+    #     postfix = postfix + "_" + args.draw_jet_fake_variation
 
     if not os.path.exists("plots/%s" % (args.tag)):
-        os.makedirs("plots/%s/%s_plots_%s/%s" % (args.tag, args.era, postfix, channel))
+        os.makedirs("plots/%s/%s/%s" % (args.tag, args.era, channel))
 
     plot.save(
-        "plots/%s/%s_plots_%s/%s/%s_%s_%s_%s.%s"
+        "plots/%s/%s/%s/%s_%s_%s.%s"
         % (
             args.tag,
             args.era,
-            postfix,
+            # postfix,
             channel,
             args.era,
             channel,
             variable,
-            args.category_postfix,
+            # args.category_postfix,
             "pdf",
         )
     )
     plot.save(
-        "plots/%s/%s_plots_%s/%s/%s_%s_%s_%s.%s"
+        "plots/%s/%s/%s/%s_%s_%s.%s"
         % (
             args.tag,
             args.era,
-            postfix,
+            # postfix,
             channel,
             args.era,
             channel,
             variable,
-            args.category_postfix,
+            # args.category_postfix,
             "png",
         )
     )
 
-#function that seperates the variables just like in produce shapes
+# function that seperates the variables just like in produce shapes
 def seperateVariables(input_list):
     charge_list=["_pos", "_neg"]
     eta_list=["_barrel", "_endcap"]
-    iso_list=["_isoSR","_iso5","_iso6","_iso7","_iso8","_iso9","_iso10","_iso11","_iso12","_iso13"]
-    npv_list=["_npv015", "_npv1530", "_npv3045"]
+    # iso_list=["_isoSR","_iso5","_iso6","_iso7","_iso8","_iso9","_iso10","_iso11","_iso12","_iso13"]
+    # npv_list=["_npv015", "_npv1530", "_npv3045"]
     variable_list = list()
     for var in input_list:
+        variable_list.append(var)
         for charge in charge_list:
+            variable_list.append(var+charge)
             for eta in eta_list:
-                for iso in iso_list:
-                    variable_list.append(var+charge+eta+iso)
+                variable_list.append(var+charge+eta)
+                # for iso in iso_list:
+                #     variable_list.append(var+charge+eta+iso)
     return variable_list
-
 
 if __name__ == "__main__":
     args = parse_arguments()
@@ -573,21 +508,21 @@ if __name__ == "__main__":
     matchData = bool(int(args.match_data))
     infolist = []
 
-    if not args.embedding and not args.fake_factor:
-        postfix = "fully_classic"
-    if args.embedding and not args.fake_factor:
-        postfix = "emb_classic"
-    if not args.embedding and args.fake_factor:
-        postfix = "classic_ff"
-    if args.embedding and args.fake_factor:
-        postfix = "emb_ff"
+    # if not args.embedding and not args.fake_factor:
+    #     postfix = "fully_classic"
+    # if args.embedding and not args.fake_factor:
+    #     postfix = "emb_classic"
+    # if not args.embedding and args.fake_factor:
+    #     postfix = "classic_ff"
+    # if args.embedding and args.fake_factor:
+    #     postfix = "emb_ff"
     for ch in channels:
         for v in variables:
             infolist.append({"args": args, "channel": ch, "variable": v})
     pool = Pool(1)
     pool.map(main, infolist)
     if writeLatex:
-         plots_to_latex(args.tag, args.era, postfix, args.channels)
+        plots_to_latex(args.tag, args.era, args.channels)
     # for info in infolist:
     #     main(info)
 
