@@ -36,7 +36,7 @@
 #include "RooHist.h"
 #include "RooHistPdf.h"
 #include "RooKeysPdf.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "RooPlot.h"
 #include "RooRealIntegral.h"
 #include "RooRealVar.h"
@@ -98,6 +98,8 @@ void fitRecoil_master(
     TString outputDir = "./", // output directory
     Double_t lumi = 1)
 {
+    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+    RooMsgService::instance().setSilentMode(true);
 
     //--------------------------------------------------------------------------------------------------------------
     // Settings and files
@@ -155,7 +157,7 @@ void fitRecoil_master(
     TString bkgvdirname_friend = bkgvdirname;
     TString bkgvdirname_friend2 = bkgvdirname;
     bkgvdirname_friend = bkgvdirname_friend.ReplaceAll("ntuples", "friends/crosssection");
-    bkgvdirname_friend2 = bkgvdirname_friend2.ReplaceAll("ntuples", "friends/lep_corr");
+    bkgvdirname_friend2 = bkgvdirname_friend2.ReplaceAll("ntuples", "friends/lep_corr").ReplaceAll("moh", "jdriesch");
 
     //Data samples
     if(inputType == 0) {
@@ -1021,14 +1023,13 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         RooAddPdf sig(name.str().c_str(), name.str().c_str(), shapes, fracs);
         name.str("");
 
-        name.str("");
-        name << "sig_" << ibin;
-        RooCrystalBall sigCB(name.str().c_str(), name.str().c_str(), u, mean1, sigmaL, sigmaR, alphaL, nL, alphaR, nR);
-        name.str("");
+        // name.str("");
+        // name << "sigCB_" << ibin;
+        // RooCrystalBall sigCB(name.str().c_str(), name.str().c_str(), u, mean1, sigmaL, sigmaR, alphaL, nL, alphaR, nR);
+        // name.str("");
 
         RooArgList parts;
         if(doCrystalBall) {
-            //parts.add(sigCB);
             parts.add(sig);
         }
         if(!doCrystalBall) {
@@ -1226,7 +1227,7 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         if(!doCrystalBall)
             wksp->import(sig);
         if(doCrystalBall)
-            wksp->import(sigCB);
+            wksp->import(sig);  // wksp->import(sigCB);
         if (!doLog)
             wksp->import(bkg);
         if (doLog)
