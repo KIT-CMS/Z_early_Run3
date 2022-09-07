@@ -166,6 +166,10 @@ void fitRecoil_master(
             sig_chain->Add(infilename + "SingleMuon_Run2022C-PromptReco-v1/mm/*.root/ntuple");
             sig_friend_chain->Add(infilename_friend + "SingleMuon_Run2022C-PromptReco-v1/mm/*.root/ntuple");
             sig_friend_chain2->Add(infilename_friend2 + "SingleMuon_Run2022C-PromptReco-v1/mm/*.root/ntuple");
+
+            sig_chain->Add(infilename + "Muon_Run2022C-PromptReco-v1/mm/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "Muon_Run2022C-PromptReco-v1/mm/*.root/ntuple");
+            sig_friend_chain2->Add(infilename_friend2 + "Muon_Run2022C-PromptReco-v1/mm/*.root/ntuple");
         }
         if(doElectron) {
             sig_chain->Add(infilename + "EGamma_Run2022C-PromptReco-v1/ee/*.root/ntuple");
@@ -201,6 +205,7 @@ void fitRecoil_master(
 
     bkgv_chain->Add(bkgvdirname + "*.root/ntuple");
     bkgv_friend_chain->Add(bkgvdirname_friend + "*.root/ntuple");
+    bkgv_friend_chain2->Add(bkgvdirname_friend2 + "*.root/ntuple");
 
     bkgv_chain->AddFriend(bkgv_friend_chain);
     bkgv_chain->AddFriend(bkgv_friend_chain2);
