@@ -6,6 +6,7 @@ import numpy as np
 import utils
 import array as a
 import json
+import glob
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Lepton correction program. To obtain corrections, please proceed as follows: \n 1. Produce histograms by setting option -H\n 2. Calculate Z mass peak position and width via -C\n 3. Produce friend tree with corrected lepton pt values via -E\n 4. Plot corrected distributions via -P")
@@ -253,12 +254,6 @@ def get_corrections(args, bins):
 
 
 ROOT.gInterpreter.Declare("""
-        float smear_pt(float smear){
-            return smear*gRandom->Gaus(0,1);
-        }
-        """)
-
-ROOT.gInterpreter.Declare("""
         float gaus(){
             return gRandom->Gaus(0,1);
         }
@@ -298,125 +293,92 @@ def apply_corrections(args, bins):
             else:
                 muel = 'el_corr'
             outdir = helpdir.format(period=period, muel=muel, corr=corr, v=args.version, year=year, proc=process, f=args.finalstate)
-            """
-            if 'mm' in args.finalstate:
-                outdir = '/ceph/jdriesch/CROWN_samples/' + period + '/friends/mu_corr'+corr+'_'+args.version+'/' + year + '/' + process + "/" + args.finalstate + "/"
-            else:
-                outdir = '/ceph/jdriesch/CROWN_samples/' + period + '/friends/el_corr'+corr+'_'+args.version+'/' + year + '/' + process + "/" + args.finalstate + "/"
-            """
 
 
-    i = 0    
+    print("Input samples taken from: {}".format(inpath))
 
-    print("Input samples taken from: ", inpath + "_"+str(i)+".root")
-    print("Output samples saved in: ", outdir + (inpath + "_"+str(i)+".root").split("/")[-1])
+    # for other processes than data: apply resolution correction
+    if (not ("Muon" in process)) and (not ("EGamma" in process)):
+        print("MC process: resolution corrections will be applied")
+        data=False
+    else:
+        print("Data process: scale corrections will be applied")
+        data=True
+
+    if args.finalstate == "mm" or args.finalstate == 'ee':
+        print("Di-lepton finalstate: both leptons will be corrected")
+        dilepton=True
+    else:
+        print("Single-lepton finalstate: one lepton will be corrected")
+        dilepton=False
+
+    print("Output samples will be saved in: {}".format(outdir))
 
 
+    # check if outdir exists and create directory if not 
     if not utils.usedir(outdir, args.overwrite):
         return
 
-    while os.path.exists(inpath + "_"+str(i)+".root"):
-        infile = inpath + "_"+str(i)+".root"
-        outfile= outdir + infile.split("/")[-1]
+    # get list of all files in the input directory
+    files = glob.glob(inpath + "_*.root")
 
-            
-        rdf = ROOT.RDataFrame('ntuple', infile)
+
+    for f in tqdm(files):
+        outfile = outdir + f.split("/")[-1]
+
+        rdf = ROOT.RDataFrame('ntuple', f)
 
         rdf = rdf.Define("pt_1_corr", "pt_1")
-        if args.finalstate == "mm" or args.finalstate == 'ee':
+        if dilepton:
             rdf = rdf.Define("pt_2_corr", "pt_2")
 
-
-        # for other processes than data: apply resolution correction
-        if (not ("SingleMuon" in process)) and (not ("EGamma" in process)):
-            if i==0:
-                print("Resolution corrections will be applied")
-
-            for j in range(nbins1): 
-                for k in range(nbins2): 
-                    bin1_l, bin1_r = bins[bin1][j], bins[bin1][j+1]
-                    bin2_l, bin2_r = bins[bin2][k], bins[bin2][k+1]
-
-                    # filter for a muon in event in corresponding bins
-                    filter_template = "({bin}_{n} > {bin_l} && {bin}_{n} < {binr})"
-
-                    filter1a = filter_template.format(bin=bin1, n=1, bin_l=bin1_l, binr = bin1_r)
-                    filter1b = filter_template.format(bin=bin2, n=1, bin_l=bin2_l, binr = bin2_r)
-
-                    if mz_res_mc[j][k] > mz_res_dt[j][k]:
-                        res_sf = 1
-                    else:
-                        res_sf = mz_res_dt[j][k] / mz_res_mc[j][k]
-
-                    #rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/m_vis*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_res_mc[j][k]), str((res_sf)**2))) # TODO: evaluate if division by 2 needed
-                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_res_mc[j][k]), str((res_sf)**2))) # TODO: evaluate if division by 2 needed
-
-                    if args.finalstate == "mm" or args.finalstate == 'ee':
-                        filter2a = filter_template.format(bin=bin1, n=2, bin_l=bin1_l, binr = bin1_r)
-                        filter2b = filter_template.format(bin=bin2, n=2, bin_l=bin2_l, binr = bin2_r)
-
-                        #rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2* (1 + {}/m_vis*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(mz_res_mc[j][k]), str((res_sf)**2)))
-                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2* (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(mz_res_mc[j][k]), str((res_sf)**2)))
-            
-            if args.finalstate == "mm" or args.finalstate == 'ee':
-                rdf = calc_m(rdf, "_corr")
-                if args.finalize:
-                    quants =  ["pt_1_corr", "pt_2_corr", "m_vis_corr"]
-                else:
-                    quants =  ["pt_1_corr", "pt_2_corr", "eta_1", "eta_2", "phi_1", "phi_2", "mass_1", "mass_2", "pt_1", "pt_2", "m_vis_corr"]
-           
-            if args.finalstate == "mmet" or args.finalstate == 'emet':
-                if args.finalize:
-                    quants =  ["pt_1_corr"]
-                else:
-                    quants = ["pt_1_corr", "eta_1", "phi_1", "mass_1", "pt_1"]
-
-            rdf.Snapshot("ntuple", outfile, quants)
-
-            if i%10==0: 
-                print("done {} of {}".format(i, 100))
-
-            i+=1
-            continue
-
-
-        if i==0:
-            print("Scale corrections will be applied")
         for j in range(nbins1): 
             for k in range(nbins2): 
                 bin1_l, bin1_r = bins[bin1][j], bins[bin1][j+1]
                 bin2_l, bin2_r = bins[bin2][k], bins[bin2][k+1]
+
+                # filter for a muon in event in corresponding bins
                 filter_template = "({bin}_{n} > {bin_l} && {bin}_{n} < {binr})"
 
                 filter1a = filter_template.format(bin=bin1, n=1, bin_l=bin1_l, binr = bin1_r)
                 filter1b = filter_template.format(bin=bin2, n=1, bin_l=bin2_l, binr = bin2_r)
-                rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * {}; else p=pt_1_corr; return p;".format(filter1a, filter1b, str(pt_sf[j][k])))
 
-                if args.finalstate == "mm" or args.finalstate == 'ee':
+                if mz_res_mc[j][k] > mz_res_dt[j][k]:
+                    res_sf = 1
+                else:
+                    res_sf = mz_res_dt[j][k] / mz_res_mc[j][k]
+
+                if data:
+                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * {}; else p=pt_1_corr; return p;".format(filter1a, filter1b, str(pt_sf[j][k])))
+                else:
+                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_res_mc[j][k]), str((res_sf)**2))) # TODO: evaluate if division by 2 needed
+
+
+                if dilepton:
                     filter2a = filter_template.format(bin=bin1, n=2, bin_l=bin1_l, binr = bin1_r)
                     filter2b = filter_template.format(bin=bin2, n=2, bin_l=bin2_l, binr = bin2_r)
-                    rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * {}; else p=pt_2_corr; return p;".format(filter2a, filter2b, str(pt_sf[j][k])))
-
-        if args.finalstate == "mm" or args.finalstate == 'ee':
+                    
+                    if data:
+                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * {}; else p=pt_2_corr; return p;".format(filter2a, filter2b, str(pt_sf[j][k])))
+                    else:
+                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2* (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(mz_res_mc[j][k]), str((res_sf)**2)))
+        
+        if dilepton:
+            rdf = calc_m(rdf, "_corr")
             if args.finalize:
-                quants = ["pt_1_corr", "pt_2_corr"]
+                quants =  ["pt_1_corr", "pt_2_corr", "m_vis_corr"]
             else:
-                quants =  ["pt_1_corr", "pt_2_corr", "eta_1", "eta_2", "phi_1", "phi_2", "mass_1", "mass_2", "pt_1", "pt_2"]
-                       
-        if args.finalstate == "mmet" or args.finalstate == 'emet':
+                quants =  ["pt_1_corr", "pt_2_corr", "eta_1", "eta_2", "phi_1", "phi_2", "mass_1", "mass_2", "pt_1", "pt_2", "m_vis_corr"]
+        
+        else:
             if args.finalize:
-                quants = ["pt_1_corr"]
+                quants =  ["pt_1_corr"]
             else:
                 quants = ["pt_1_corr", "eta_1", "phi_1", "mass_1", "pt_1"]
-        
-        rdf.Snapshot("ntuple", outfile, ["pt_1_corr", "eta_1", "phi_1", "mass_1", "pt_1"])
 
-        if i%10==0: 
-            print("done {}".format(i))
+        rdf.Snapshot("ntuple", outfile, quants)
 
-        i+=1
-
-    print("great success")
+    print("Great success!")
 
 
 
