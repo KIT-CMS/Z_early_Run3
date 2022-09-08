@@ -308,6 +308,7 @@ void fitRecoil_master(
     Float_t met, metPhi;
     Int_t q1, q2;
     Float_t scale1fbSumW, genWeight;
+    Int_t trg_match_1, trg_match_2;
     TLorentzVector *dilep = 0, *lep1 = 0, *lep2 = 0, *lep1_raw = 0, *lep2_raw = 0, *genlep1 = 0, *genlep2 = 0;
 
     for (UInt_t ifile = 0; ifile < fnamev.size(); ifile++) {
@@ -332,6 +333,10 @@ void fitRecoil_master(
         intree->SetBranchAddress("eta_1", &lep1_eta); // eta of tag lepton
         intree->SetBranchAddress("phi_1", &lep1_phi); // phi of tag lepton
         intree->SetBranchAddress("mass_1", &lep1_mass); // mass of tag lepton
+        if (doElectron)
+            intree->SetBranchAddress("trg_single_ele27_1", &trg_match_1);
+        else
+            intree->SetBranchAddress("trg_single_mu24_1", &trg_match_1);
 
         if (inputType<2) { // Z specific variables
             intree->SetBranchAddress("q_2", &q2); // charge of probe lepton
@@ -340,6 +345,10 @@ void fitRecoil_master(
             intree->SetBranchAddress("eta_2", &lep2_eta); // eta of probe lepton
             intree->SetBranchAddress("phi_2", &lep2_phi); // phi of probe lepton
             intree->SetBranchAddress("mass_2", &lep2_mass); // mass of probe lepton
+            if (doElectron)
+                intree->SetBranchAddress("trg_single_ele27_2", &trg_match_2);
+            else
+                intree->SetBranchAddress("trg_single_mu24_2", &trg_match_2);
         }
 
         //
@@ -398,7 +407,10 @@ void fitRecoil_master(
                     continue;
                 if (fabs(mu1.Eta()) > ETA_CUT || fabs(mu2.Eta()) > ETA_CUT)
                     continue;
-
+                if (q1*q2 > 0)
+                    continue;
+                if (!(trg_match_1 || trg_match_2))
+                    continue;
             } else { //W events
                 if (inputType == 2 && q1 < 0)
                     continue;
@@ -408,7 +420,8 @@ void fitRecoil_master(
                     continue;
                 if (fabs(lep1_eta) > ETA_CUT)
                     continue;
-
+                if (!trg_match_1)
+                    continue;
             }
 
             //// TODO: implement this to do eta bin categorizing
