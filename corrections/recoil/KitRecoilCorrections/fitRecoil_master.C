@@ -308,7 +308,7 @@ void fitRecoil_master(
     Float_t met, metPhi;
     Int_t q1, q2;
     Float_t scale1fbSumW, genWeight;
-    Int_t trg_match_1, trg_match_2;
+    Bool_t trg_match_1, trg_match_2;
     TLorentzVector *dilep = 0, *lep1 = 0, *lep2 = 0, *lep1_raw = 0, *lep2_raw = 0, *genlep1 = 0, *genlep2 = 0;
 
     for (UInt_t ifile = 0; ifile < fnamev.size(); ifile++) {
