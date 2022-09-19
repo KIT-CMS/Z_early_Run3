@@ -50,7 +50,8 @@ def get_paths(args, mode, kw = None):
             elif args.run=='3':
                 if args.finalstate=='mm':
                     mc = ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root']
-                    dt = ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/SingleMuon_Run2022C-PromptReco-v1/mm/SingleMuon_Run2022C-PromptReco-v1_*.root'] 
+                    dt = ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/SingleMuon_Run2022C-PromptReco-v1/mm/SingleMuon_Run2022C-PromptReco-v1_*.root']
+                    dt += ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/Muon_Run2022C-PromptReco-v1/mm/Muon_Run2022C-PromptReco-v1_*.root'] 
                 elif args.finalstate=='ee':
                     mc = ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/ee/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root']
                     dt = ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/EGamma_Run2022C-PromptReco-v1/ee/EGamma_Run2022C-PromptReco-v1_*.root']
@@ -87,6 +88,7 @@ def get_paths(args, mode, kw = None):
                 if args.finalstate=='mm':
                     mc = ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/mu_corr_{v}/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root'.format(v=args.version)]
                     dt = ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/mu_corr_{v}/2022/SingleMuon_Run2022C-PromptReco-v1/mm/SingleMuon_Run2022C-PromptReco-v1_*.root'.format(v=args.version)]
+                    dt+= ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/mu_corr_{v}/2022/Muon_Run2022C-PromptReco-v1/mm/Muon_Run2022C-PromptReco-v1_*.root'.format(v=args.version)] 
                 elif args.finalstate=='ee':
                     mc = ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/el_corr_{v}/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/ee/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root'.format(v=args.version)]
                     dt = ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/el_corr_{v}/2022/EGamma_Run2022C-PromptReco-v1/ee/EGamma_Run2022C-PromptReco-v1_*.root'.format(v=args.version)]
@@ -102,6 +104,7 @@ def get_paths(args, mode, kw = None):
         else:
             fs = 'ee'
         path = 'correction_files/Run{run}/{fs}/{res}mz_{mcdt}_{bin1}_{bin2}_{v}{corr}.txt'.format(run=args.run, fs=fs, bin1=kw[0], bin2=kw[1], corr=kw[2], res = kw[3], mcdt = kw[4], v=args.version)
+        print("take correction file: ", path)
         return path
 
 
@@ -110,6 +113,7 @@ def calc_m(rdf, corr = ""):
     rdf = rdf.Define("lv_2", "ROOT::Math::PtEtaPhiMVector p(pt_2"+corr+", eta_2, phi_2, mass_2); return p")
     
     rdf = rdf.Define("dimuon", "lv_1 + lv_2")
+    rdf = rdf.Define("pt_vis"+corr, "dimuon.Pt()")
     rdf = rdf.Define("m_vis"+corr, "dimuon.M()")
     return rdf
 
@@ -140,18 +144,27 @@ def make_hists(bins, args):
     rdf_mc = ROOT.RDataFrame("ntuple", mc)
     rdf_dt = ROOT.RDataFrame("ntuple", dt)
 
+    event_selection = "(q_1*q_2 < 0)"
+    if args.finalstate == "mm":
+        event_selection += " && (trg_single_mu24_1 || trg_single_mu24_2)"
+    elif args.finalstate == "ee":
+        event_selection += " && (trg_single_ele27_1 || trg_single_ele27_2)"
+
+    rdf_mc = rdf_mc.Filter(event_selection)
+    rdf_dt = rdf_dt.Filter(event_selection)    
+
     if args.corr:
-        rdf_mc = calc_m(rdf_mc, '_corr')
-        rdf_dt = calc_m(rdf_dt, '_corr')
+        #rdf_mc = calc_m(rdf_mc, '_corr')
+        #rdf_dt = calc_m(rdf_dt, '_corr')
         if bin1=='pt':
-            corr1 = '_corr'
+            #corr1 = '_corr'
             corr = '_corr'
         if bin2=='pt':
-            corr2='_corr'
+            #corr2='_corr'
             corr = '_corr'
 
 
-    outdir = 'hists/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}/'.format(run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version)
+    outdir = 'hists/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}_binuncorr/'.format(run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version)
     if not utils.usedir(outdir, args.overwrite):
         return
 
@@ -238,7 +251,7 @@ def get_corrections(args, bins):
 
 
     # make 2d plots
-    ratio_mu = mz_dt/mz_mc
+    ratio_mu = (91.1876+mz_dt)/(91.1876+mz_mc)
     ratio_sigma = res_mz_dt/res_mz_mc * ratio_mu
     labels1, labels2 = np.zeros(nbins1), np.zeros(nbins2)
     
@@ -248,9 +261,17 @@ def get_corrections(args, bins):
     for j in range(nbins2):
         labels2[j] = .5*(bins[bin2][j] + bins[bin2][j+1])
 
-    
-    utils.plot2d(ratio_mu, '{}mu{}.pdf'.format(outdir,corr), r'$\frac{M_Z (\mathrm{data})}{M_Z (\mathrm{mc})}$', r'$p_\mathrm{T}$', bins[bin2], r'$\eta$', bins[bin1], 0.998, 1.002, np.around(labels2, 1), labels1)
-    utils.plot2d(ratio_sigma, '{}sigma{}.pdf'.format(outdir,corr), r'$\frac{\mathrm{res}(M_Z(\mathrm{data}))}{\mathrm{res}(M_Z (\mathrm{mc}))}$', r'$p_\mathrm{T}$', bins[bin2], r'$\eta$', bins[bin1], 0.9, 1.1, np.around(labels2,1), labels1)
+    if args.finalstate == 'ee':
+        mean_min, mean_max = 0.98, 1.02
+        std_min, std_max = 0.8, 1.2
+    elif args.finalstate == 'mm':
+        mean_min, mean_max = 0.998, 1.002
+        std_min, std_max = 0.9, 1.1
+    else:
+        print("This finalstate should not be used to obtain lepton corrections")
+        return
+    utils.plot2d(ratio_mu, '{}mu{}.pdf'.format(outdir,corr), r'$\frac{M_Z (\mathrm{data})}{M_Z (\mathrm{mc})}$', r'$p_\mathrm{T}$', bins[bin2], r'$\eta$', bins[bin1], mean_min, mean_max, np.around(labels2, 1), labels1)
+    utils.plot2d(ratio_sigma, '{}sigma{}.pdf'.format(outdir,corr), r'$\frac{\mathrm{res}(M_Z(\mathrm{data}))}{\mathrm{res}(M_Z (\mathrm{mc}))}$', r'$p_\mathrm{T}$', bins[bin2], r'$\eta$', bins[bin1], std_min, std_max, np.around(labels2,1), labels1)
 
 
 ROOT.gInterpreter.Declare("""
@@ -272,7 +293,7 @@ def apply_corrections(args, bins):
     # Load correction files
     #fname = get_paths(args, mode=1, kw=[bin1, bin2, corr])
     mz_mc, mz_dt = np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, '', 'mc'])), np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, '', 'dt']))
-    pt_sf = mz_mc / mz_dt
+    pt_sf = (91.1876+mz_mc) / (91.1876+mz_dt)
     mz_res_mc, mz_res_dt = np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, 'res', 'mc'])), np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, 'res', 'dt'])) * pt_sf
 
     period = args.inpath.split('/')[4]
@@ -286,7 +307,7 @@ def apply_corrections(args, bins):
     else:
         helpdir = '/ceph/jdriesch/CROWN_samples/{period}/friends/{muel}{corr}_{v}/{year}/{proc}/{f}/'
         if args.finalize:
-            outdir = helpdir.format(period=period, muel='lep', corr='', v='corr', year=year, proc=process, f=args.finalstate)
+            outdir = helpdir.format(period=period, muel='lep', corr='_corr', v=args.version, year=year, proc=process, f=args.finalstate)
         else:
             if 'mm' in args.finalstate:
                 muel = 'mu_corr'
@@ -349,9 +370,11 @@ def apply_corrections(args, bins):
                     res_sf = mz_res_dt[j][k] / mz_res_mc[j][k]
 
                 if data:
-                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * {}; else p=pt_1_corr; return p;".format(filter1a, filter1b, str(pt_sf[j][k])))
+                    #rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * {}; else p=pt_1_corr; return p;".format(filter1a, filter1b, str(pt_sf[j][k])))
+                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (91.1876 + {})/(91.1876 + {}); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_mc[j][k]), str(mz_dt[j][k])))
                 else:
-                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_res_mc[j][k]), str((res_sf)**2))) # TODO: evaluate if division by 2 needed
+                    #rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_res_mc[j][k]), str((res_sf)**2))) # TODO: evaluate if division by 2 needed
+                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/91.1876*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_res_mc[j][k]), str((res_sf)**2))) # TODO: evaluate if division by 2 needed
 
 
                 if dilepton:
@@ -359,25 +382,55 @@ def apply_corrections(args, bins):
                     filter2b = filter_template.format(bin=bin2, n=2, bin_l=bin2_l, binr = bin2_r)
                     
                     if data:
-                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * {}; else p=pt_2_corr; return p;".format(filter2a, filter2b, str(pt_sf[j][k])))
+                        #rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * {}; else p=pt_2_corr; return p;".format(filter2a, filter2b, str(pt_sf[j][k])))
+                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * (91.1876 + {})/(91.1876 + {}); else p=pt_2_corr; return p;".format(filter2a, filter2b,  str(mz_mc[j][k]), str(mz_dt[j][k])))
                     else:
-                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2* (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(mz_res_mc[j][k]), str((res_sf)**2)))
+                        #rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2* (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(mz_res_mc[j][k]), str((res_sf)**2)))
+                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * (1 + {}/91.1876*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(mz_res_mc[j][k]), str((res_sf)**2)))
         
         if dilepton:
             rdf = calc_m(rdf, "_corr")
             if args.finalize:
-                quants =  ["pt_1_corr", "pt_2_corr", "m_vis_corr"]
+                quants =  ["pt_1_corr", "pt_2_corr", "m_vis_corr", "pt_vis_corr"]
             else:
-                quants =  ["pt_1_corr", "pt_2_corr", "eta_1", "eta_2", "phi_1", "phi_2", "mass_1", "mass_2", "pt_1", "pt_2", "m_vis_corr"]
-        
+                quants =  ["pt_1_corr", "pt_2_corr", "eta_1", "eta_2", "phi_1", "phi_2", "mass_1", "mass_2", "pt_1", "pt_2", "m_vis", "m_vis_corr", "q_1", "q_2", "pt_vis", "pt_vis_corr"]
+                if args.finalstate=='mm':
+                    quants+=["trg_single_mu24_1", "trg_single_mu24_2"]
+                else:
+                    quants+=["trg_single_ele27_1", "trg_single_ele27_2"]
+
         else:
             if args.finalize:
                 quants =  ["pt_1_corr"]
             else:
-                quants = ["pt_1_corr", "eta_1", "phi_1", "mass_1", "pt_1"]
+                quants = ["pt_1_corr", "eta_1", "phi_1", "mass_1", "pt_1", "q_1"]
 
         rdf.Snapshot("ntuple", outfile, quants)
 
+
+        #rdf = rdf.Define("diff_m", "m_vis_corr - m_vis")
+        #std_m  = rdf.StdDev("diff_m").GetValue()
+        #rint(std_m)
+        """
+        ####### for bugfix
+        b1=1
+        b2=7
+        ratio = mz_res_dt[b1][b2]/mz_res_mc[b1][b2]
+        print(mz_res_mc[b1][b2], mz_res_dt[b1][b2], " ratio: ", ratio)
+        filter1a = filter_template.format(bin=bin1, n=1, bin_l=bins[bin1][b1], binr = bins[bin1][b1+1])
+        filter1b = filter_template.format(bin=bin2, n=1, bin_l=bins[bin2][b2], binr = bins[bin2][b2+1])
+        filter2a = filter_template.format(bin=bin1, n=2, bin_l=bins[bin1][b1], binr = bins[bin1][b1+1])
+        filter2b = filter_template.format(bin=bin2, n=2, bin_l=bins[bin2][b2], binr = bins[bin2][b2+1])
+        arr1 = rdf.Filter("( {} && {} )".format(filter1a, filter1b)).AsNumpy(["pt_1", "pt_1_corr"])
+        arr2 = rdf.Filter("( {} && {} )".format(filter2a, filter2b)).AsNumpy(["pt_2", "pt_2_corr"])
+        std1 = np.std(arr1["pt_1_corr"]-arr1["pt_1"])
+        std2 = np.std(arr2["pt_2_corr"]-arr2["pt_2"])
+        print("updated ratio: ", np.mean(2*ratio*arr1["pt_1"]/91.1876), "+/-", np.std(2*ratio*arr1["pt_1"]/91.1876))
+        print("lepton 1: ", std1)
+        print("lepton 2: ", std2)
+
+        #######
+        """
     print("Great success!")
 
 
@@ -388,20 +441,24 @@ def plot(args, bins):
         corr='_corr'
     bin1, bin2 = list(bins.keys())[0], list(bins.keys())[1]
     nbins1, nbins2 = len(bins[bin1])-1, len(bins[bin2])-1
-    if not utils.usedir('plots/Run{run}/{fs}/ratio_plots{corr}_{bin1}_{bin2}_{v}/'.format(run=args.run, fs=args.finalstate, corr=corr, bin1=bin1, bin2=bin2, v=args.version), args.overwrite):
+    outdir = 'plots/Run{run}/{fs}/ratio_plots{corr}_{bin1}_{bin2}_{v}/'.format(run=args.run, fs=args.finalstate, corr=corr, bin1=bin1, bin2=bin2, v=args.version)
+    if not utils.usedir(outdir, args.overwrite):
         return
-    # Load files
+
+    chi2 = np.zeros((nbins1, nbins2))
     for i in range(nbins1):
         for j in range(nbins2):
             filename = 'hists/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}/{bin1}_{}_{bin2}_{}.root'.format(i, j, run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version)
             file0 = ROOT.TFile(filename)
             hist_mc, hist_dt = file0.Get('mc'), file0.Get('data')
             hist_mc.Scale(1./hist_mc.Integral())
+            n_dt = round(hist_dt.Integral())
             hist_dt.Scale(1./hist_dt.Integral())
             hists = {'mc': hist_mc, 'dt': hist_dt}
-            outfile = 'plots/Run{run}/{fs}/ratio_plots{corr}_{bin1}_{bin2}_{v}/{b1}_{b2}.pdf'.format(run=args.run, bin1=bin1, bin2=bin2, b1=i, b2=j, fs=args.finalstate, corr=corr, v=args.version)
-            utils.plot_ratio(plots=hists, rcolors={'mc': ROOT.kBlue, 'dt': ROOT.kBlack}, title='ratio plot', outfile=outfile) #, ratio=True)
-
+            outfile = outdir+'{b1}_{b2}.pdf'.format(b1=i, b2=j)
+            chi2[i][j] = utils.plot_ratio(plots=hists, rcolors={'mc': ROOT.kBlue, 'dt': ROOT.kBlack}, title='ratio plot', outfile=outfile, evts=n_dt)
+    np.savetxt(outdir+'chi2.txt', chi2)
+    
 
 if __name__=='__main__':
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
