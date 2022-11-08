@@ -27,7 +27,7 @@ def plot_canvas(plots, title, filename, style, line=None):
     c.SaveAs(filename)
 
 
-def plot_ratio(plots, rcolors, title, outfile, text={}):
+def plot_ratio(plots, rcolors, title, outfile, text={}, evts=-1):
     c = ROOT.TCanvas("c", title, 800, 700)
     ROOT.gROOT.SetBatch(1)
     pad1 = ROOT.TPad("pad1", "pad1", 0,0.3,1,1)
@@ -36,16 +36,25 @@ def plot_ratio(plots, rcolors, title, outfile, text={}):
     pad1.cd()
     plots['dt'].SetMarkerStyle(20)
     plots['mc'].SetStats(0)
+    plots['mc'].GetXaxis().SetRangeUser(80,102)
+    plots['dt'].GetXaxis().SetRangeUser(80,102)
     plots['mc'].Draw("same hist")
     plots['dt'].DrawCopy("same")
     plots['mc'].SetTitle("dilepton mass")
+    #test_ad = plots['dt'].AndersonDarlingTest(plots['mc'], "D")
+    test_chi2 = plots['dt'].Chi2Test(plots['mc'], "WW CHI2/NDF")
+    #test_ks = plots['dt'].KolmogorovTest(plots['mc'], "WW")
     cmsTex=ROOT.TLatex()
     cmsTex.SetTextFont(42)
     cmsTex.SetTextSize(0.025)
     cmsTex.SetNDC()
     cmsTex.SetTextSize(0.035)
-    cmsTex.DrawLatex(0.11,0.91,'#bf{CMS} #it{Preliminary}')
-
+    cmsTex.DrawLatex(0.11,0.92,'#bf{CMS} #it{Preliminary}')
+    cmsTex.DrawLatex(0.745, 0.92, '{} data events'.format(evts))
+    #cmsTex.DrawLatex(0.7, 0.85, 'A-D = {}'.format(test_ad))
+    cmsTex.DrawLatex(0.7, 0.8, 'chi2/NDF = {}'.format(round(test_chi2,3)))
+    #cmsTex.DrawLatex(0.7, 0.75, 'K-S = {}'.format(test_ks))
+    #pad1.SetLogy(1)
     c.cd()
     pad2 = ROOT.TPad("pad2", "pad2", 0,0,1,0.3)
     pad2.SetTopMargin(.05)
@@ -68,6 +77,7 @@ def plot_ratio(plots, rcolors, title, outfile, text={}):
     c.cd()
     c.SaveAs(outfile)    
     c.SaveAs(outfile.split(".pdf")[0]+".png")
+    return test_chi2
 
 
 def plot_same(plots, rcolors, title, outfile, text={}, ratio=False):
@@ -190,16 +200,19 @@ def roofit_mass(filename, plot=False, fitf='bwxcb'):
             Z_width = ROOT.RooRealVar("Z_width", "Z_widthan", 2.4952, 2.4952, 2.4952)
             Z_width.setConstant(True)
             sigma = ROOT.RooRealVar("sigma", "sigma", 0.1, 0, 10)
+            n_sigma=1
 
             func = ROOT.RooVoigtian("vgt_mc", "Voigt", x, Z_mass, Z_width, sigma)
 
         elif fitf=='bwxcb':
             Z_mass = ROOT.RooRealVar("Z_mass", "Z_mass", 91.1876, 60, 120)
             Z_width = ROOT.RooRealVar("Z_width", "Z_widthan", 2.4952, 0, 10)
+            Z_mass.setConstant(True)
             Z_width.setConstant(True)
-            cb_mean = ROOT.RooRealVar("cb_mean", "cb_mean", 0, 0, 0)
-            cb_mean.setConstant(True)
+            mean = ROOT.RooRealVar("mean", "mean", 0, -10, 10)
+            #cb_mean.setConstant(True)
             sigma = ROOT.RooRealVar("sigma", "sigma", 2, 0, 10)
+            n_sigma = 2 # since sigma_total = sigma_left + sigma_right
             n_L = ROOT.RooRealVar("n_L", "n_L", 5, 0, 1000)
             n_R = ROOT.RooRealVar("n_R", "n_R", 5, 0, 1000)
             alpha_L = ROOT.RooRealVar("alpha_L", "alpha_L", 1.4, 0.5, 5)
@@ -207,20 +220,29 @@ def roofit_mass(filename, plot=False, fitf='bwxcb'):
             #alpha_L.setConstant(True)
             #alpha_R.setConstant(True)
 
-            frac = ROOT.RooRealVar("frac", "frac", 1, 0, 10)
             bw = ROOT.RooBreitWigner("bw", "BreitWigner", x, Z_mass, Z_width)
-            cb = ROOT.RooCrystalBall("cb", "CrystalBall", x, cb_mean, sigma,
+            cb = ROOT.RooCrystalBall("cb", "CrystalBall", x, mean, sigma,
                                     sigma, alpha_L, n_L, alpha_R, n_R)
 
-            shapes = ROOT.RooArgList(bw, cb)
-            fracs = ROOT.RooArgList(frac)
-            pdf = ROOT.RooAddPdf("pdf", "pdf", shapes, fracs)
             func = ROOT.RooFFTConvPdf("func", "func", x, bw, cb)
+
+        elif fitf=='template':
+            roohist_mc = ROOT.RooDataHist('mc', 'mc hist', ROOT.RooArgSet(x), hist_mc)
+
+            histpdf = ROOT.RooHistPdf("histpdf", "histpdf", x, roohist_mc, 1) # 1 is order of interpolation
+            # definition of gaussian distribution
+            mean = ROOT.RooRealVar("mean", "mean", 0, -100, 100) # not really Z mass but for the sake of not having too many exceptions in the code
+            sigma = ROOT.RooRealVar("sigma", "sigma", 1.5, 0, 5)
+            n_sigma=1
+            gaus = ROOT.RooGaussian("gaus", "gaus", x, mean, sigma)
+
+            func = ROOT.RooFFTConvPdf("func", "func", x, histpdf, gaus)
 
         else:
             # definition of gaussian distribution
             mean_g = ROOT.RooRealVar("mean_g", "mean_g", 0, 0, 10)
             sigma = ROOT.RooRealVar("sigma_g", "sigma_g", 1, 0, 5)
+            n_sigma=1
             gaus = ROOT.RooGaussian("gaus", "gaus", x, mean_g, sigma)
 
             # definition of dscb
@@ -254,10 +276,9 @@ def roofit_mass(filename, plot=False, fitf='bwxcb'):
                 func.plotOn(frame, ROOT.RooFit.LineColor(ROOT.kBlack))
                 chi2 = frame.chiSquare(6) 
 
-        results[d] = [Z_mass.getVal(), sigma.getVal(), chi2]
-        errors[d] = [Z_mass.getAsymErrorHi(), sigma.getAsymErrorHi()]
+        results[d] = [mean.getVal(), n_sigma*sigma.getVal(), chi2]
+        errors[d] = [mean.getAsymErrorHi(), n_sigma*sigma.getAsymErrorHi()]
         #errors[d] = [Z_mass.getAsymErrorLo(), sigma.getAsymErrorLo()]
-
 
     if plot:
         frame.Draw()
@@ -288,14 +309,6 @@ def roofit_mass(filename, plot=False, fitf='bwxcb'):
         stats.AddText("chi2/dof = {}".format(round(results['mc'][2],2)))
         stats.GetListOfLines().Last().SetTextColor(ROOT.kBlue)
 
-
-
-        """
-        cmsTex.DrawLatex(0.65, 0.88-i, '#bf{'+d+'}')
-        cmsTex.DrawLatex(0.7, 0.88-i, "M(Z) = {} ({})".format(round(results[d][0],3), round(errors[d][0],3)))
-        cmsTex.DrawLatex(0.7, 0.85-i, "res(M) = {} ({})".format(round(results[d][1],3), round(errors[d][1],3)))
-        cmsTex.DrawLatex(0.7, 0.82-i, "#chi^2 = "+str(round(results[d][2],3)))
-        """
         stats.Draw("SAME")
         c1.Update()
         c1.SaveAs("{}.png".format(plot))

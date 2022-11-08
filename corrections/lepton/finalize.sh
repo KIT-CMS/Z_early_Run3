@@ -5,8 +5,8 @@ cd $filedir
 for i in *
 do
 	cd $execdir
-	python lepton_corrections.py -F mm -E -R 3 -V v2 --overwrite -I ${filedir}${i}/ --finalize
-	python lepton_corrections.py -F mmet -E -R 3 -V v2 --overwrite -I ${filedir}${i}/ --finalize
-	python lepton_corrections.py -F ee -E -R 3 -V v2 --overwrite -I ${filedir}${i}/ --finalize
-        python lepton_corrections.py -F emet -E -R 3 -V v2 --overwrite -I ${filedir}${i}/ --finalize
+	python lepton_corrections.py -F mm -E -R 3 -V v4 --overwrite -I ${filedir}${i}/ --finalize
+	python lepton_corrections.py -F mmet -E -R 3 -V v4 --overwrite -I ${filedir}${i}/ --finalize
+	python lepton_corrections.py -F ee -E -R 3 -V v4 --overwrite -I ${filedir}${i}/ --finalize
+        python lepton_corrections.py -F emet -E -R 3 -V v4 --overwrite -I ${filedir}${i}/ --finalize
 done
