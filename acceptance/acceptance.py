@@ -58,17 +58,11 @@ def count(df, signal, prefix = "genlep", lepton_idx = "1", pt_cut = 25., abseta_
     num_pw, num_nw, den_pw, den_nw = None, None, None, None
     num_sel = None
     if signal == "Z":
-        mass_cut = None
-        if prefix == "genDressed":
-            mass_cut = (
-                (df["genlepPreFSR_dilepton_mass"] > 60.) &
-                (df["genlepPreFSR_dilepton_mass"] < 120.)
-            )
-        else:
-            mass_cut = (
-                (df[f"{prefix}_dilepton_mass"] > 60.) &
-                (df[f"{prefix}_dilepton_mass"] < 120.)
-            )
+        # always take the true Z mass before FSR
+        mass_cut = (
+            (df["genlepPreFSR_dilepton_mass"] > 60.) &
+            (df["genlepPreFSR_dilepton_mass"] < 120.)
+        )
         num_sel = (
             (df[f"{prefix}_pt_1"] > pt_cut) &
             (abs(df[f"{prefix}_eta_1"]) < abseta_cut) &
@@ -106,20 +100,12 @@ def calc_acc(num_pw, num_nw, den_pw, den_nw):
     acc = (num_pw - num_nw) / (den_pw - den_nw)
     err = np.sqrt(num_pw**2 * v_pw + num_nw**2 * v_nw) / (den_pw - den_nw)
 
-    # print(f"pw:  {a_pw:.5f} +/- {np.sqrt(v_pw):.5f}, {num_pw}, {den_pw}")
-    # print(f"nw:  {a_nw:.5f} +/- {np.sqrt(v_nw):.5f}, {num_nw}, {den_nw}")
-    # print(f"acc: {acc:.5f} +/- {np.sqrt(err):.5f}, {num_pw - num_nw}, {den_pw - den_nw}")
-
     return acc, err
 
 
 if __name__ == '__main__':
 
     paths = {
-        # "Z": "/ceph/moh/CROWN_samples/Run3V02_gen/ntuples/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_1.root",
-        # "Wpos": "/ceph/moh/CROWN_samples/Run3V02_gen/ntuples/2022/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_1.root",
-        # "Wneg": "/ceph/moh/CROWN_samples/Run3V02_gen/ntuples/2022/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_1.root",
-
         "Z": "/ceph/moh/CROWN_samples/Run3V02_gen/ntuples/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root",
         "Wpos": "/ceph/moh/CROWN_samples/Run3V02_gen/ntuples/2022/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root",
         "Wneg": "/ceph/moh/CROWN_samples/Run3V02_gen/ntuples/2022/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root",
@@ -173,15 +159,10 @@ if __name__ == '__main__':
                 print(">>>\t\t --> acc calc done!")
                 sys.stdout.flush()
 
-    # df_Z = infos["Z"]["mu"]["df"]
-    # df_Wpos = infos["Wpos"]["mu"]["df"]
-    # df_Wneg = infos["Wneg"]["mu"]["df"]
-
     for signal, path in paths.items():
         for channel, cuts in channels.items():
             del infos[signal][channel]["df"]
 
-    # print(json.dumps(infos, indent=4))
     with open('acceptance.json', 'w') as f:
         f.write(json.dumps(infos, indent=4))
 
