@@ -187,8 +187,6 @@ def plot2d(matrix, outfile, title, x, xbins, y, ybins, cmin, cmax, xticks, ytick
 
 
 def roofit_mass(filename, plot=False, fitf='bwxcb', pdf=False):
-    ROOT.RooMsgService.instance().setSilentMode(True)
-
     results, errors, plots = {}, {}, {}
     file0 = ROOT.TFile(filename)
     hist_mc, hist_dt = file0.Get('mc'), file0.Get('data')
@@ -234,12 +232,12 @@ def roofit_mass(filename, plot=False, fitf='bwxcb', pdf=False):
             Z_width.setConstant(True)
             mean = ROOT.RooRealVar("mean", "mean", 0, -10, 10)
             #cb_mean.setConstant(True)
-            sigma = ROOT.RooRealVar("sigma", "sigma", 1.42, 0, 10)
-            n_sigma = 1 # since sigma_total = sigma_left + sigma_right
+            sigma = ROOT.RooRealVar("sigma", "sigma", 2, 0, 10)
+            n_sigma = 2 # since sigma_total = sigma_left + sigma_right
             n_L = ROOT.RooRealVar("n_L", "n_L", 5, 0, 1000)
             n_R = ROOT.RooRealVar("n_R", "n_R", 5, 0, 1000)
-            alpha_L = ROOT.RooRealVar("alpha_L", "alpha_L", 1.3, 1, 5)
-            alpha_R = ROOT.RooRealVar("alpha_R", "alpha_R", 1.2, 1, 5)
+            alpha_L = ROOT.RooRealVar("alpha_L", "alpha_L", 1.4, 1, 5)
+            alpha_R = ROOT.RooRealVar("alpha_R", "alpha_R", 1.5, 0.5, 5)
             #alpha_L.setConstant(True)
             #alpha_R.setConstant(True)
 
@@ -286,7 +284,7 @@ def roofit_mass(filename, plot=False, fitf='bwxcb', pdf=False):
         
 
         roohist = ROOT.RooDataHist(d, d, ROOT.RooArgSet(x), hists[d])
-        fitResult = func.fitTo(roohist, ROOT.RooFit.AsymptoticError(True), ROOT.RooFit.PrintEvalErrors(-1))
+        fitResult = func.fitTo(roohist, ROOT.RooFit.AsymptoticError(True))
         ws.Import(func)
 
         if plot:

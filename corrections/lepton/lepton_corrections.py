@@ -1,3 +1,4 @@
+from ast import arg
 import ROOT
 import argparse
 import os
@@ -23,6 +24,9 @@ def parse_args():
     parser.add_argument('-R', '--run', default='2', help='Run number. Either 2 (condsiders 2018 only) or 3 (for 2022)')
     parser.add_argument('-V', '--version', default='v1')
     parser.add_argument('--finalize', action='store_true', default=False)
+    parser.add_argument('-x', '--res-factor', default=1.)
+    parser.add_argument('--run_i', default=355862)
+    parser.add_argument('--run_f', default=357482) #357900
     args = parser.parse_args()
     return args
 
@@ -49,12 +53,16 @@ def get_paths(args, mode, kw = None):
                     return
             elif args.run=='3':
                 if args.finalstate=='mm':
-                    mc = ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root']
-                    dt = ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/SingleMuon_Run2022C-PromptReco-v1/mm/SingleMuon_Run2022C-PromptReco-v1_*.root']
-                    dt += ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/Muon_Run2022C-PromptReco-v1/mm/Muon_Run2022C-PromptReco-v1_*.root'] 
+                    mc = ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root']
+                    dt = ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/SingleMuon_Run2022C-PromptReco-v1/mm/SingleMuon_Run2022C-PromptReco-v1_*.root']
+                    dt+= ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/Muon_Run2022C-PromptReco-v1/mm/Muon_Run2022C-PromptReco-v1_*.root']
+                    #dt+= ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/Muon_Run2022D-PromptReco-v1/mm/Muon_Run2022D-PromptReco-v1_*.root']
+                    #dt+= ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/Muon_Run2022D-PromptReco-v2/mm/Muon_Run2022D-PromptReco-v2_*.root']
                 elif args.finalstate=='ee':
-                    mc = ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/ee/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root']
-                    dt = ['/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/EGamma_Run2022C-PromptReco-v1/ee/EGamma_Run2022C-PromptReco-v1_*.root']
+                    mc = ['/ceph/moh/CROWN_samples/Run3V02/ntuples_xsec_sf/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/ee/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root']
+                    dt = ['/ceph/moh/CROWN_samples/Run3V02/ntuples_xsec_sf/2022/EGamma_Run2022C-PromptReco-v1/ee/EGamma_Run2022C-PromptReco-v1_*.root']
+                    dt+= ['/ceph/moh/CROWN_samples/Run3V02/ntuples_xsec_sf/2022/EGamma_Run2022D-PromptReco-v1/ee/EGamma_Run2022D-PromptReco-v1_*.root']
+                    dt+= ['/ceph/moh/CROWN_samples/Run3V02/ntuples_xsec_sf/2022/EGamma_Run2022D-PromptReco-v2/ee/EGamma_Run2022D-PromptReco-v2_*.root']
                 else:
                     print('Only Files with two leptons of the same kind in the finalstate should be considered for corrections. Aborting...')
                     return         
@@ -67,35 +75,41 @@ def get_paths(args, mode, kw = None):
         if args.corr:
             if args.run=='2':
                 if args.finalstate=='mm':
-                    mc = ['/ceph/jdriesch/CROWN_samples/EarlyRun3_V12/friends/mu_corr_{v}/2018/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mm/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X_*.root'.format(v=args.version)]
-                    dt = ['/ceph/jdriesch/CROWN_samples/EarlyRun3_V12/friends/mu_corr_{v}/2018/SingleMuon_Run2018{run}-UL2018/mm/SingleMuon_Run2018{run}-UL2018_*.root'.format(run=r, v=args.version) for r in ['A', 'B', 'C', 'D']]
+                    mc = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/mu_corr_{v}/2018/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mm/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X_*.root'.format(v=args.version)]
+                    dt = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/mu_corr_{v}/2018/SingleMuon_Run2018{run}-UL2018/mm/SingleMuon_Run2018{run}-UL2018_*.root'.format(run=r, v=args.version) for r in ['A', 'B', 'C', 'D']]
                 elif args.finalstate=='ee':
-                    mc = ['/ceph/jdriesch/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/ee/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X_*.root'.format(v=args.version)]
+                    mc = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/ee/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X_*.root'.format(v=args.version)]
                     dt = [
-                        '/ceph/jdriesch/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018{run}-UL2018/ee/EGamma_Run2018{run}-UL2018_*.root'.format(run=r, v=args.version) for r in ['A', 'B', 'C', 'D']
+                        '/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018{run}-UL2018/ee/EGamma_Run2018{run}-UL2018_*.root'.format(run=r, v=args.version) for r in ['A', 'B', 'C', 'D']
                         ]
                     """
-                    dt.append(['/ceph/jdriesch/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i=i) for i in range(113)])
-                    dt.append(['/ceph/jdriesch/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i='113_ee')])
-                    dt.append(['/ceph/jdriesch/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i=i) for i in range(114, 117)])
-                    dt.append(['/ceph/jdriesch/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i='117_ee')])
-                    dt.append(['/ceph/jdriesch/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i=i) for i in range(118, 173)])
+                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i=i) for i in range(113)])
+                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i='113_ee')])
+                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i=i) for i in range(114, 117)])
+                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i='117_ee')])
+                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i=i) for i in range(118, 173)])
                     """
                 else:
                     print('Only Files with two leptons of the same kind in the finalstate should be considered for corrections. Aborting...')
                     return      
             elif args.run=='3':
+                res_factor_str = str(args.res_factor)
+                res_factor_str = res_factor_str.replace('.', 'p')
                 if args.finalstate=='mm':
-                    mc = ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/mu_corr_{v}/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root'.format(v=args.version)]
-                    dt = ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/mu_corr_{v}/2022/SingleMuon_Run2022C-PromptReco-v1/mm/SingleMuon_Run2022C-PromptReco-v1_*.root'.format(v=args.version)]
-                    dt+= ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/mu_corr_{v}/2022/Muon_Run2022C-PromptReco-v1/mm/Muon_Run2022C-PromptReco-v1_*.root'.format(v=args.version)] 
+                    mc = ['/ceph/jdriesch/CROWN_samples/Run3V03/ntuples_xsec_sf_lep_corr_{v}_x{x}/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root'.format(v=args.version, x='opt')]
+                    dt = ['/ceph/jdriesch/CROWN_samples/Run3V03/ntuples_xsec_sf_lep_corr_{v}_x{x}/2022/SingleMuon_Run2022C-PromptReco-v1/mm/SingleMuon_Run2022C-PromptReco-v1_*.root'.format(v=args.version, x='opt')]
+                    dt+= ['/ceph/jdriesch/CROWN_samples/Run3V03/ntuples_xsec_sf_lep_corr_{v}_x{x}/2022/Muon_Run2022C-PromptReco-v1/mm/Muon_Run2022C-PromptReco-v1_*.root'.format(v=args.version, x='opt')]
+                    #dt+= ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/Muon_Run2022D-PromptReco-v1/mm/Muon_Run2022D-PromptReco-v1_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
+                    #dt+= ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/Muon_Run2022D-PromptReco-v2/mm/Muon_Run2022D-PromptReco-v2_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
                 elif args.finalstate=='ee':
-                    mc = ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/el_corr_{v}/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/ee/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root'.format(v=args.version)]
-                    dt = ['/ceph/jdriesch/CROWN_samples/Run3V01/friends/el_corr_{v}/2022/EGamma_Run2022C-PromptReco-v1/ee/EGamma_Run2022C-PromptReco-v1_*.root'.format(v=args.version)]
+                    mc = ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/ee/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
+                    dt = ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/EGamma_Run2022C-PromptReco-v1/ee/EGamma_Run2022C-PromptReco-v1_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
+                    dt+= ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/EGamma_Run2022D-PromptReco-v1/ee/EGamma_Run2022D-PromptReco-v1_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
+                    dt+= ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/EGamma_Run2022D-PromptReco-v2/ee/EGamma_Run2022D-PromptReco-v2_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
                 else:
                     print('Only Files with two leptons of the same kind in the finalstate should be considered for corrections. Aborting...')
                     return                         
-            return mc, dt
+            return mc, dt #/ceph/jdriesch/CROWN_samples/Run3V03/ntuples_xsec_sf_lep_corr_02_xopt/2022/SingleMuon_Run2022C-PromptReco-v1/mm/
 
     # get correction file's paths
     elif mode == 1:
@@ -118,11 +132,13 @@ def calc_m(rdf, corr = ""):
     return rdf
 
 
-def plot_binned(rdf, mcdt, filters, corr=''):
+def plot_binned(rdf, mcdt, filters, corr='', weight='1.'):
     rdf_filtered = rdf.Filter(filters)
     #print(rdf_filtered.Count().GetValue())
 
-    hist = rdf_filtered.Histo1D((mcdt, 'm_vis'+corr, 200, 50, 130), 'm_vis'+corr)
+    rdf_filtered_weight = rdf_filtered.Define("weight", weight)
+
+    hist = rdf_filtered_weight.Histo1D((mcdt, 'm_vis'+corr, 200, 50, 130), 'm_vis'+corr, "weight")
     num_entries = hist.GetEntries()
     #hist.Scale(1./hist.Integral())
     hist.SetXTitle("m_vis{} (GeV)".format(corr))
@@ -141,8 +157,17 @@ def make_hists(bins, args):
     mc, dt = get_paths(args, mode=0)
     print(mc)
 
-    rdf_mc = ROOT.RDataFrame("ntuple", mc)
-    rdf_dt = ROOT.RDataFrame("ntuple", dt)
+    ch_mc = ROOT.TChain("ntuple")
+    ch_dt = ROOT.TChain("ntuple")
+
+    for p in mc:
+        ch_mc.Add(p)
+
+    for p in dt:
+        ch_dt.Add(p)
+
+    rdf_mc = ROOT.RDataFrame(ch_mc)
+    rdf_dt = ROOT.RDataFrame(ch_dt)
 
     event_selection = "(q_1*q_2 < 0)"
     if args.finalstate == "mm":
@@ -150,21 +175,24 @@ def make_hists(bins, args):
     elif args.finalstate == "ee":
         event_selection += " && (trg_single_ele27_1 || trg_single_ele27_2)"
 
+    if int(args.run_i) > 0:
+        event_selection += f" && (run >= {int(args.run_i)} || run == 1)"
+    if int(args.run_f) > 0:
+        event_selection += f" && (run <= {int(args.run_f)} || run == 1)"
+
     rdf_mc = rdf_mc.Filter(event_selection)
     rdf_dt = rdf_dt.Filter(event_selection)    
 
     if args.corr:
-        #rdf_mc = calc_m(rdf_mc, '_corr')
-        #rdf_dt = calc_m(rdf_dt, '_corr')
         if bin1=='pt':
-            #corr1 = '_corr'
+            corr1 = '_corr'
             corr = '_corr'
         if bin2=='pt':
-            #corr2='_corr'
+            corr2='_corr'
             corr = '_corr'
 
 
-    outdir = 'hists/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}_binuncorr/'.format(run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version)
+    outdir = 'hists/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}/'.format(run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version)
     if not utils.usedir(outdir, args.overwrite):
         return
 
@@ -191,7 +219,7 @@ def make_hists(bins, args):
             filters = "({} && {}) || ({} && {})".format(filter1a, filter1b, filter2a, filter2b)
 
             # plot di muon mass in filtered events
-            hist_mc, num_mc = plot_binned(rdf_mc, "mc", filters, corr)
+            hist_mc, num_mc = plot_binned(rdf_mc, "mc", filters, corr, "genweight*sumwWeight*crossSectionPerEventWeight*sf_trk*sf_sta*sf_id*sf_iso*sf_trg")
             hist_dt, num_dt = plot_binned(rdf_dt, "data", filters, corr)
             n_events[i][j] = num_dt
             if args.info:
@@ -290,8 +318,8 @@ def apply_corrections(args, bins):
     else:
         corr=''
 
+    x = np.loadtxt('correction_files/Run{}/{}/sf_extra_mc_{}.txt'.format(args.run, args.finalstate, args.version))
     # Load correction files
-    #fname = get_paths(args, mode=1, kw=[bin1, bin2, corr])
     mz_mc, mz_dt = np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, '', 'mc'])), np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, '', 'dt']))
     pt_sf = (91.1876+mz_mc) / (91.1876+mz_dt)
     mz_res_mc, mz_res_dt = np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, 'res', 'mc'])), np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, 'res', 'dt'])) * pt_sf
@@ -305,9 +333,12 @@ def apply_corrections(args, bins):
     if args.test:
         outdir = '/ceph/jdriesch/CROWN_samples/test/'
     else:
-        helpdir = '/ceph/jdriesch/CROWN_samples/{period}/friends/{muel}{corr}_{v}/{year}/{proc}/{f}/'
+        helpdir = '/ceph/jdriesch/CROWN_samples/{period}/ntuples_xsec_sf_{muel}{corr}_{v}_x{x}/{year}/{proc}/{f}/'
         if args.finalize:
-            outdir = helpdir.format(period=period, muel='lep', corr='_corr', v=args.version, year=year, proc=process, f=args.finalstate)
+            #res_factor_str = f"{float(args.res_factor):.2f}"
+            #res_factor_str = res_factor_str.replace('.', 'p')
+            res_factor_str = 'opt'
+            outdir = helpdir.format(period=period, muel='lep', corr='_corr', v=args.version, x=res_factor_str, year=year, proc=process, f=args.finalstate)
         else:
             if 'mm' in args.finalstate:
                 muel = 'mu_corr'
@@ -348,6 +379,7 @@ def apply_corrections(args, bins):
         outfile = outdir + f.split("/")[-1]
 
         rdf = ROOT.RDataFrame('ntuple', f)
+        original_cols = [str(col) for col in rdf.GetColumnNames()]
 
         rdf = rdf.Define("pt_1_corr", "pt_1")
         if dilepton:
@@ -369,12 +401,11 @@ def apply_corrections(args, bins):
                 else:
                     res_sf = mz_res_dt[j][k] / mz_res_mc[j][k]
 
+
                 if data:
-                    #rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * {}; else p=pt_1_corr; return p;".format(filter1a, filter1b, str(pt_sf[j][k])))
                     rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (91.1876 + {})/(91.1876 + {}); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_mc[j][k]), str(mz_dt[j][k])))
                 else:
-                    #rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_res_mc[j][k]), str((res_sf)**2))) # TODO: evaluate if division by 2 needed
-                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/91.1876*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_res_mc[j][k]), str((res_sf)**2))) # TODO: evaluate if division by 2 needed
+                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/91.1876*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(x[j][k]*mz_res_mc[j][k]), str((res_sf)**2)))
 
 
                 if dilepton:
@@ -382,12 +413,10 @@ def apply_corrections(args, bins):
                     filter2b = filter_template.format(bin=bin2, n=2, bin_l=bin2_l, binr = bin2_r)
                     
                     if data:
-                        #rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * {}; else p=pt_2_corr; return p;".format(filter2a, filter2b, str(pt_sf[j][k])))
                         rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * (91.1876 + {})/(91.1876 + {}); else p=pt_2_corr; return p;".format(filter2a, filter2b,  str(mz_mc[j][k]), str(mz_dt[j][k])))
                     else:
-                        #rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2* (1 + {}/91*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(mz_res_mc[j][k]), str((res_sf)**2)))
-                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * (1 + {}/91.1876*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(mz_res_mc[j][k]), str((res_sf)**2)))
-        
+                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * (1 + {}/91.1876*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(x[j][k]*mz_res_mc[j][k]), str((res_sf)**2)))
+
         if dilepton:
             rdf = calc_m(rdf, "_corr")
             if args.finalize:
@@ -405,32 +434,43 @@ def apply_corrections(args, bins):
             else:
                 quants = ["pt_1_corr", "eta_1", "phi_1", "mass_1", "pt_1", "q_1"]
 
-        rdf.Snapshot("ntuple", outfile, quants)
+        # add recoil variables
+        if not ("WtoLNu" in outfile):
+            bosonphi = "phi_vis_c"
+            bosonpt = "pt_vis_c"
+        else:
+            bosonphi = "genbosonphi"
+            bosonpt = "genbosonpt"
 
+        if args.finalstate == "ee" or args.finalstate == "mm":
+            rdf = rdf.Define("pt_vis_c_x", "pt_1_corr*cos(phi_1) + pt_2_corr*cos(phi_2)")
+            rdf = rdf.Define("pt_vis_c_y", "pt_1_corr*sin(phi_1) + pt_2_corr*sin(phi_2)")
+            rdf = rdf.Define("pt_vis_c", "sqrt(pt_vis_c_x*pt_vis_c_x + pt_vis_c_y*pt_vis_c_y)")
+            rdf = rdf.Define("phi_vis_c", "atan2(pt_vis_c_y, pt_vis_c_x)")
+        else:
+            rdf = rdf.Define("pt_vis_c", "pt_1_corr")
+            rdf = rdf.Define("phi_vis_c", "phi_1")
 
-        #rdf = rdf.Define("diff_m", "m_vis_corr - m_vis")
-        #std_m  = rdf.StdDev("diff_m").GetValue()
-        #rint(std_m)
-        """
-        ####### for bugfix
-        b1=1
-        b2=7
-        ratio = mz_res_dt[b1][b2]/mz_res_mc[b1][b2]
-        print(mz_res_mc[b1][b2], mz_res_dt[b1][b2], " ratio: ", ratio)
-        filter1a = filter_template.format(bin=bin1, n=1, bin_l=bins[bin1][b1], binr = bins[bin1][b1+1])
-        filter1b = filter_template.format(bin=bin2, n=1, bin_l=bins[bin2][b2], binr = bins[bin2][b2+1])
-        filter2a = filter_template.format(bin=bin1, n=2, bin_l=bins[bin1][b1], binr = bins[bin1][b1+1])
-        filter2b = filter_template.format(bin=bin2, n=2, bin_l=bins[bin2][b2], binr = bins[bin2][b2+1])
-        arr1 = rdf.Filter("( {} && {} )".format(filter1a, filter1b)).AsNumpy(["pt_1", "pt_1_corr"])
-        arr2 = rdf.Filter("( {} && {} )".format(filter2a, filter2b)).AsNumpy(["pt_2", "pt_2_corr"])
-        std1 = np.std(arr1["pt_1_corr"]-arr1["pt_1"])
-        std2 = np.std(arr2["pt_2_corr"]-arr2["pt_2"])
-        print("updated ratio: ", np.mean(2*ratio*arr1["pt_1"]/91.1876), "+/-", np.std(2*ratio*arr1["pt_1"]/91.1876))
-        print("lepton 1: ", std1)
-        print("lepton 2: ", std2)
+        rdf = rdf.Define("bosonpt", f"{bosonpt}")
+        rdf = rdf.Define("bosonphi", f"{bosonphi}")
 
-        #######
-        """
+        rdf = rdf.Define("uPx", "met_uncorrected*cos(metphi_uncorrected) + pt_vis_c*cos(phi_vis_c)")
+        rdf = rdf.Define("uPy", "met_uncorrected*sin(metphi_uncorrected) + pt_vis_c*sin(phi_vis_c)")
+
+        rdf = rdf.Define("uP1_uncorrected", "- (uPx*cos("+bosonphi+") + uPy*sin("+bosonphi+"))")
+        rdf = rdf.Define("uP2_uncorrected", "uPx*sin("+bosonphi+") - uPy*cos("+bosonphi+")")
+
+        rdf = rdf.Define("pfuPx", "pfmet_uncorrected*cos(pfmetphi_uncorrected) + pt_vis_c*cos(phi_vis_c)")
+        rdf = rdf.Define("pfuPy", "pfmet_uncorrected*sin(pfmetphi_uncorrected) + pt_vis_c*sin(phi_vis_c)")
+
+        rdf = rdf.Define("pfuP1_uncorrected", "- (pfuPx*cos("+bosonphi+") + pfuPy*sin("+bosonphi+"))")
+        rdf = rdf.Define("pfuP2_uncorrected", "pfuPx*sin("+bosonphi+") - pfuPy*cos("+bosonphi+")")
+
+        met_cols = ["uP1_uncorrected", "uP2_uncorrected", "pfuP1_uncorrected", "pfuP2_uncorrected", "pt_vis_c", "phi_vis_c", "bosonpt", "bosonphi"]
+
+        #print(original_cols + quants + met_cols)
+        rdf.Snapshot("ntuple", outfile, original_cols + quants + met_cols)
+
     print("Great success!")
 
 
@@ -456,7 +496,8 @@ def plot(args, bins):
             hist_dt.Scale(1./hist_dt.Integral())
             hists = {'mc': hist_mc, 'dt': hist_dt}
             outfile = outdir+'{b1}_{b2}.pdf'.format(b1=i, b2=j)
-            chi2[i][j] = utils.plot_ratio(plots=hists, rcolors={'mc': ROOT.kBlue, 'dt': ROOT.kBlack}, title='ratio plot', outfile=outfile, evts=n_dt)
+            text = ['lepton 1 or 2:', '{} < #eta < {}'.format(bins[bin1][i], bins[bin1][i+1]), '{} GeV < pT < {} GeV'.format(bins[bin2][j], bins[bin2][j+1])]
+            chi2[i][j] = utils.plot_ratio(plots=hists, rcolors={'mc': ROOT.kBlue, 'dt': ROOT.kBlack}, title='ratio plot', outfile=outfile, evts=n_dt, text=text)
     np.savetxt(outdir+'chi2.txt', chi2)
     
 
@@ -465,7 +506,10 @@ if __name__=='__main__':
     ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
     args = parse_args()
 
-    bins = {'eta': [-2.4, -1.2, 0., 1.2, 2.4], 'pt': [25, 30, 35, 39, 42, 45, 49, 60, 1500]}
+    if 'mm' in args.finalstate:
+        bins = {'eta': [-2.4, -1.2, 0., 1.2, 2.4], 'pt': [25, 30, 35, 39, 42, 45, 49, 60, 120, 9999]}
+    else:
+        bins = {'eta': [-2.5, -1.49, 0., 1.49, 2.5], 'pt': [25, 30, 35, 39, 42, 45, 49, 60, 120, 9999]}
     
     if args.histogram:
         make_hists(bins, args)
