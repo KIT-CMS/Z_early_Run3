@@ -8,20 +8,16 @@ import ROOT
 import argparse
 import copy
 import yaml
-import os, sys
-from time import sleep
-import gc
-
-from config.common.variables import seperate_var, get_base_name, get_all_variables
-from config.shapes.group_runs import get_subera_boundaries
+import os
 
 import logging
+
 logger = logging.getLogger("")
 from multiprocessing import Pool
 from multiprocessing import Process
 import multiprocessing
 
-# from plots_to_latex import plots_to_latex
+from plots_to_latex import plots_to_latex
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -31,7 +27,6 @@ def parse_arguments():
         "-l", "--linear", action="store_true", help="Enable linear x-axis"
     )
     parser.add_argument("-e", "--era", type=str, required=True, help="Era")
-    parser.add_argument("--subera", type=str, default="Run2022", help="Experiment sub-era.")
     parser.add_argument(
         "-i",
         "--input",
@@ -69,7 +64,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--write-to-latex",
-        default=0,
+        default=1,
         help="If true this will automatically write all the plots to latex slides for presenting",
     )
     parser.add_argument(
@@ -90,10 +85,10 @@ def parse_arguments():
         "--embedding", action="store_true", help="Fake factor estimation method used"
     )
     parser.add_argument(
-        "--syst",
+        "--draw-jet-fake-variation",
         type=str,
-        default="Nominal",
-        help="Draw sys variation",
+        default=None,
+        help="Draw variation of jetFakes or QCD in derivation region.",
     )
     parser.add_argument(
         "--blinded", action="store_true", help="if true, no data is plottet"
@@ -101,30 +96,14 @@ def parse_arguments():
     parser.add_argument(
         "--tag", type=str, default=None, help="plots are stored in plots/tag/"
     )
-    parser.add_argument(
-        "--doQCD",
-        action="store_true",
-        help="run QCD templates",
-    )
-    parser.add_argument(
-        "--doZpt",
-        action="store_true",
-        help="run over Zpt bins",
-    )
-    parser.add_argument(
-        "--doLepCorrBins",
-        action="store_true",
-        help="run over lepton momentum correction bins",
-    )
-    parser.add_argument("--plot-postfix", type=str, default="", help="plot name postfix")
 
     return parser.parse_args()
 
-# loads the plot names from the text file into a list
-# plot_names = list()
-# data_file_names = open("data_plot_names.txt", "r")
-# plot_names = [line.strip() for line in data_file_names.readlines() if line]
-# data_file_names.close()
+#loads the plot names from the text file into a list
+plot_names = list()
+data_file_names = open("data_plot_names.txt", "r")
+plot_names = [line.strip() for line in data_file_names.readlines() if line]
+data_file_names.close()
 
 def setup_logging(output_file, level=logging.DEBUG):
     logger.setLevel(level)
@@ -140,10 +119,8 @@ def setup_logging(output_file, level=logging.DEBUG):
 
 def main(info):
     args = info["args"]
-    subera = args.subera
     variable = info["variable"]
     channel = info["channel"]
-    channel_base = channel.replace("_corr", "")
     draw_list = list()
     channel_dict = {
         "ee": "#font[42]{#scale[1.0]{ee}}",
@@ -151,38 +128,6 @@ def main(info):
         "mmet": "#font[42]{#scale[1.0]{single-#mu}}",
         "mm": "#font[42]{#scale[1.0]{#mu#mu}}",
     }
-    doLogy = info["doLogy"]
-
-    # HERE
-    subera_boundaries = get_subera_boundaries()
-    plot_names = [
-        "%d-%d" % (subera_boundaries[args.subera][0][0], subera_boundaries[args.subera][0][1])
-
-        # "355862-357900"
-
-        # "data"
-
-        # "355862-356446",
-        # "356523-357482",
-        # "357538-357732",
-        # "357734-357900",
-
-        # "355862-356578",
-        # "356580-356969",
-        # "356970-357271",
-        # "357328-357442",
-        # "357447-357696",
-        # "357697-357778",
-        # "357779-357900",
-
-        # "355872-356075",
-        # "356076-356323",
-        # "356371-356378",
-        # "356381",
-        # "356383-356433",
-        # "356434-356446"
-    ]
-
     if args.linear == True:
         split_value = 0.1
     else:
@@ -193,10 +138,19 @@ def main(info):
 
     split_dict = {c: split_value for c in ["mm", "mmet", "emet", "ee"]}
 
+    doLogy = {
+        "mm": True,
+        "ee": True,
+        "mmet": True,
+        "emet": True,
+    }
+
     category = "_".join([channel, variable])
     if args.category_postfix is not None:
         category += "_%s" % args.category_postfix
     rootfile = rootfile_parser.Rootfile_parser(args.input, variable)
+
+    bkg_processes = ["TT", "DY"]  # ["TT", "W", "DY"]
 
     # create plot
     width = 600
@@ -206,14 +160,10 @@ def main(info):
         plot = dd.Plot([0.5, [0.3, 0.28]], "ModTDR", r=0.04, l=0.14, width=width)
 
     # get background histograms
-    if args.syst is None:
+    if args.draw_jet_fake_variation is None:
         stype = "Nominal"
     else:
-        stype = args.syst
-
-    # HERE tmp
-    # bkg_processes = ["DYtau", "VV", "ST", "TT", "DY"]
-    bkg_processes = ["Wtau", "DYtau", "VV", "ST", "TT", "W", "DY"]
+        stype = args.draw_jet_fake_variation
 
     is_first_total = True
     total_bkg = None
@@ -222,26 +172,23 @@ def main(info):
     ewk_bkg = None
 
     ewk_processes = None
-    if channel_base in ["mm", "ee"]:
-        ewk_processes = ["Wtau", "DYtau", "VV", "ST", "W"]
-    elif channel_base in ["mmet", "emet"]:
-        ewk_processes = ["Wtau", "DYtau", "VV", "ST", "DY"]
+    if channel in ["mm", "ee"]:
+        ewk_processes = []
+    elif channel in ["mmet", "emet"]:
+        ewk_processes = []
+    stack_processes = [p for p in bkg_processes if p not in ewk_processes]
 
-    # HERE tmp
-    # stack_processes = bkg_processes
-    stack_processes = ["EWK"] + [p for p in bkg_processes if p not in ewk_processes]
-
-    # print("stack_processes:", stack_processes)
+    print("stack_processes:", stack_processes)
     legend_bkg_processes = copy.deepcopy(stack_processes)
     legend_bkg_processes.reverse()
 
-    for process in bkg_processes:
+    for index, process in enumerate(bkg_processes):
         if is_first_total:
             total_bkg = rootfile.get(
-                channel, process, plot_names[0], shape_type=stype
+                channel, process, args.category_postfix, shape_type=stype
             ).Clone()
             plot.add_hist(
-                rootfile.get(channel, process, plot_names[0], shape_type=stype),
+                rootfile.get(channel, process, args.category_postfix, shape_type=stype),
                 process,
                 "bkg",
             )
@@ -249,12 +196,12 @@ def main(info):
         else:
             total_bkg.Add(
                 rootfile.get(
-                    channel, process, plot_names[0], shape_type=stype
+                    channel, process, args.category_postfix, shape_type=stype
                 )
             )
             plot.add_hist(
                 rootfile.get(
-                    channel, process, plot_names[0], shape_type=stype
+                    channel, process, args.category_postfix, shape_type=stype
                 ),
                 process,
                 "bkg",
@@ -263,70 +210,28 @@ def main(info):
         if process in ewk_processes:
             if is_first_ewk:
                 ewk_bkg = rootfile.get(
-                    channel, process, plot_names[0], shape_type=stype
+                    channel, process, args.category_postfix, shape_type=stype
                 ).Clone()
                 is_first_ewk = False
             else:
                 ewk_bkg.Add(
                     rootfile.get(
-                        channel, process, plot_names[0], shape_type=stype
+                        channel, process, args.category_postfix, shape_type=stype
                     )
                 )
-
-        # if is_first_total:
-        #     total_bkg = rootfile.get(
-        #         channel, process, args.category_postfix, shape_type=stype
-        #     ).Clone()
-        #     plot.add_hist(
-        #         rootfile.get(channel, process, args.category_postfix, shape_type=stype),
-        #         process,
-        #         "bkg",
-        #     )
-        #     is_first_total = False
-        # else:
-        #     total_bkg.Add(
-        #         rootfile.get(
-        #             channel, process, args.category_postfix, shape_type=stype
-        #         )
-        #     )
-        #     plot.add_hist(
-        #         rootfile.get(
-        #             channel, process, args.category_postfix, shape_type=stype
-        #         ),
-        #         process,
-        #         "bkg",
-        #     )
-
-        # if process in ewk_processes:
-        #     if is_first_ewk:
-        #         ewk_bkg = rootfile.get(
-        #             channel, process, args.category_postfix, shape_type=stype
-        #         ).Clone()
-        #         is_first_ewk = False
-        #     else:
-        #         ewk_bkg.Add(
-        #             rootfile.get(
-        #                 channel, process, args.category_postfix, shape_type=stype
-        #             )
-        #         )
 
         plot.setGraphStyle(process, "hist", fillcolor=styles.color_dict[process])
 
     plot.add_hist(total_bkg, "total_bkg")
-    plot.add_hist(ewk_bkg, "EWK", "bkg")
-    plot.setGraphStyle("EWK", "hist", fillcolor=styles.color_dict["EWK"])
+    # plot.add_hist(ewk_bkg, "EWK", "bkg")
+    # plot.setGraphStyle("EWK", "hist", fillcolor=styles.color_dict["EWK"])
 
-    for data_name in plot_names:
-        if args.category_postfix != None and args.category_postfix != "None":
-            plot.add_hist(
-                rootfile.get(channel+"-"+args.category_postfix, "data", data_name, shape_type="Nominal"),
-                data_name,
-            )
-        else:
-            plot.add_hist(
-                rootfile.get(channel, "data", data_name, shape_type="Nominal"),
-                data_name,
-            )
+    for index, category in enumerate(plot_names):
+        print("PROCESS VALUES: ", category)
+        plot.add_hist(
+            rootfile.get(channel, "data", category, shape_type=stype),
+            category,
+        )
 
     if matchData:
         mc_norm = plot.subplot(0).get_hist("total_bkg").Integral()
@@ -371,10 +276,10 @@ def main(info):
 
         # set axes limits and labels
         plot.subplot(0).setYlims(
-            split_dict[channel_base],
+            split_dict[channel],
             max(
                 2 * plot.subplot(0).get_hist(data_name).GetMaximum(),
-                split_dict[channel_base] * 2,
+                split_dict[channel] * 2,
             ),
         )
 
@@ -391,8 +296,8 @@ def main(info):
         plot.subplot(0).normalizeByBinWidth()
         plot.subplot(1).normalizeByBinWidth()
 
-    plot.subplot(2).setYlims(0.7, 1.30)
-    # plot.subplot(2).setYlims(0.01, 1.99)
+    # plot.subplot(2).setYlims(0.75, 1.55)
+    plot.subplot(2).setYlims(0.0, 2)
     ymin_list = list()
     ymax_list = list()
     for i in plot_names:
@@ -401,25 +306,26 @@ def main(info):
     ymax = max(ymax_list)
     ymin = min(ymin_list)
     ymin = min(ymin, 1e-2)
-    plot.subplot(0).setYlims(0.5, ymax*1.7)
+    plot.subplot(0).setYlims(0, ymax*1.7)
 
-    if doLogy:
+    if doLogy[channel]:
         plot.subplot(0).setLogY()
         if len(plot_names) == 1:
-            plot.subplot(0).setYlims(0.5, ymax*1.e4)
+            plot.subplot(0).setYlims(0.5, ymax*1.e3)
         else:
-            plot.subplot(0).setYlims(0.4*ymin, ymax*1.e4)
+            plot.subplot(0).setYlims(0.4*ymin, ymax*1.e3)
     if matchData:
         plot.subplot(0).setYlims(1e-5, 1e2)
 
+
     if args.linear != True:
-        plot.subplot(1).setYlims(0.1, split_dict[channel_base])
+        plot.subplot(1).setYlims(0.1, split_dict[channel])
         plot.subplot(1).setYlabel("")  # otherwise number labels are not drawn on axis
         #plot.subplot(1).setLogY()
     if variable != None:
-        xLabelName = get_base_name(variable)
-        if xLabelName in styles.x_label_dict[channel_base]:
-            x_label = styles.x_label_dict[channel_base][xLabelName]
+        xLabelName = variable.replace("_barrel", "").replace("_endcap", "").replace("_pos", "").replace("_neg", "").replace("_nv015", "").replace("_nv1530", "").replace("_nv3045", "").replace("_isoSR", "").replace("_iso5", "").replace("_iso6", "").replace("_iso7", "").replace("_iso8", "").replace("_iso9", "").replace("_iso10", "").replace("_iso11", "").replace("_iso12", "").replace("_iso13", "")
+        if xLabelName in styles.x_label_dict[channel]:
+            x_label = styles.x_label_dict[channel][xLabelName]
         else:
             x_label = variable
         plot.subplot(2).setXlabel(x_label)
@@ -440,33 +346,30 @@ def main(info):
     plot.scaleXTitleSize(0.8)
 
     # draw subplots. Argument contains names of objects to be drawn in corresponding order.
+    path = "chi_square_data/data_outfile.csv"
     procs_to_draw = ["stack", "total_bkg"]
     for drawing_element in draw_list:
         procs_to_draw.append(drawing_element)
+        plot.subplot(0).Draw(procs_to_draw)
+        if args.linear != True:
+            plot.subplot(1).Draw(procs_to_draw)
 
-    plot.subplot(0).Draw(procs_to_draw)
-    if args.linear != True:
-        plot.subplot(1).Draw(procs_to_draw)
+        #print chi square info in the terminal
+        print("\n Run " + drawing_element + ":")
+        plot.subplot(2).get_hist(drawing_element).Fit("pol0","0")
 
-    # path = "chi_square_data/data_outfile.csv"
-    # for drawing_element in draw_list:
-    #     #print chi square info in the terminal
-    #     print("Run " + drawing_element + ":")
-    #     plot.subplot(2).get_hist(drawing_element).Fit("pol0","0")
-
-    #     #store chi square info to a text file that can be manually exported to excel
-    #     chi2 = str(plot.subplot(2).get_hist(drawing_element).GetFunction("pol0").GetChisquare())
-    #     num_dof = str(plot.subplot(2).get_hist(drawing_element).GetFunction("pol0").GetNDF())
-    #     p_0 = str(plot.subplot(2).get_hist(drawing_element).GetFunction("pol0").GetParameter(0)) + " +/- " + str(plot.subplot(2).get_hist(drawing_element).GetFunction("pol0").GetParError(0))
-    #     str_to_write = variable + "," + drawing_element + "," + channel + "," + chi2 + "," + num_dof +"," + p_0 + "\n"
-    #     if os.path.exists(path): 
-    #         with open(path , 'a') as f:
-    #             f.write(str_to_write)
-    #     else:
-    #         with open(path , 'w') as f:
-    #             f.write("variable,run,channel,chi2,dof,p_0\n")
-    #             f.write(str_to_write)
-
+        #store chi square info to a text file that can be manually exported to excel
+        chi2 = str(plot.subplot(2).get_hist(drawing_element).GetFunction("pol0").GetChisquare())
+        num_dof = str(plot.subplot(2).get_hist(drawing_element).GetFunction("pol0").GetNDF())
+        p_0 = str(plot.subplot(2).get_hist(drawing_element).GetFunction("pol0").GetParameter(0)) + " +/- " + str(plot.subplot(2).get_hist(drawing_element).GetFunction("pol0").GetParError(0))
+        str_to_write = variable + "," + drawing_element + "," + channel + "," + chi2 + "," + num_dof +"," + p_0 + "\n"
+        if os.path.exists(path): 
+            with open(path , 'a') as f:
+                f.write(str_to_write)
+        else:
+            with open(path , 'w') as f:
+                f.write("variable,run,channel,chi2,dof,p_0\n")
+                f.write(str_to_write)
     plot.subplot(2).Draw(procs_to_draw[1:])
             
 
@@ -483,9 +386,9 @@ def main(info):
                 "f",
             )
         plot.legend(i).add_entry(0, "total_bkg", "Bkg. stat. unc.", "f")
-        for run_num in draw_list:
-            data_label_name = "Observed" if plot_names[0] == "data" else "Run " + run_num
-            plot.legend(i).add_entry(0, run_num, data_label_name, "PE2L")
+        for index in draw_list:
+            data_label_name = "Observed" if plot_names[0] == "data" else "Run " + index
+            plot.legend(i).add_entry(0, index, data_label_name, "PE2L")
         plot.legend(i).setNColumns(2)
     plot.legend(0).Draw()
     plot.legend(1).setAlpha(0.0)
@@ -502,18 +405,19 @@ def main(info):
         plot.legend(3).Draw()
 
     # draw additional labels
-    plot.DrawCMS(variable, channel_base)
+    plot.DrawCMS(variable, channel)
     if "2016" in args.era:
         plot.DrawLumi("35.9 fb^{-1} (2016, 13 TeV)")
     elif "2017" in args.era:
         plot.DrawLumi("41.5 fb^{-1} (2017, 13 TeV)")
     elif "2018" in args.era:
-        plot.DrawLumi("59.8 fb^{-1} (2018, 13 TeV)")
+        plot.DrawLumi("31.75 fb^{-1} (2018, 13 TeV)")  # 2018D
+        # plot.DrawLumi("59.8 fb^{-1} (2018, 13 TeV)")
     elif "2022" in args.era:
         if matchData or len(plot_names) != 1:
             plot.DrawLumi("(2022, 13.6 TeV)")
         else:
-            lumiString = "{:.2f}".format(float(args.lumi_label))+" fb^{-1}"
+            lumiString = "{:.1f}".format(float(args.lumi_label))+" pb^{-1}"
             plot.DrawLumi(lumiString + " (2022, 13.6 TeV)")
     else:
         logger.critical("Era {} is not implemented.".format(args.era))
@@ -521,7 +425,7 @@ def main(info):
 
     posChannelCategoryLabelLeft = None
     plot.DrawChannelCategoryLabel(
-        "%s" % (channel_dict[channel_base]),  # "{cat}".format(cat=args.category_postfix)
+        "%s" % (channel_dict[channel]),  # "{cat}".format(cat=args.category_postfix)
         begin_left=posChannelCategoryLabelLeft,
     )
 
@@ -530,107 +434,103 @@ def main(info):
     else:
         if len(plot_names) != 1:
             plot.DrawText(0.17, 0.73, "#bf{#font[42]{Normalized to 1 pb^{-1}}}", 0.03)
-        else:
-            # plot.DrawText(0.17, 0.73, "#bf{#font[42]{Normalized to Z-counting lumi}}", 0.03)
-            plot.DrawText(0.17, 0.73, "#bf{#font[42]{Normalized to online lumi}}", 0.03)
+        # else:
+        #     plot.DrawText(0.17, 0.73, "#bf{#font[42]{Normalized to online lumi}}", 0.03)
 
     # save plot
-    # if not os.path.exists("plots/%s/%s/%s" % (args.tag, args.era, channel)):
-    #     os.makedirs("plots/%s/%s/%s" % (args.tag, args.era, channel))
+    # if not args.embedding and not args.fake_factor:
+    #     postfix = "fully_classic"
+    # if args.embedding and not args.fake_factor:
+    #     postfix = "emb_classic"
+    # if not args.embedding and args.fake_factor:
+    #     postfix = "classic_ff"
+    # if args.embedding and args.fake_factor:
+    #     postfix = "emb_ff"
+    # if args.draw_jet_fake_variation is not None:
+    #     postfix = postfix + "_" + args.draw_jet_fake_variation
 
-    out_name_base = "plots/%s/%s/%s/%s/%s_%s_%s_%s" % (
-        args.tag,
-        args.era,
-        channel,
-        args.syst,
-        args.era+"_"+plot_names[0],
-        channel,
-        args.syst,
-        variable,
-    )
-    if args.category_postfix != None and args.category_postfix != "None":
-        out_name_base = out_name_base + "_" + args.category_postfix
-    out_name_base = out_name_base+args.plot_postfix
-    if doLogy:
-        out_name_base = out_name_base + "_log"
-
-    out_name_base = out_name_base.replace("-", "_")
+    if not os.path.exists("plots/%s" % (args.tag)):
+        os.makedirs("plots/%s/%s/%s" % (args.tag, args.era, channel))
 
     plot.save(
-        "%s.%s"
+        "plots/%s/%s/%s/%s_%s_%s.%s"
         % (
-            out_name_base,
+            args.tag,
+            args.era,
+            # postfix,
+            channel,
+            args.era,
+            channel,
+            variable,
+            # args.category_postfix,
             "pdf",
         )
     )
-    # plot.save(
-    #     "%s.%s"
-    #     % (
-    #         out_name_base,
-    #         "png",
-    #     )
-    # )
+    plot.save(
+        "plots/%s/%s/%s/%s_%s_%s.%s"
+        % (
+            args.tag,
+            args.era,
+            # postfix,
+            channel,
+            args.era,
+            channel,
+            variable,
+            # args.category_postfix,
+            "png",
+        )
+    )
+
+# function that seperates the variables just like in produce shapes
+def seperateVariables(input_list):
+    charge_list=["_pos", "_neg"]
+    eta_list=["_barrel", "_endcap"]
+    # iso_list=["_isoSR","_iso5","_iso6","_iso7","_iso8","_iso9","_iso10","_iso11","_iso12","_iso13"]
+    # npv_list=["_npv015", "_npv1530", "_npv3045"]
+    variable_list = list()
+
+    for var in input_list:
+        variable_list.append(var)
+        for eta in eta_list:
+            variable_list.append(var+eta)
+
+    # for var in input_list:
+    #     variable_list.append(var)
+    #     for charge in charge_list:
+    #         variable_list.append(var+charge)
+    #         for eta in eta_list:
+    #             variable_list.append(var+charge+eta)
+                # for iso in iso_list:
+                #     variable_list.append(var+charge+eta+iso)
+    return variable_list
 
 if __name__ == "__main__":
     args = parse_arguments()
-    
-    # setup_logging("{}_plot_shapes.log".format(args.era), logging.DEBUG)
-    setup_logging("{}_plot_shapes.log".format(args.era), logging.INFO)
-
+    setup_logging("{}_plot_shapes.log".format(args.era), logging.DEBUG)
+    variables = args.variables.split(",")
+    seperateVariable = bool(int(args.seperate_variables))
+    if seperateVariable: variables = seperateVariables(variables)
     channels = args.channels.split(",")
-
-    variable_dict = {}
-    variables_base = args.variables.split(",") if args.variables is not None else []
-    if len(variables_base) > 0:
-        if bool(int(args.seperate_variables)):
-            variable_dict = {
-                "mm": seperate_var(variables_base, doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins),
-                "mmet": seperate_var(variables_base, doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins),
-                "ee": seperate_var(variables_base, doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins),
-                "emet": seperate_var(variables_base, doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins),
-            }
-        else:
-            variable_dict = {
-                "mm": variables_base,
-                "mmet": variables_base,
-                "ee": variables_base,
-                "emet": variables_base,
-            }
-    else:
-        variable_dict_base = get_all_variables(args.doZpt, args.doQCD, args.doLepCorrBins)
-        if bool(int(args.seperate_variables)):
-            for _ch in channels:
-                _ch_base = _ch.replace("_corr", "")
-                variable_dict[_ch_base] = seperate_var(variable_dict_base[_ch_base], doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins)
-        else:
-            variable_dict = variable_dict_base
-
     writeLatex = bool(int(args.write_to_latex))
     matchData = bool(int(args.match_data))
     infolist = []
 
-    for _ch in channels:
-        _ch_base = _ch.replace("_corr", "")
-        outdir = "plots/%s/%s/%s/%s" % (args.tag, args.era, _ch, args.syst)
-        if not os.path.exists(outdir):
-            os.makedirs(outdir)
-        for v in variable_dict[_ch_base]:
-            infolist.append({"args": args, "channel": _ch, "variable": v, "doLogy": True})
-            infolist.append({"args": args, "channel": _ch, "variable": v, "doLogy": False})
-
-    # nthread = min(len(infolist), 64)
-    # pool = Pool(nthread)
-    # pool.map(main, infolist)
-
-    # if writeLatex:
-    #     plots_to_latex(args.tag, args.era, args.channels)
-    for info in infolist:
-        # print(info["variable"])
-        # if "_zpt" in info["variable"] and int(info["variable"].split("_zpt")[1]) < 19:
-        #     continue
-        main(info)
-        sys.stdout.flush()
-        # gc.collect()
-        sleep(0.1)
+    # if not args.embedding and not args.fake_factor:
+    #     postfix = "fully_classic"
+    # if args.embedding and not args.fake_factor:
+    #     postfix = "emb_classic"
+    # if not args.embedding and args.fake_factor:
+    #     postfix = "classic_ff"
+    # if args.embedding and args.fake_factor:
+    #     postfix = "emb_ff"
+    for ch in channels:
+        for v in variables:
+            infolist.append({"args": args, "channel": ch, "variable": v})
+    pool = Pool(1)
+    pool.map(main, infolist)
+    if writeLatex:
+        plots_to_latex(args.tag, args.era, args.channels)
+    # for info in infolist:
+    #     main(info)
 
     
