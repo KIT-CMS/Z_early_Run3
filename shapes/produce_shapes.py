@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+from ast import arg
 import logging
 import pickle
 import re
@@ -17,9 +18,8 @@ from ntuple_processor import (
 )
 
 from config.shapes.channel_selection import channel_selection
-from config.shapes.run_selection import run_selection
-from config.shapes.run_selection import run_group_selection
-from config.shapes.group_runs import run_lumi_selection
+from config.shapes.run_selection import run_selection, run_group_selection, run_selection_mc
+from config.shapes.group_runs import run_lumi_selection, run_by_era
 from config.shapes.file_names import files
 from config.shapes.process_selection import (
     DY_process_selection,
@@ -36,12 +36,14 @@ from config.shapes.data_selection import (
 )
 
 
-# Muon ID weight uncertainties
+# variations
 from config.shapes.variations import (
-    mu_id_weight,
+    mu_sf_weight,
+    pdf_weight,
 )
 
-from config.shapes.control_binning import get_control_binning, seperateVariables
+from config.shapes.control_binning import get_control_binning
+from config.common.variables import seperate_var, get_all_variables
 
 logger = logging.getLogger("")
 
@@ -61,9 +63,10 @@ def setup_logging(output_file, level=logging.DEBUG):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description="Produce shapes for the legacy NMSSM analysis."
+        description="Produce shapes for the Run 3 analysis."
     )
     parser.add_argument("--era", required=True, type=str, help="Experiment era.")
+    parser.add_argument("--subera", type=str, default="Run2022", help="Experiment sub-era.")
     parser.add_argument(
         "--channels",
         default=[],
@@ -72,27 +75,6 @@ def parse_arguments():
     )
     parser.add_argument(
         "--directory", required=True, type=str, help="Directory with Artus outputs."
-    )
-    parser.add_argument(
-        "--et-friend-directory",
-        type=str,
-        default=[],
-        nargs="+",
-        help="Directories arranged as Artus output and containing a friend tree for et.",
-    )
-    parser.add_argument(
-        "--mt-friend-directory",
-        type=str,
-        default=[],
-        nargs="+",
-        help="Directories arranged as Artus output and containing a friend tree for mt.",
-    )
-    parser.add_argument(
-        "--tt-friend-directory",
-        type=str,
-        default=[],
-        nargs="+",
-        help="Directories arranged as Artus output and containing a friend tree for tt.",
     )
     parser.add_argument(
         "--mmet-friend-directory",
@@ -121,13 +103,6 @@ def parse_arguments():
         default=[],
         nargs="+",
         help="Directories arranged as Artus output and containing a friend tree for ee.",
-    )
-    parser.add_argument(
-        "--em-friend-directory",
-        type=str,
-        default=[],
-        nargs="+",
-        help="Directories arranged as Artus output and containing a friend tree for em.",
     )
     parser.add_argument(
         "--optimization-level",
@@ -174,7 +149,7 @@ def parse_arguments():
     )
     parser.add_argument(
         "--control-plot-set",
-        default="pt_1",
+        default=[],
         type=lambda varlist: [variable for variable in varlist.split(",")],
         help="Variables the shapes should be produced for.",
     )
@@ -226,6 +201,32 @@ def parse_arguments():
         action="store_true",
         help="Enables check for double actions during booking. Takes long for all variations.",
     )
+    parser.add_argument(
+        "--doQCD",
+        action="store_true",
+        help="run QCD templates",
+    )
+    parser.add_argument(
+        "--doZpt",
+        action="store_true",
+        help="run over Zpt bins",
+    )
+    parser.add_argument(
+        "--doLepCorrBins",
+        action="store_true",
+        help="run over lepton momentum correction bins",
+    )
+    parser.add_argument(
+        "--norm1invpb",
+        action="store_true",
+        help="normalize MC to 1 /pb",
+    )
+    parser.add_argument(
+        "--applySF",
+        default=False,
+        action="store_true",
+        help="apply SF",
+    )
     return parser.parse_args()
 
 def main(args):
@@ -237,6 +238,33 @@ def main(args):
         "emet": args.emet_friend_directory,
     }
 
+    # Get variables
+    assert type(args.control_plot_set) == list, args.control_plot_set
+    variable_dict = {}
+    if len(args.control_plot_set) > 0:
+        if bool(int(args.seperate_variables)):
+            variable_dict = {
+                "mm": seperate_var(args.control_plot_set, doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins),
+                "mmet": seperate_var(args.control_plot_set, doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins),
+                "ee": seperate_var(args.control_plot_set, doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins),
+                "emet": seperate_var(args.control_plot_set, doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins),
+            }
+        else:
+            variable_dict = {
+                "mm": args.control_plot_set,
+                "mmet": args.control_plot_set,
+                "ee": args.control_plot_set,
+                "emet": args.control_plot_set,
+            }
+    else:
+        variable_dict_base = get_all_variables(args.doZpt, args.doQCD, args.doLepCorrBins)
+        if bool(int(args.seperate_variables)):
+            for _ch in args.channels:
+                variable_dict[_ch] = seperate_var(variable_dict_base[_ch], doZpt = args.doZpt, doQCD = args.doQCD, doLepCorrBins = args.doLepCorrBins)
+        else:
+            variable_dict = variable_dict_base
+
+    # Output file
     if ".root" in args.output_file:
         output_file = args.output_file
         log_file = args.output_file.replace(".root", ".log")
@@ -260,7 +288,7 @@ def main(args):
                 if "FakeFactors" in friend or "EMQCDWeights" in friend:
                     return False
             elif re.match("data", dataset.lower()):
-                if "crosssection" in friend:
+                if "crosssection" in friend:  #  or "sf" in friend:
                     return False
             return True
 
@@ -280,120 +308,145 @@ def main(args):
             )
         return datasets
 
-    def get_control_units(channel, era, datasets, control_binning):
-        #adds the MC samples first to the dictionary of histograms to be made
-        data_dict = {
-            "dy": [
+    def get_mc_units(channel, era, datasets, control_binning, run_list, run_lumi):
+        n_trg_matches = [None]  # [2, 1, 0, -1] if channel == "mm" else [None]
+        corr_postfixs = ["_corr"]  # ["", "_corr"]
+
+        run_tag = ""
+        if run_list is not None:
+            run_tag = "_" + run_list[0] + "-" + run_list[-1]
+
+        mc_dict = {
+            f"dy{run_tag}": [
                 Unit(
                     datasets["DY"],
                     [
-                        channel_selection(channel, era),
-                        DY_process_selection(channel, era, runPlot, totalLumi)
+                        channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                        run_selection_mc(run_list[0], run_list[-1]),
+                        DY_process_selection(channel, era, runPlot, totalLumi, run_list, run_lumi, args.norm1invpb, args.applySF),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(variable_list)
+                        & set(variable_dict[channel])
                     ],
-                )
+                ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
             ],
-            "w": [
+            f"w{run_tag}": [
                 Unit(
                     datasets["W"],
                     [
-                        channel_selection(channel, era),
-                        W_process_selection(channel, era, runPlot, totalLumi),
+                        channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                        run_selection_mc(run_list[0], run_list[-1]),
+                        W_process_selection(channel, era, runPlot, totalLumi, run_list, run_lumi, args.norm1invpb, args.applySF),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(variable_list)
+                        & set(variable_dict[channel])
                     ],
-                )
+                ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
             ],
-            "tt": [
+            f"tt{run_tag}": [
                 Unit(
                     datasets["TT"],
                     [
-                        channel_selection(channel, era),
-                        TT_process_selection(channel, era, runPlot, totalLumi),
+                        channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                        run_selection_mc(run_list[0], run_list[-1]),
+                        TT_process_selection(channel, era, runPlot, totalLumi, run_list, run_lumi, args.norm1invpb, args.applySF),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(variable_list)
+                        & set(variable_dict[channel])
                     ],
-                )
+                ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
             ],
-            "st": [
+            f"st{run_tag}": [
                 Unit(
                     datasets["ST"],
                     [
-                        channel_selection(channel, era),
-                        ST_process_selection(channel, era, runPlot, totalLumi),
+                        channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                        run_selection_mc(run_list[0], run_list[-1]),
+                        ST_process_selection(channel, era, runPlot, totalLumi, run_list, run_lumi, args.norm1invpb, args.applySF),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(variable_list)
+                        & set(variable_dict[channel])
                     ],
-                )
+                ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
             ],
-            "vv": [
+            f"vv{run_tag}": [
                 Unit(
                     datasets["VV"],
                     [
-                        channel_selection(channel, era),
-                        VV_process_selection(channel, era, runPlot, totalLumi),
+                        channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                        run_selection_mc(run_list[0], run_list[-1]),
+                        VV_process_selection(channel, era, runPlot, totalLumi, run_list, run_lumi, args.norm1invpb, args.applySF),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(variable_list)
+                        & set(variable_dict[channel])
                     ],
-                )
+                ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
             ],
-            "ewktau": [
+            f"ewktau{run_tag}": [
                 Unit(
                     datasets["DYtau"],
                     [
-                        channel_selection(channel, era),
-                        DYtau_process_selection(channel, era, runPlot, totalLumi)
+                        channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                        run_selection_mc(run_list[0], run_list[-1]),
+                        DYtau_process_selection(channel, era, runPlot, totalLumi, run_list, run_lumi, args.norm1invpb, args.applySF),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(variable_list)
+                        & set(variable_dict[channel])
                     ],
-                ),
+                ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
+            ] + [
                 Unit(
                     datasets["Wtau"],
                     [
-                        channel_selection(channel, era),
-                        Wtau_process_selection(channel, era, runPlot, totalLumi),
+                        channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                        run_selection_mc(run_list[0], run_list[-1]),
+                        Wtau_process_selection(channel, era, runPlot, totalLumi, run_list, run_lumi, args.norm1invpb, args.applySF),
                     ],
                     [
                         control_binning[channel][v]
                         for v in set(control_binning[channel].keys())
-                        & set(variable_list)
+                        & set(variable_dict[channel])
                     ],
-                )
+                ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
             ],
         }
 
+        return mc_dict
+
+    def get_control_units(channel, era, datasets, control_binning):
+        n_trg_matches = [None]  # [2, 1, 0, -1] if channel == "mm" else [None]
+        corr_postfixs = ["_corr"]  # ["", "_corr"]
+
+        data_dict = {}
+
         # sums the runs and returns data as its own histogram
         if not runPlot:
-            data_dict["data"] = [Unit(
-                datasets["data"],
-                [
-                    channel_selection(channel, era),
-                ],
-                [
-                    control_binning[channel][v]
-                    for v in set(control_binning[channel].keys())
-                    & set(variable_list)
-                ],
-            )]
+            data_dict = get_mc_units(channel, era, datasets, control_binning, None, None)
+            data_dict["data"] = [
+                Unit(
+                    datasets["data"],
+                    [
+                        channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                    ],
+                    [
+                        control_binning[channel][v]
+                        for v in set(control_binning[channel].keys())
+                        & set(variable_dict[channel])
+                    ],
+                ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
+            ]
         # seperates run by run and plots them seperatly
         else:
             run_list = args.run_list
@@ -402,59 +455,69 @@ def main(args):
             temp_prev_run_number = float(run_list[0])
             list_of_run_lists = list()
             if groupRuns:
-                while temp_prev_run_number < float(run_list[-1]):
-                    list_of_run_lists.append(run_lumi_selection(temp_prev_run_number, run_list, run_lumi, groupRuns)) 
-                    temp_prev_run_number = float(list_of_run_lists[-1][-1])
+                # while temp_prev_run_number < float(run_list[-1]):
+                #     list_of_run_lists.append(run_lumi_selection(temp_prev_run_number, run_list, run_lumi, groupRuns)) 
+                #     temp_prev_run_number = float(list_of_run_lists[-1][-1])
+                list_of_run_lists = run_by_era(run_list, args.subera)
                 for run_list in list_of_run_lists:
+                    mc_dict = get_mc_units(channel, era, datasets, control_binning, run_list, run_lumi)
+                    data_dict = {**data_dict, **mc_dict}
                     if run_list[0] == run_list[-1]:
-                        data_dict[run_list[0]] = [Unit(
-                            datasets["data"],
-                            [
-                                channel_selection(channel, era),
-                                run_selection(run_list[0]),
-                                data_process_selection(channel, era, run_list[0], run_lumi),
-                            ],
-                            [
-                                control_binning[channel][v]
-                                for v in set(control_binning[channel].keys())
-                                & set(variable_list)
-                            ],
-                        )]
-                    else:
-                        data_dict[run_list[0] + "-" + run_list[-1]] = [Unit(
+                        data_dict[run_list[0]] = [
+                            Unit(
                                 datasets["data"],
                                 [
-                                    channel_selection(channel, era),
-                                    run_group_selection(run_list[0], run_list[-1]),
-                                    data_group_process_selection(channel, era, run_list, run_lumi)
+                                    channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                                    run_selection(run_list[0]),
+                                    data_process_selection(channel, era, run_list[0], run_lumi, args.norm1invpb),
                                 ],
                                 [
                                     control_binning[channel][v]
                                     for v in set(control_binning[channel].keys())
-                                    & set(variable_list)
+                                    & set(variable_dict[channel])
                                 ],
-                            )]
+                            ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
+                        ]
+                    else:
+                        data_dict[run_list[0] + "-" + run_list[-1]] = [
+                            Unit(
+                                datasets["data"],
+                                [
+                                    channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                                    run_group_selection(run_list[0], run_list[-1]),
+                                    data_group_process_selection(channel, era, run_list, run_lumi, args.norm1invpb)
+                                ],
+                                [
+                                    control_binning[channel][v]
+                                    for v in set(control_binning[channel].keys())
+                                    & set(variable_dict[channel])
+                                ],
+                            ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
+                        ]
             else:
                 for run_number in run_list:
-                    data_dict[run_number] = [Unit(
-                        datasets["data"],
-                        [
-                            channel_selection(channel, era),
-                            run_selection(run_number),
-                            data_process_selection(channel, era, run_number, run_lumi),
-                        ],
-                        [
-                            control_binning[channel][v]
-                            for v in set(control_binning[channel].keys())
-                            & set(variable_list)
-                        ],
-                    )]
+                    mc_dict = get_mc_units(channel, era, datasets, control_binning, [run_number], run_lumi)
+                    data_dict = {**data_dict, **mc_dict}
+                    data_dict[run_number] = [
+                        Unit(
+                            datasets["data"],
+                            [
+                                channel_selection(channel, era, args.doQCD, n_match, corr_postfix),
+                                run_selection(run_number),
+                                data_process_selection(channel, era, run_number, run_lumi, args.norm1invpb),
+                            ],
+                            [
+                                control_binning[channel][v]
+                                for v in set(control_binning[channel].keys())
+                                & set(variable_dict[channel])
+                            ],
+                        ) for n_match in n_trg_matches for corr_postfix in corr_postfixs
+                    ]
         return data_dict
 
     # Step 1: create units and book actions
     for channel in args.channels:
-        control_binning = get_control_binning(channel, variable_list)
-        print(control_binning)
+        control_binning = get_control_binning(channel, variable_dict[channel])
         nominals[args.era]["datasets"][channel] = get_nominal_datasets(
             args.era, channel
         )
@@ -464,92 +527,37 @@ def main(args):
             )
     um = UnitManager()
 
+
+
+    procS = set()
     if args.process_selection is None:
-        if runPlot:
-            run_nums = set()
-            for run_key in nominals[args.era]["units"][channel].keys():
-                run_nums.add(run_key)
-
-        if runPlot:
-            procS = {
-                *run_nums,
-                "dy",
-                "w",
-                "tt",
-                "st",
-                "vv",
-                "ewktau",
-            }
-        else:
-            procS = {
-                "data",
-                "dy",
-                "w",
-                "tt",
-                "st",
-                "vv",
-                "ewktau",
-            }
-
+        for key in nominals[args.era]["units"][channel].keys():
+            procS.add(key)
     else:
         procS = args.process_selection
+    
+    procMC = set()
+    procMCNoVV = set()
+    for key in procS:
+        if "_" in key:
+            procMC.add(key)
+            if "vv" not in key:
+                procMCNoVV.add(key)
 
     print("Processes to be computed: ", procS)
 
-    simulatedProcsDS = {
-        "mm": {
-            "dy",
-            "w",
-            "tt",
-            "st",
-            "vv",
-            "ewktau",
-        },
-        "ee": {
-            "dy",
-            "w",
-            "tt",
-            "st",
-            "vv",
-            "ewktau",
-        },
-        "mmet": {
-            "dy",
-            "w",
-            "tt",
-            "st",
-            "vv",
-            "ewktau",
-        },
-        "emet": {
-            "dy",
-            "w",
-            "tt",
-            "st",
-            "vv",
-            "ewktau",
-        }
-    }
-
-    dataS = set()
-    if runPlot:
-        for run_key in nominals[args.era]["units"][channel].keys():
-            if run_key not in simulatedProcsDS[channel]:
-                dataS.add(run_key)
-    else: dataS = {"data"} & procS
-
     # exports the names of the data plots to a text file
-    plot_names = ["{}\n".format(plot_name) for plot_name in dataS]
-    plot_names.sort()
-    with open(r'data_plot_names.txt', 'w') as fp:
-        fp.writelines(plot_names)
-        fp.close()
+    # plot_names = ["{}\n".format(plot_name) for plot_name in dataS]
+    # plot_names.sort()
+    # with open(r'data_plot_names.txt', 'w') as fp:
+    #     fp.writelines(plot_names)
+    #     fp.close()
 
     for ch_ in args.channels:
         um.book(
             [
                 unit
-                for d in dataS | simulatedProcsDS[ch_]
+                for d in procS  # dataS | simulatedProcsDS[ch_]
                 for unit in nominals[args.era]["units"][ch_][d]
             ],
             enable_check=args.enable_booking_check,
@@ -558,14 +566,36 @@ def main(args):
             pass
         else:
             # Book variations common to all channels
+            print("")
+            print("="*50)
+            print("Systematic variations:")
+            for syst in mu_sf_weight:
+                print(f"\t{syst.name}")
+            for syst in pdf_weight:
+                print(f"\t{syst.name}")
+            print("="*50)
+            print("")
+            # SF weights
             um.book(
                 [
                     unit
-                    for d in simulatedProcsDS[ch_]
+                    for d in procMC
                     for unit in nominals[args.era]["units"][ch_][d]
                 ],
                 [
-                    *mu_id_weight,
+                    *mu_sf_weight,
+                ],
+                enable_check=args.enable_booking_check,
+            )
+            # PDF weights
+            um.book(
+                [
+                    unit
+                    for d in procMCNoVV
+                    for unit in nominals[args.era]["units"][ch_][d]
+                ],
+                [
+                    *pdf_weight,
                 ],
                 enable_check=args.enable_booking_check,
             )
@@ -574,8 +604,7 @@ def main(args):
     g_manager = GraphManager(um.booked_units, True)
     g_manager.optimize(args.optimization_level)
     graphs = g_manager.graphs
-    for graph in graphs:
-        print("%s" % graph)
+
     if args.only_create_graphs:
         if args.control_plots:
             graph_file_name = "control_unit_graphs-{}-{}-{}.pkl".format(
@@ -595,20 +624,18 @@ def main(args):
     else:
         # Step 3: convert to RDataFrame and run the event loop
         print("GRAPHS:", graphs)
-        r_manager = RunManager(graphs)
+        #r_manager = RunManager(graphs, addOverflow = True)
+        r_manager = RunManager(graphs, addOverflow = False)
         r_manager.run_locally(output_file, args.num_processes, args.num_threads)
     return
 
 if __name__ == "__main__":
-    # from multiprocessing import set_start_method
-    # set_start_method("spawn")
     args = parse_arguments()
-    seperateVariable = bool(int(args.seperate_variables))
-    if seperateVariable: variable_list = seperateVariables(args.control_plot_set)
-    else: variable_list = args.control_plot_set
+
     if ".root" in args.output_file:
         log_file = args.output_file.replace(".root", ".log")
     else:
         log_file = "{}.log".format(args.output_file)
-    setup_logging(log_file, logging.DEBUG)
+    # setup_logging(log_file, logging.DEBUG)
+    setup_logging(log_file, logging.INFO)
     main(args)

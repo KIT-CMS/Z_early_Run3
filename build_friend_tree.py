@@ -15,7 +15,7 @@ def base_filename(path):
 
 
 def job_wrapper(args):
-    print(args)
+    # print(args)
     return friend_producer(*args)
 
 def remove_zero_event_file(rfile):
@@ -35,66 +35,107 @@ def friend_producer(rfile, dataset_proc):
     is_non_zero = remove_zero_event_file(rfile)
     if not is_non_zero:
         return
-    if "Run20" not in rfile:
-        return
 
-    output_path = rfile.replace("ntuples", "friends/crosssection")
+    # output_path = rfile.replace("ntuples", "friends/crosssection")
+    output_path = rfile.replace("ntuples", "ntuples_xsec")
 
     if os.path.exists(output_path):
         print(f"friend_producer: {output_path} exists -> skip")
         return
 
-    if not os.path.exists(os.path.dirname(output_path)):
-        os.makedirs(os.path.dirname(output_path), exist_ok=False)
+    # if not os.path.exists(os.path.dirname(output_path)):
+    #     os.makedirs(os.path.dirname(output_path), exist_ok=False)
+
+    if not os.path.exists(output_path):
+        os.makedirs(output_path, exist_ok=False)
 
     rdf = ROOT.RDataFrame("ntuple", rfile)
-    numberGeneratedEventsWeight = 1 / float(dataset_proc["nevents"])
-    crossSectionPerEventWeight = float(dataset_proc["xsec"])
-    sumwWeight = 1. / float(dataset_proc["sumw"])
-    sumwnormWeight = 1. / float(dataset_proc["sumwnorm"])
-    negFracWeight = float(dataset_proc["generator_weight"])
-    scale1fb_sumw = crossSectionPerEventWeight * sumwWeight * 1.e3
-    scale1fb_sumwnorm = crossSectionPerEventWeight * sumwnormWeight * 1.e3
+    original_cols = [str(col) for col in rdf.GetColumnNames()]
 
-    rdf = rdf.Define(
-        "numberGeneratedEventsWeight",
-        "(float){ngw}".format(ngw=numberGeneratedEventsWeight),
-    )
-    
-    rdf = rdf.Define(
-        "sumwWeight",
-        "(float){ngw}".format(ngw=sumwWeight),
-    )
+    if "Run20" in rfile:
+        rdf = rdf.Define(
+            "numberGeneratedEventsWeight",
+            "(float)1.",
+        )
+        
+        rdf = rdf.Define(
+            "sumwWeight",
+            "(float)1.",
+        )
 
-    rdf = rdf.Define(
-        "sumwnormWeight",
-        "(float){ngw}".format(ngw=sumwnormWeight),
-    )
+        rdf = rdf.Define(
+            "sumwnormWeight",
+            "(float)1.",
+        )
 
-    rdf = rdf.Define(
-        "negFracWeight",
-        "(float){ngw}".format(ngw=negFracWeight),
-    )
+        rdf = rdf.Define(
+            "negFracWeight",
+            "(float)0.",
+        )
 
-    rdf = rdf.Define(
-        "crossSectionPerEventWeight",
-        "(float){xsec}".format(xsec=crossSectionPerEventWeight),
-    )
+        rdf = rdf.Define(
+            "crossSectionPerEventWeight",
+            "(float)1.",
+        )
 
-    rdf = rdf.Define(
-        "scale1fb_sumw",
-        "(float){ngw}".format(ngw=scale1fb_sumw),
-    )
+        rdf = rdf.Define(
+            "scale1fb_sumw",
+            "(float)1.",
+        )
 
-    rdf = rdf.Define(
-        "scale1fb_sumwnorm",
-        "(float){ngw}".format(ngw=scale1fb_sumwnorm),
-    )
+        rdf = rdf.Define(
+            "scale1fb_sumwnorm",
+            "(float)1.",
+        )
+
+    else:
+        numberGeneratedEventsWeight = 1 / float(dataset_proc["nevents"])
+        crossSectionPerEventWeight = float(dataset_proc["xsec"])
+        sumwWeight = 1. / float(dataset_proc["sumw"])
+        sumwnormWeight = 1. / float(dataset_proc["sumwnorm"])
+        negFracWeight = float(dataset_proc["generator_weight"])
+        scale1fb_sumw = crossSectionPerEventWeight * sumwWeight * 1.e3
+        scale1fb_sumwnorm = crossSectionPerEventWeight * sumwnormWeight * 1.e3
+
+        rdf = rdf.Define(
+            "numberGeneratedEventsWeight",
+            "(float){ngw}".format(ngw=numberGeneratedEventsWeight),
+        )
+        
+        rdf = rdf.Define(
+            "sumwWeight",
+            "(float){ngw}".format(ngw=sumwWeight),
+        )
+
+        rdf = rdf.Define(
+            "sumwnormWeight",
+            "(float){ngw}".format(ngw=sumwnormWeight),
+        )
+
+        rdf = rdf.Define(
+            "negFracWeight",
+            "(float){ngw}".format(ngw=negFracWeight),
+        )
+
+        rdf = rdf.Define(
+            "crossSectionPerEventWeight",
+            "(float){xsec}".format(xsec=crossSectionPerEventWeight),
+        )
+
+        rdf = rdf.Define(
+            "scale1fb_sumw",
+            "(float){ngw}".format(ngw=scale1fb_sumw),
+        )
+
+        rdf = rdf.Define(
+            "scale1fb_sumwnorm",
+            "(float){ngw}".format(ngw=scale1fb_sumwnorm),
+        )
 
     rdf.Snapshot(
         "ntuple",
         output_path,
-        [
+        original_cols + [
             "numberGeneratedEventsWeight",
             "sumwWeight",
             "sumwnormWeight",
@@ -113,7 +154,7 @@ def generate_friend_trees(dataset, ntuples, nthreads):
         pool.imap_unordered(job_wrapper, arguments),
         total=len(arguments),
         desc="Total progess",
-        position=nthreads + 1,
+        # position=nthreads + 1,
         dynamic_ncols=True,
         leave=True,
     ):
@@ -121,7 +162,7 @@ def generate_friend_trees(dataset, ntuples, nthreads):
 
 
 if __name__ == "__main__":
-    base_path = "/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/*/*/*.root"
+    base_path = "/ceph/moh/CROWN_samples/Run3V03/ntuples/20*/*/*/*.root"
     dataset = yaml.load(open("datasets.yaml"), Loader=yaml.Loader)
 
     ntuples = glob.glob(base_path)
@@ -129,7 +170,7 @@ if __name__ == "__main__":
     # for ntuple in ntuples:
     #     if "Run20" in ntuple:
     #         ntuples_wo_data.remove(str(ntuple))
-    nthreads = 24
+    nthreads = 64
     if nthreads > len(ntuples_wo_data):
         nthreads = len(ntuples_wo_data)
     print("# files: ", len(ntuples_wo_data))

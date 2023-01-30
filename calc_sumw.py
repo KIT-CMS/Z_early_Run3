@@ -50,7 +50,7 @@ def calc_sumw(dataset, ntuples, nthreads):
         pass
 
 if __name__ == "__main__":
-    base_path = "/ceph/moh/CROWN_samples/Run3V01_sumw/ntuples/2022/*"
+    base_path = "/ceph/moh/CROWN_samples/Run3V03_sumw/ntuples/2022/*"
     dataset = yaml.load(open("datasets.yaml"), Loader=yaml.Loader)
 
     ntuples = glob.glob(base_path)
