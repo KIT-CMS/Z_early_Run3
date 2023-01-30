@@ -4,39 +4,9 @@ __pycache__/
 *$py.class
 # folders and files
 .gitignore.swp
-CMSSW_10_2_16_UL/
-combine_logger.out
-condor*
-config/variations_felix.py
-docker_stderror
-dummy.json
-exclusion_limits/
-fit_condor_combined_limit.sh
-fit_condor_combined_limit_68.sh
-fit_output/
-gof/
-htt-ml/
 log/
-memory_profile/
-misc_scripts/
 output/
 plots/
-plotting/balance.py
-plotting/plot_balance.sh
-plotting/prefit_janek_shapes.sh
-shapes/add_emb_ttt_variation.py
-shapes/convert_to_synced_shapes_all_bkg_true.py
-shapes/convert_to_synced_shapes_org.py
-shapes/limits_json_to_list
-shapes/produce_shapes3.py
-shapes/sort_hists.py
-submit/single_gr_all.sh
-submit_all.sh
-symlink_friends.sh
-utils/fit_cmssw.sh
-#utils/setup_nmssm_samples.sh
-webgallery.sh
-webgallery/
 # C extensions
 *.so
 
@@ -48,14 +18,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -163,6 +125,10 @@ dmypy.json
 .pyre/
 # Root files and plots.
 *.root
-# *.png
-# *.pdf
+*.png
+*.pdf
 *.html
+*.json
+SignalFit/**/*.txt
+SignalFit/**/*.json
+SignalFit/cards*/**
