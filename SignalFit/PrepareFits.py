@@ -43,7 +43,7 @@ if __name__  == "__main__":
 
     w_fit_vars = [
         "pfmt_corr",
-        "pfmet_corr",
+        # "pfmet_corr",
         # "ptOverPfmt_corr",
     ]
 
@@ -58,14 +58,14 @@ if __name__  == "__main__":
                 _mass_bins_w_toUse = mass_bins_w_ptOverMt
 
             for syst_name, systs in syst_groups.items():
-                f_output = f"root/test_{version}/output_shapes_{fit_variable_w}_wbin{idx}_syst{syst_name}.root"
+                f_output = f"root/{version}/output_shapes_{fit_variable_w}_wbin{idx}_syst{syst_name}.root"
 
                 card_muplus, card_muminus, card_zmumu, card_xsec_muplus, card_xsec_muminus, card_xsec_mumu = RunPreparations(
                     f_input,
                     fqcd_input,
                     f_output,
                     "mu",
-                    outdir_card = f"cards/test_{version}/{fit_variable_w}/scan_wbin{idx}_syst{syst_name}",
+                    outdir_card = f"cards/{version}/{fit_variable_w}/scan_wbin{idx}_syst{syst_name}",
                     mass_bins_w = _mass_bins_w_toUse,
                     mass_bins_z = mass_bins_z,
                     applyLFU=applyLFU,

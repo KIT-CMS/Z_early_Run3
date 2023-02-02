@@ -28,7 +28,7 @@ if doInclusive:
 
     w_fit_vars = [
         "pfmt_corr",
-        "pfmet_corr",
+        # "pfmet_corr",
         # "ptOverPfmt_corr",
     ]
 
@@ -51,10 +51,10 @@ if doInclusive:
         errs_qcd_neg = []
 
         for idx in range(nscans):
-            
+
             for syst_name, systs in syst_groups.items():
 
-                workdir = f"cards/test_{version}/{fit_variable_w}/scan_wbin{idx}_syst{syst_name}/"
+                workdir = f"cards/{version}/{fit_variable_w}/scan_wbin{idx}_syst{syst_name}/"
                 filename = workdir + f"card_mu.root"
 
                 mass_bins = mass_bins_w_scan[idx]
