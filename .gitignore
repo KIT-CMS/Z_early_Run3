@@ -132,4 +132,9 @@ dmypy.json
 SignalFit/**/*.txt
 SignalFit/**/*.json
 SignalFit/cards*/**
+<<<<<<< HEAD
 **/log*
+=======
+
+# other tmp files
+.#*
