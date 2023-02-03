@@ -7,3 +7,9 @@ def run_group_selection(initial_run, final_run):
 
 def run_selection(_run):
     return Selection(name=_run, cuts=[("run == {}".format(_run), _run)])
+
+def run_selection_mc(initial_run, final_run):
+    if initial_run == final_run:
+        return Selection(name=initial_run, cuts=[("run == 1", initial_run)])
+    else:
+        return Selection(name=initial_run + "-" + final_run, cuts=[("run == 1", initial_run + "-" + final_run)])
