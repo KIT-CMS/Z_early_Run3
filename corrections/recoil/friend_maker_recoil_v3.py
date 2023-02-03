@@ -10,7 +10,7 @@ from multiprocessing import Pool, current_process, RLock
 
 def parse_args():
     parser = argparse.ArgumentParser(description="produce friend of input ntuple with corrected met")   
-    parser.add_argument('-I', '--inpath', default='/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/*/mm/*.root', help='path to input samples')
+    parser.add_argument('-I', '--inpath', default='/ceph/moh/CROWN_samples/Run3V01/ntuples/2022/*/mm*/*.root', help='path to input samples')
     parser.add_argument('--overwrite', action='store_true', default=True)
     parser.add_argument('--test', action='store_true', default=False)   
     args = parser.parse_args()
@@ -54,7 +54,7 @@ def prep(inpath, met="met"):
     chain = ROOT.TChain("ntuple")
     chain.Add(inpath)
     friend = ROOT.TChain("ntuple")
-    frpath = inpath.replace("ntuples", "friends/lep_corr").replace("/ceph/moh", "/ceph/jdriesch")  # HERE tmp
+    frpath = inpath.replace("ntuples", "friends/lep_corr_v3")
     # print("prep inpath:", inpath)
     # print("prep frpath:", frpath)
     friend.Add(frpath)
@@ -123,15 +123,15 @@ def run(input_dict):
 
     if channel == 'mmet':
         dataWorkspace = load_fit_results(ws_dict["data_mm"], nBins)
-        mcWorkspace_pos = load_fit_results(ws_dict["Wmpos"], nBins)
-        mcWorkspace_neg = load_fit_results(ws_dict["Wmneg"], nBins)           
+        mcWorkspace_pos = load_fit_results(ws_dict["Zmm"], nBins)
+        mcWorkspace_neg = load_fit_results(ws_dict["Zmm"], nBins)           
         mcWorkspace_pos_tocorr = load_fit_results(ws_dict["Wmpos"], nBins)
         mcWorkspace_neg_tocorr = load_fit_results(ws_dict["Wmneg"], nBins)   
 
     elif channel == 'emet':
         dataWorkspace = load_fit_results(ws_dict["data_ee"], nBins)
-        mcWorkspace_pos = load_fit_results(ws_dict["Wepos"], nBins)
-        mcWorkspace_neg = load_fit_results(ws_dict["Weneg"], nBins)        
+        mcWorkspace_pos = load_fit_results(ws_dict["Zee"], nBins)
+        mcWorkspace_neg = load_fit_results(ws_dict["Zee"], nBins)
         mcWorkspace_pos_tocorr = load_fit_results(ws_dict["Wepos"], nBins)
         mcWorkspace_neg_tocorr = load_fit_results(ws_dict["Weneg"], nBins)
 
@@ -142,32 +142,26 @@ def run(input_dict):
 
     elif channel == 'ee':
         dataWorkspace = load_fit_results(ws_dict["data_ee"], nBins)
-        mcWorkspace = load_fit_results(ws_dict["Zee"], nBins)        
+        mcWorkspace = load_fit_results(ws_dict["Zee"], nBins)
         mcWorkspace_tocorr = load_fit_results(ws_dict["Zee"], nBins)
 
     else:
         print('channel cannot be matched to mm, ee, mmet, emet')
         return
 
-    if args.test:
-        outdir = '/ceph/moh/CROWN_samples/test/'
-    else:
-        outdir = infile.replace("/ntuples/", "/friends/met_corr/")
-
     # make sure that variables are named consistently (for Run2 met is already corrected)
     if "18" in year:
         corrected = "_corrected"
-        # print("run2 data")
     else:
         corrected = "_corr"
-        # print("run3 data")
     met = 'met'
-    """
-    if "_pf" in args.wsdir:
-        met = "pfmet"
-    else: 
-        met = "met"
-    """
+    if 'pfmet_' in ws_dict["data_mm"]:
+        met = 'pfmet'
+    
+    if args.test:
+        outdir = '/ceph/moh/CROWN_samples/test/'
+    else:
+        outdir = infile.replace("/ntuples/", "/friends/"+met+"_corr_with_lep_corr_v3/")
 
     outfile = outdir
     if args.test:
@@ -183,8 +177,8 @@ def run(input_dict):
     if not ("DYtoLL" in process or "WtoLNu" in process):
         rdf = rdf.Define("uP1"+corrected, "uP1_uncorrected")
         rdf = rdf.Define("uP2"+corrected, "uP2_uncorrected")
-        rdf = rdf.Define(met+corrected, 'double(met_uncorrected)')
-        rdf = rdf.Define(met+"phi"+corrected, 'double(metphi_uncorrected)')
+        rdf = rdf.Define(met+corrected, 'double('+met+'_uncorrected)')
+        rdf = rdf.Define(met+"phi"+corrected, 'double('+met+'phi_uncorrected)')
 
         if not os.path.exists(outfile) or args.overwrite:
             rdf.Snapshot("ntuple", outfile, ["uP1_uncorrected", "uP2_uncorrected", "uP1"+corrected, "uP2"+corrected, met+corrected, met+"phi"+corrected, "pt_vis_c", "phi_vis_c"])
@@ -258,9 +252,10 @@ def run(input_dict):
 
 
             mc_uPValZlike = invertCdf(fromrdf["uP"+str(k+1)+"_uncorrected"][j], toCorr_cdf, toCorr_xuP, mc_cdf, mc_xuP) # TODO check order of matrix
-            data_uPValZlike = invertCdf(mc_uPValZlike, mc_cdf, mc_xuP, data_cdf, data_xuP)
+            dt_uPValZlike = invertCdf(fromrdf["uP"+str(k+1)+"_uncorrected"][j], toCorr_cdf, toCorr_xuP, data_cdf, data_xuP)
+            # data_uPValZlike = invertCdf(mc_uPValZlike, mc_cdf, mc_xuP, data_cdf, data_xuP)
 
-            tordf["uP"+str(k+1)+corrected][j] += data_uPValZlike - mc_uPValZlike
+            tordf["uP"+str(k+1)+corrected][j] += dt_uPValZlike - mc_uPValZlike
 
     rdf_tosave = ROOT.RDF.MakeNumpyDataFrame(tordf)
     rdf_tosave = calculateMET(rdf_tosave, corrected, met=met)     
@@ -274,21 +269,25 @@ def run(input_dict):
 if __name__=='__main__':
     args = parse_args()
 
-    ws_dict = {
-        "data_mm":  "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_data_triple_muon_sigOnly/", 
-        "data_ee":  "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_data_triple_elec_sigOnly/", 
-        "Zmm":      "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
-        "Zee":      "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_ZllMC_triple_elec_sigOnly/",
-        "Wmneg":    "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
-        "Wmpos":    "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
-        "Wepos":    "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_WposMC_triple_elec_sigOnly/",
-        "Weneg":    "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_WnegMC_triple_elec_sigOnly/",
-    }
+    ws_dicts = [
+        {
+            "data_mm":  "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_data_triple_muon_sigAndBck/", 
+            "Zmm":      "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg":    "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos":    "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
+        },
+        {
+            "data_mm":  "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck/", 
+            "Zmm":      "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg":    "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos":    "/home/moh/CROWN_working/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V01_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly/",
+        }
+    ]
 
     ntuples = glob.glob(args.inpath)
     nthreads = 64
 
-    arguments = [{"ntuple": ntuple, "args": args, "ws_dict": ws_dict} for ntuple in ntuples]
+    arguments = [{"ntuple": ntuple, "args": args, "ws_dict": ws_dict} for ntuple in ntuples for ws_dict in ws_dicts]
     pool = Pool(nthreads, initargs=(RLock(),), initializer=tqdm.set_lock)
     for _ in tqdm(
         pool.imap_unordered(run, arguments),  # imap_unordered
