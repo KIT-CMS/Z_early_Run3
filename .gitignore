@@ -132,3 +132,4 @@ dmypy.json
 SignalFit/**/*.txt
 SignalFit/**/*.json
 SignalFit/cards*/**
+**/log*

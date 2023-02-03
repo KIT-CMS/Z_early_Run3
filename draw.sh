@@ -46,7 +46,7 @@ extra_args=""
 #     postfix=$(basename $ntuple_dir)
 #     postfix=${postfix/ntuples_xsec_sf_/"_"}
 
-    ntuple_dir="/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC_lep_corr_01_x0p60"
+    ntuple_dir="/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_scaleres_EraC"
     # postfix="_NoSF"
     # postfix="_SF"
     # postfix="_met_corr"
@@ -127,19 +127,19 @@ extra_args=""
         --subera $subera \
         --applySF \
         --mm-friend-directory \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_double \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_sigOnly \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_zrap0 \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_zrap1 \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_zrap2 \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_double \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_sigOnly \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_zrap0 \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_zrap1 \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_zrap2 \
         --mmet-friend-directory \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_double \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_sigOnly \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_zrap0 \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_zrap1 \
-            /ceph/moh/CROWN_samples/Run3V03/friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr_zrap2
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_double \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_sigOnly \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_zrap0 \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_zrap1 \
+            /work/jdriesch/earlyrun3/samples/Run3V04/friend_xsec_sf_scaleres_EraC_met_corr_zrap2 \
 
     elif [ $type == "plot" ]
     then
