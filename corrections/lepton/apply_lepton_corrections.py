@@ -94,7 +94,7 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
                     "pt_1_corr_up",
                     "double p;"\
                         f"if ({filter1a} && {filter1b})"\
-                        f"p=pt_1_corr * (1 + 0.5*abs({res_smear}-1) + 0.5*abs(1/{mom_scale}-1));"\
+                        f"p=pt_1_corr * (1 + 0.5*abs({res_smear}-1) + 0.5*abs(1./({mom_scale})-1));"\
                         "else p=pt_1_corr_up;"\
                         "return p;"
                     )
@@ -102,7 +102,7 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
                     "pt_1_corr_dn",
                     "double p;"\
                         f"if ({filter1a} && {filter1b})"\
-                        f"p=pt_1_corr * (1 - 0.5*abs({res_smear}-1) - 0.5*abs(1/{mom_scale}-1));"\
+                        f"p=pt_1_corr * (1 - 0.5*abs({res_smear}-1) - 0.5*abs(1./({mom_scale})-1));"\
                         "else p=pt_1_corr_dn;"\
                         "return p;"
                     )
@@ -133,7 +133,7 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
                         "pt_2_corr_up",
                         "double p;"\
                             f"if ({filter2a} && {filter2b})"\
-                            f"p=pt_2_corr * (1 + 0.5*abs({res_smear}-1) + 0.5*abs(1/{mom_scale}-1));"\
+                            f"p=pt_2_corr * (1 + 0.5*abs({res_smear}-1) + 0.5*abs(1./({mom_scale})-1));"\
                             "else p=pt_2_corr_up;"\
                             "return p;"
                         )
@@ -141,10 +141,18 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
                         "pt_2_corr_dn",
                         "double p;"\
                             f"if ({filter2a} && {filter2b})"\
-                            f"p=pt_2_corr * (1 - 0.5*abs({res_smear}-1) - 0.5*abs(1/{mom_scale}-1));"\
+                            f"p=pt_2_corr * (1 - 0.5*abs({res_smear}-1) - 0.5*abs(1./({mom_scale})-1));"\
                             "else p=pt_2_corr_dn;"\
                             "return p;"
                         )
+   # set variation to corrected values in data 
+    if is_data:
+        rdf = rdf.Redefine("pt_1_corr_up", "pt_1_corr")
+        rdf = rdf.Redefine("pt_1_corr_dn", "pt_1_corr")
+        if is_dilepton:
+            rdf = rdf.Redefine("pt_2_corr_up", "pt_2_corr")
+            rdf = rdf.Redefine("pt_2_corr_dn", "pt_2_corr")
+                    
     # calculate corrected visible mass for dilepton events
     if is_dilepton:
         rdf = calc_m(rdf, '_corr')
@@ -217,9 +225,9 @@ def generate_files(arguments, nthreads):
 
 if __name__=='__main__':
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
-    ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
-    ROOT.ROOT.EnableImplicitMT(24)
-    ROOT.gROOT.SetBatch(True)
+    #ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
+    ROOT.ROOT.EnableImplicitMT(16)
+    #ROOT.gROOT.SetBatch(True)
 
 
     base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_EraC/20*/*/*/*.root"
@@ -232,7 +240,7 @@ if __name__=='__main__':
     mz_res_mc = np.loadtxt('correction_files/Run3/mm/resmz_mc.txt')
     mz_res_dt = np.loadtxt('correction_files/Run3/mm/resmz_dt.txt') * pt_sf
     
-    nthreads = 64
+    nthreads = 16
     arguments = [(ntuple, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt) for ntuple in ntuples]
     generate_files(arguments, nthreads)
     #for n in tqdm(ntuples):

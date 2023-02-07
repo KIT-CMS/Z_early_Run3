@@ -580,7 +580,7 @@ def run(input_dict):
 if __name__=='__main__':
     args = parse_args()
     ROOT.gROOT.SetBatch(True) 
-    ROOT.ROOT.EnableImplicitMT(32)
+    #ROOT.ROOT.EnableImplicitMT(32)
     ws_dicts = [
         {
             "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigAndBck/", 
