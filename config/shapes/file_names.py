@@ -17,11 +17,9 @@ common_files_2018 = {
 common_files_2022 = {
     "DY": [
         "DYJetsToLL_M-10to50_TuneCP5_13p6TeV-madgraphMLM-pythia8-Run3Winter22MiniAOD-122X",
-        # "DYJetsToLL_M-50_TuneCP5_13p6TeV-madgraphMLM-pythia8-Run3Winter22MiniAOD-122X",
         "DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X",
     ],
     "W": [
-        # "WJetsToLNu_TuneCP5_13p6TeV-madgraphMLM-pythia8-Run3Winter22MiniAOD-122X",
         "WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X",
     ],
     "TT": [
@@ -55,18 +53,20 @@ files = {
                 "data": [
                     "SingleMuon_Run2022C-PromptReco-v1",
                     "Muon_Run2022C-PromptReco-v1",
+                    # "Muon_Run2022D-PromptReco-v1",
+                    # "Muon_Run2022D-PromptReco-v2",
                 ],
             },
-            # **common_files_2018
             **common_files_2022
         ),
         "ee": dict(
             {
                 "data": [
                     "EGamma_Run2022C-PromptReco-v1",
+                    "EGamma_Run2022D-PromptReco-v1",
+                    "EGamma_Run2022D-PromptReco-v2",
                 ],
             },
-            # **common_files_2018
             **common_files_2022
         ),
         "mmet": dict(
@@ -74,18 +74,20 @@ files = {
                 "data": [
                     "SingleMuon_Run2022C-PromptReco-v1",
                     "Muon_Run2022C-PromptReco-v1",
+                    # "Muon_Run2022D-PromptReco-v1",
+                    # "Muon_Run2022D-PromptReco-v2",
                 ],
             },
-            # **common_files_2018
             **common_files_2022
         ),
         "emet": dict(
             {
                 "data": [
                     "EGamma_Run2022C-PromptReco-v1",
+                    "EGamma_Run2022D-PromptReco-v1",
+                    "EGamma_Run2022D-PromptReco-v2",
                 ],
             },
-            # **common_files_2018
             **common_files_2022
         ),
     },
