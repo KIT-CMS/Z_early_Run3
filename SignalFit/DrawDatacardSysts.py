@@ -70,8 +70,6 @@ for full_name in list(hlist):
     if not tmp in syst and 'bin' not in tmp and 'nominal' not in tmp:
         syst.append(tmp)
 
-print(hlist)
-
 # create the plots
 for r in region:
     for p in process:
@@ -86,6 +84,7 @@ for r in region:
             k_down = 'h_' + p + '_' + r + '_' + s + 'Down'
 
             h_name = 'h_' + p + '_' + r + '_' + s
+            h_title = f'process: {p}, variable: {r}, systematic: {s}'
 
             # get histograms
             if k_up in list(hlist):
@@ -181,7 +180,7 @@ for r in region:
             for h in [h_up,h_down,h_nom]:
                 if h.GetMaximum() > maxbin:
                     maxbin = h.GetMaximum()
-            h_up.SetMaximum( 1.1 * maxbin )
+            h_up.SetMaximum( 1.2 * maxbin )
 
             # debug
             if debug:
@@ -207,11 +206,13 @@ for r in region:
             h_up.SetLineColor(632)
             h_down.SetLineColor(600)
 
-            h_up.SetTitle(h_name)
+            h_up.SetTitle(h_title)
 
             h_up.GetYaxis().SetTitleSize(20)
             h_up.GetYaxis().SetTitleFont(43)
             h_up.GetYaxis().SetTitleOffset(1.55)
+
+            h_up.GetYaxis().SetTitle("events")
 
             h_up.Draw()
             h_down.Draw('same')
@@ -225,12 +226,12 @@ for r in region:
             leg.SetTextFont(42)
             leg.SetTextSize(0.02)
             leg.SetTextAlign(12)
-            int_nom = round(h_nom.Integral(),1)
-            int_up = round(h_up.Integral(),1)
-            int_down = round(h_down.Integral(),1)
+            int_nom = round(h_nom.Integral(),2)
+            int_up = round(h_up.Integral(),2)
+            int_down = round(h_down.Integral(),2)
             leg.AddEntry(h_nom,"nominal ("+str(int_nom)+")","L")
-            leg.AddEntry(h_up,"up ("+str(int_up)+", "+str(int_up-int_nom)+")","L")
-            leg.AddEntry(h_down,"down ("+str(int_down)+", "+str(int_down-int_nom)+")","L")
+            leg.AddEntry(h_up,"up ("+str(int_up)+", "+str(round(int_up-int_nom,2))+")","L")
+            leg.AddEntry(h_down,"down ("+str(int_down)+", "+str(round(int_down-int_nom,2))+")","L")
             leg.Draw()
 
             c[-1].cd()
@@ -275,6 +276,7 @@ for r in region:
 
             h_diff_up.GetYaxis().SetNdivisions(505)
             h_diff_up.GetYaxis().SetLabelSize(0.125)
+            h_diff_up.GetYaxis().SetTitle("ratio")
 
             h_diff_up.GetXaxis().SetLabelSize(0)
 
