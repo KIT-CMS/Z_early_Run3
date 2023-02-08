@@ -401,6 +401,15 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
             for sysweight in nuisgroups["effsys"]:
                 sysweight[proc.name] = 1.0
 
+    # momentum and resolution correction systematics
+    nuisgroups["Momentum"] = []
+    for syst in ["LepCorr"]:
+        nuis_mom = Nuisance(name = syst, type = "shape")
+        for proc in processes:
+            if not proc.isQCD:
+                    nuis_mom[proc.name] = 1.0
+        nuisgroups["Momentum"].append(nuis_mom)
+
     # theory systematics
     nuisgroups["pdfscale"] = []
     for ipdf in range(1, 101):
