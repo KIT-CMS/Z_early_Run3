@@ -149,7 +149,7 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
 
     # from lumi
     unc_lumi = {}
-    unc_lumi['lumi_13p6TeV'] = 1.06
+    unc_lumi['lumi_13p6TeV'] = 1.03
 
     # data
     data = Process(
@@ -227,11 +227,11 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
     # and the impacts on each process
     nuisgroups = OrderedDict()
 
-    # nuis_lumi = Nuisance(name = "lumi_" + era, type = "lnN")
-    # for proc in processes:
-    #     if proc.isMC:
-    #         nuis_lumi[proc.name] = unc_lumi[nuis_lumi.name]
-    # nuisgroups["lumi"] = [nuis_lumi]
+    nuis_lumi = Nuisance(name = "lumi_" + era, type = "lnN")
+    for proc in processes:
+        if proc.isMC:
+            nuis_lumi[proc.name] = unc_lumi[nuis_lumi.name]
+    nuisgroups["lumi"] = [nuis_lumi]
 
     nuisgroups["mcsec"] = []
     for proc in processes:
@@ -277,13 +277,13 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
     for ipdf in range(1, 101):
         nuis_pdf = Nuisance(name = f"LHEPdfWeight{ipdf}", type = "shape")
         for proc in processes:
-            if proc.isSignal:
+            if proc.isMC and proc.name != "ewk":
                 nuis_pdf[proc.name] = 1.0
         nuisgroups["pdfscale"].append(nuis_pdf)
     for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR"]:
         nuis_scale = Nuisance(name = syst, type = "shape")
         for proc in processes:
-            if proc.isSignal:
+            if proc.isMC and proc.name != "ewk":
                 nuis_scale[proc.name] = 1.0
         nuisgroups["pdfscale"].append(nuis_scale)
 
@@ -321,7 +321,7 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
 
     # from lumi
     unc_lumi = {}
-    unc_lumi['lumi_13p6TeV'] = 1.06
+    unc_lumi['lumi_13p6TeV'] = 1.03
 
     # data
     data = Process(
@@ -377,11 +377,11 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
     # and the impacts on each process
     nuisgroups = OrderedDict()
 
-    # nuis_lumi = Nuisance(name = "lumi_" + era, type = "lnN")
-    # for proc in processes:
-    #     if proc.isMC:
-    #         nuis_lumi[proc.name] = unc_lumi[nuis_lumi.name]
-    # nuisgroups["lumi"] = [nuis_lumi]
+    nuis_lumi = Nuisance(name = "lumi_" + era, type = "lnN")
+    for proc in processes:
+        if proc.isMC:
+            nuis_lumi[proc.name] = unc_lumi[nuis_lumi.name]
+    nuisgroups["lumi"] = [nuis_lumi]
 
     nuisgroups["mcsec"] = []
     for proc in processes:
@@ -401,18 +401,27 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
             for sysweight in nuisgroups["effsys"]:
                 sysweight[proc.name] = 1.0
 
+    # momentum and resolution correction systematics
+    nuisgroups["Momentum"] = []
+    for syst in ["LepCorr"]:
+        nuis_mom = Nuisance(name = syst, type = "shape")
+        for proc in processes:
+            if not proc.isQCD:
+                    nuis_mom[proc.name] = 1.0
+        nuisgroups["Momentum"].append(nuis_mom)
+
     # theory systematics
     nuisgroups["pdfscale"] = []
     for ipdf in range(1, 101):
         nuis_pdf = Nuisance(name = f"LHEPdfWeight{ipdf}", type = "shape")
         for proc in processes:
-            if proc.isSignal:
+            if proc.isMC and proc.name != "ewk":
                 nuis_pdf[proc.name] = 1.0
         nuisgroups["pdfscale"].append(nuis_pdf)
     for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR"]:
         nuis_scale = Nuisance(name = syst, type = "shape")
         for proc in processes:
-            if proc.isSignal:
+            if proc.isMC and proc.name != "ewk":
                 nuis_scale[proc.name] = 1.0
         nuisgroups["pdfscale"].append(nuis_scale)
 

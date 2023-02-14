@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 
-export iteration='v13Asimov'
+export iteration='v14Asimov'
 export fit_variable='pfmt_corr'
 export datacard_name='card_mu'
 export script_dir="$PWD"
 
 mkdir -p {cards,root}/${iteration} plots
 
+unset PYTHONHOME PYTHON_INCLUDE_PATH PYTHONPATH PYTHON_VERSION
 source setenv.sh
 python PrepareFits.py ${iteration}
 
@@ -25,11 +26,10 @@ done
 echo "waiting for fits to finish ..."
 wait
 
-# tail -f  cards/${iteration}/${fit_variable}/scan_wbin0_syst*/${datacard_name}.log
-# ls -lthr cards/${iteration}/*/scan_wbin*
 
 unset PYTHON27PATH PYTHON3PATH PYTHON_VALGRIND_SUPP
 source setenv.sh
-python MakePostFitPlots.py ${iteration} &> log-${iteration}.log
+python DrawDatacardSysts.py root/${iteration}/output_shapes_pfmt_corr_wbin0_systAll.root plots/syst_shapes_${iteration}/ &> log-${iteration}_DrawDatacardSysts.log
+python MakePostFitPlots.py ${iteration} &> log-${iteration}_MakePostFitPlots.log
 
-grep -r "poi =" log-${iteration}.log > res_pois_${iteration}.txt
+grep -r "poi =" log-${iteration}_MakePostFitPlots.log > res_pois_${iteration}.txt

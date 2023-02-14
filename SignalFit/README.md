@@ -1,3 +1,30 @@
+# most recent setup
+
+## TLDR
+
+open `fit.sh`, adjust variables at the top, run `fit.sh` ... profit
+
+##  Make datacards
+
+go to `SignalFit` dir
+
+run `PrepareFits.py` (check `fit.sh` for usage, as well as for the following steps)
+
+##  Perform combine fit
+
+in the `SignalFit` dir, go to `cards` and follow the tag dir, as well as the variable dir
+
+there are multiple directories, each containing the datacards and a shell script to run the fit
+
+difference between these folders are different amounts of systematic uncertainties
+
+## Plot fit results
+
+again in the `SignalFit` dir, run `MakePostFitPlots.py`
+
+
+# !outdated below!
+
 # W cross section and W pT Analysis
 
 Collection of the analysis code to make plots and run statistical analysis for the inclusive W and Z cross section, and W pT analysis, ideally end to end. Under development.
@@ -27,7 +54,7 @@ To produce the histograms in the signal region, just run
 ```
 python MakePlots_Wlnu.py
 ```
-which will produce all the needed histograms for data and MC templates in the muon channel, saved in the `root` directory. 
+which will produce all the needed histograms for data and MC templates in the muon channel, saved in the `root` directory.
 
 This might take a while since it needs to loop over a large number of events with different systematic variations. Change `doTest` flag to true will run in the test mode, with only a subset of samples and variations. Suitable for debugging.
 
@@ -46,7 +73,7 @@ Do this for electron, and muon channels separately. `--applyScaling` flag will s
 
 ## PrepareFits.py
 
-The histogram processings and data card generations, etc, are all included in `PrepareFits.py`. 
+The histogram processings and data card generations, etc, are all included in `PrepareFits.py`.
 ```
 python PrepareFits.py
 ```
