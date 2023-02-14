@@ -180,40 +180,42 @@ def get_all_variables(doZpt, doQCD, doLepCorrBins):
 
     final_vars_mm = [
         "m_toFit",
-    ]
+        "m_toFit_up",
+        "m_toFit_dn"
+        ]
     final_vars_mmet = [
-        "pfmet_corr_pos", "pfmet_corr_neg",
+        #"pfmet_corr_pos", "pfmet_corr_neg",
         "pfmt_corr_pos", "pfmt_corr_neg",
     ]
 
     final_vars_mmet_syst = [
-        "pfmet_corr_double_neg", "pfmet_corr_double_pos",
+        #"pfmet_corr_double_neg", "pfmet_corr_double_pos",
         "pfmt_corr_double_neg",  "pfmt_corr_double_pos",
 
-        "pfmet_corr_sigOnly_neg", "pfmet_corr_sigOnly_pos",
+        #"pfmet_corr_sigOnly_neg", "pfmet_corr_sigOnly_pos",
         "pfmt_corr_sigOnly_neg",  "pfmt_corr_sigOnly_pos",
 
-        "pfmet_corr_zrap0_neg", "pfmet_corr_zrap0_pos",
+        #"pfmet_corr_zrap0_neg", "pfmet_corr_zrap0_pos",
         "pfmt_corr_zrap0_neg",  "pfmt_corr_zrap0_pos",
 
-        "pfmet_corr_zrap1_neg", "pfmet_corr_zrap1_pos",
+        #"pfmet_corr_zrap1_neg", "pfmet_corr_zrap1_pos",
         "pfmt_corr_zrap1_neg",  "pfmt_corr_zrap1_pos",
 
-        "pfmet_corr_zrap2_neg", "pfmet_corr_zrap2_pos",
+        #"pfmet_corr_zrap2_neg", "pfmet_corr_zrap2_pos",
         "pfmt_corr_zrap2_neg",  "pfmt_corr_zrap2_pos",
     ] + [
         "pfmt_corr_stat{istat}{updn}_{posneg}".format(istat=istat, updn=updn, posneg=posneg) for istat in range(15) for updn in ["Up", "Down"] for posneg in ["pos", "neg"]
     ] + [
-        "pfmet_corr_stat{istat}{updn}_{posneg}".format(istat=istat, updn=updn, posneg=posneg) for istat in range(15) for updn in ["Up", "Down"] for posneg in ["pos", "neg"]
+      #  "pfmet_corr_stat{istat}{updn}_{posneg}".format(istat=istat, updn=updn, posneg=posneg) for istat in range(15) for updn in ["Up", "Down"] for posneg in ["pos", "neg"]
     ]
 
     variable_dict = {
-        # "mm": final_vars_mm,
+        "mm": final_vars_mm,
         # "mmet": final_vars_mmet,
-        # "mmet": final_vars_mmet_syst,
+        "mmet": final_vars_mmet_syst,
 
-        "mm": common_vars_mm + met_vars,
-        "mmet": common_vars_mmet + met_vars,
+        # "mm": common_vars_mm + met_vars,
+        # "mmet": common_vars_mmet + met_vars,
 
         # "mm": common_vars_mm + met_vars,  # + ["nTrackerLayers_1", "nStations_1"],
         # "mmet": common_vars_mmet + met_vars,  # + ["nTrackerLayers_1", "nStations_1"],

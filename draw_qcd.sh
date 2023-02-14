@@ -39,7 +39,7 @@ seperateVariables=0
 extra_args=""
 # extra_args="--doLepCorrBins"
 # extra_args="--doZpt"
-#extra_args="--doQCD"
+extra_args="--doQCD"
 
 # variables by channel (this can be changed to fit what variables you want plotted)
 # variable_list=""
