@@ -21,7 +21,7 @@ showPULL = True
 if doInclusive:
     sqrtS = "13p6TeV"
     do5TeV = False
-    lumi_unc = 0.06
+    lumi_unc = 0.03
 
     version = sys.argv[1]
     doAsimov = ("Asimov" in version)
@@ -51,7 +51,7 @@ if doInclusive:
         errs_qcd_neg = []
 
         for idx in range(nscans):
-
+            
             for syst_name, systs in syst_groups.items():
 
                 workdir = f"cards/{version}/{fit_variable_w}/scan_wbin{idx}_syst{syst_name}/"
@@ -192,7 +192,7 @@ if doInclusive:
 
     # HERE
     if not doAsimov:
-        workdir = f"cards/test_{version}/pfmet_pfmt/"
+        workdir = f"cards/{version}/pfmet_pfmt/"
         filename = workdir + f"card_mu.root"
 
         mass_bins = mass_bins_w

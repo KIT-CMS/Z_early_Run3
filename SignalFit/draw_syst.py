@@ -207,7 +207,7 @@ def MakeSystPlot(version: str, ifilename: str, hist_name: str, syst_group: str, 
 if __name__  == "__main__":
     version = "v12"
     syst_groups = {
-        f"root/test_{version}/output_shapes_pfmt_corr_wbin0_systAll.root": {
+        f"root/{version}/output_shapes_pfmt_corr_wbin0_systAll.root": {
             "h_dy_m_toFit": {
                 "SF": [
                     "SFTrk",
