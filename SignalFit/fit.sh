@@ -8,6 +8,7 @@ export script_dir="$PWD"
 
 mkdir -p cards root plots logs pois {cards,root,plots}/${iteration}
 
+unset PYTHONHOME PYTHON_INCLUDE_PATH PYTHONPATH PYTHON_VERSION
 source setenv.sh
 python PrepareFits.py ${iteration}
 
@@ -27,11 +28,11 @@ done
 echo "waiting for fits to finish ..."
 wait
 
-# tail -f  cards/${iteration}/${fit_variable}/scan_wbin0_syst*/${datacard_name}.log
-# ls -lthr cards/${iteration}/*/scan_wbin*
 
 unset PYTHON27PATH PYTHON3PATH PYTHON_VALGRIND_SUPP
 source setenv.sh
 python MakePostFitPlots.py ${iteration} &> logs/log-${iteration}.log
 
 grep -r "poi =" logs/log-${iteration}.log > pois/res_pois_${iteration}.txt
+python DrawDatacardSysts.py root/${iteration}/output_shapes_pfmt_corr_wbin0_systAll.root plots/syst_shapes_${iteration}/ &> logs/log-${iteration}_DrawDatacardSysts.log
+

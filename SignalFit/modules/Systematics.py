@@ -50,4 +50,8 @@ syst_groups = {
     "QCDStat": [
         f"bin{i}shape" for i in range(1, len(mass_bins_w))
     ],
+    "Momentum": [
+        "LepCorr",
+    ],
+
 }

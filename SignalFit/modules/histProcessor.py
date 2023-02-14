@@ -11,7 +11,7 @@ def DoRebin(hist, mass_bins):
     rebin the histogram to be used for the mass fit
     """
     hist = RebinHisto(hist, mass_bins, hist.GetName())
-    
+
     # clear underflow
     hist.SetBinContent(0, 0.)
     hist.SetBinError(0, 0.)
@@ -51,9 +51,9 @@ def renameHist(hist, base_name, syst = None):
 
 
 def ProcessHists(
-    ifile, foutput, 
-    processes = ["EWK", "TT", "DY", "data"], 
-    ewk = ["Wtau", "DYtau", "VV", "ST"], 
+    ifile, foutput,
+    processes = ["EWK", "TT", "DY", "data"],
+    ewk = ["Wtau", "DYtau", "VV", "ST"],
     fit_variable = "m_toFit",
     bins = None,
     systs = []):
@@ -73,6 +73,9 @@ def ProcessHists(
         if "pfmtcut" in hname:
             continue
         if not hname.endswith(fit_variable):
+            continue
+        # this is illegal...
+        if 'LepCorr' in hname:
             continue
         hnames.append(hname.replace("data", "PROCREPLACE"))
 
@@ -184,7 +187,6 @@ def ProcessHists(
                 else:
                     hists_all[h_renamed.GetName()] = h_renamed
                     SaveHistToFile(h_renamed, foutput)
-
     return 1
 
 
@@ -205,14 +207,14 @@ def ProcessHistsQCD(ifile, foutput, fit_variable = None, bins = None, systs = []
         for syst in ["Nominal"]+systs:
             hname_syst = hname
             if syst != "Nominal":
-                hname_syst += "_"+syst 
+                hname_syst += "_"+syst
 
             name_base = f"h_qcd_{fit_variable}"
             h_tmp = finput.Get(hname_syst)
             h_renamed = renameHist(h_tmp, name_base, syst)
             if bins is not None:
                 h_renamed = DoRebin(h_renamed, bins)
-            
+
             if "mcScale" in syst:
                 h_renamed_no = hists_all[h_renamed.GetName().replace(f"_{syst}", "")].Clone(h_renamed.GetName()+"Nominal")
                 n_renamed_no = h_renamed_no.Integral(0, -1)
@@ -237,8 +239,8 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
     # Z histograms
     ProcessHists(
         ifile, foutput,
-        processes = ["EWK", "TT", "DY", "data"], 
-        ewk = ["Wtau", "DYtau", "VV", "ST"], 
+        processes = ["EWK", "TT", "DY", "data"],
+        ewk = ["Wtau", "DYtau", "VV", "ST"],
         fit_variable = "m_toFit",
         bins = mass_bins_z,
         systs = [
@@ -263,6 +265,9 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMURDown",
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
+        ] + [
+            "LepCorrUp",
+            "LepCorrDn",
         ]
     )
 
@@ -379,5 +384,3 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
     foutput.Close()
 
     return 1
-
-
