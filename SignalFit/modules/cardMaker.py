@@ -1,5 +1,5 @@
 """
-code to generate the W(lnv) cards for tfCombine. 
+code to generate the W(lnv) cards for tfCombine.
 """
 
 from collections import OrderedDict
@@ -26,7 +26,7 @@ class Process(object):
 
         # a bit hacky, to point to the correct file location
         # - by default the fits run on lpc
-        prefix_LPC = "/work/jdriesch/earlyrun3/Z_early_Run3/SignalFit/"
+        prefix_LPC = os.getcwd() + '/'
         self.fname = prefix_LPC + kwargs.get('fname', 'test.root')
 
         #  regulation
@@ -60,10 +60,10 @@ class Nuisance(object):
         # valuemap saves how much one process is affected by the nuisance parameter
         # key is the process name, value is the uncertainty
         self.valuemap = kwargs.get('valuemap', {})
-    
+
     def __getitem__(self, key):
         return self.valuemap.get(key, '-')
-    
+
     def __setitem__(self, key, val):
         self.valuemap[key] = val
 
@@ -141,13 +141,13 @@ def WriteCard(data, processes, nuisgroups, cardname):
 def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = False, nMTBins = 9, outdir = "cards", applyLFU = False, fit_variable_w = "pfmet_corr", systs=None):
     # charge string for histogram names
     charge = "pos" if "plus" in channel else "neg"
-    
+
     # prefix of all histo names
     prefix = ""
     if rebinned:
         prefix = "Rebinned_"
 
-    # from lumi    
+    # from lumi
     unc_lumi = {}
     unc_lumi['lumi_13p6TeV'] = 1.03
 
@@ -161,7 +161,7 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
     # sig processes
     sigs = []
     sig = Process(
-        name = GetSigName(channel, applyLFU), fname = fname_mc, 
+        name = GetSigName(channel, applyLFU), fname = fname_mc,
         hname = prefix + "h_w_{}_{}".format(fit_variable_w, charge),
         hsys  = prefix + "h_w_{}_{}_".format(fit_variable_w, charge),
         isSignal = True,
@@ -172,7 +172,7 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
     sigs.append(sig)
     sig_z_channel = channel.replace("plus", "").replace("minus", "")*2
     sig_z = Process(
-        name = GetSigName(sig_z_channel, applyLFU), fname = fname_mc, 
+        name = GetSigName(sig_z_channel, applyLFU), fname = fname_mc,
         hname = prefix + "h_dy_{}_{}".format(fit_variable_w, charge),
         hsys  = prefix + "h_dy_{}_{}_".format(fit_variable_w, charge),
         isSignal = True,
@@ -219,7 +219,7 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
 
     # list of all processes
     processes = sigs + [ttbar, ewk, qcd]
-    
+
     lepname = "mu" if "mu" in channel else "e"
     era = "13p6TeV"
 
@@ -319,7 +319,7 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
     if rebinned:
         prefix = "Rebinned_"
 
-    # from lumi    
+    # from lumi
     unc_lumi = {}
     unc_lumi['lumi_13p6TeV'] = 1.03
 
@@ -333,7 +333,7 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
     # sig processes
     sigs = []
     sig_z = Process(
-        name = GetSigName(channel, applyLFU), fname = fname, 
+        name = GetSigName(channel, applyLFU), fname = fname,
         hname = prefix + "h_dy_m_toFit",
         hsys  = prefix + "h_dy_m_toFit_",
         isSignal = True,
@@ -369,7 +369,7 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
 
     # list of all processes
     processes = sigs + [ttbar, ewk]
-    
+
     lepname = "mu" if "mu" in channel else "e"
     era = "13p6TeV"
 
@@ -467,7 +467,7 @@ def GenerateRunCommand(output: str, cards: list, channels: list, cards_xsec: lis
     """
     assert len(cards) == len(channels), "cards and channels should have the same length"
     if len(cards_xsec) > 0:
-        # if provided xsec cards, then it should have the same length as the hist cards and channels        
+        # if provided xsec cards, then it should have the same length as the hist cards and channels
         assert len(cards_xsec) == len(channels), "xsec cards and channels should have the same length"
 
     # these partitions can be changed depending on the directories and organizations
@@ -476,7 +476,7 @@ def GenerateRunCommand(output: str, cards: list, channels: list, cards_xsec: lis
 
     for idx, card in enumerate(cards):
         cards[idx] = card.split('/')[-1]
-    
+
     for idx, card_xsec in enumerate(cards_xsec):
         cards_xsec[idx] = card_xsec.split('/')[-1]
 
@@ -588,14 +588,14 @@ def MakeXSecCard(channel: str, is5TeV: bool = False, outdir: str = "cards", appl
     f.Close()
 
     # sig mc xsec
-    sig = Process(name = GetSigName(channel, applyLFU), fname = fname, 
+    sig = Process(name = GetSigName(channel, applyLFU), fname = fname,
                  hname = hname,
                  hsys = hname+"_",
                  isSignal = True,
                  isMC = True,
                  isV = True,
                  isQCD = False
-                 ) 
+                 )
 
     # get the datacard
     cardname = f"{outdir}/datacard_{channel}_xsec_InAcc.txt"
@@ -615,5 +615,3 @@ def GetSigName(channel: str, applyLFU: bool = False):
     if applyLFU:
         signame = signame.replace("e", "lep").replace("mu", "lep")
     return signame + "_sig"
-
-
