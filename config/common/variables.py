@@ -211,8 +211,8 @@ def get_all_variables(doZpt, doQCD, doLepCorrBins):
 
     variable_dict = {
         "mm": final_vars_mm,
-        # "mmet": final_vars_mmet,
-        "mmet": final_vars_mmet_syst,
+        "mmet": final_vars_mmet,
+        # "mmet": final_vars_mmet_syst,
 
         # "mm": common_vars_mm + met_vars,
         # "mmet": common_vars_mmet + met_vars,

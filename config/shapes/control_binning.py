@@ -51,8 +51,8 @@ uniformBinningDict = {
     #'pfmt': [0, 20, 10],
     'pfmt_uncorrected': [0, 120, 20],
 
-    # 'pfmt_corr': [0, 120, 20],
-    'pfmt_corr': [0, 30, 5],
+    'pfmt_corr': [0, 120, 20],
+    # 'pfmt_corr': [0, 30, 5],
 
     'pfmt_lepuncorr': [0, 120, 20],
     #'pfmt_uncorrected': [0, 20, 10],
