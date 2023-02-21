@@ -64,7 +64,7 @@ def FormatOutputForWZ(istring: str, tdrStyle: bool=False):
     sysmaps['mcsec        '] = 'MC normalization       '
 
     if tdrStyle:
-        for key in ['lepplus','lepminus','leplep','WpOverZ','WmOverZ','WpOverWm']:
+        for key in ['WpOverZ','WmOverZ','WpOverWm', 'lepplus', 'lepminus','leplep']:
             istring = istring.replace(key, labelmaps[key])
     else:
         for key in labelmaps.keys():
