@@ -235,7 +235,7 @@ WW_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X:
   nfiles: 82
   nick: WW_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X
   sample_type: diboson
-  xsec: 173.4  # AN2022_103_v7
+  xsec: 116.8 # NNLO from SA + ER # 8.042e+01 GenXSecAnalyzer  # 173.4 AN2022_103_v7 # ratio NNLO/genxsec(LO) = 1.4523750310867942
   nevents: 15723238.0000000000
   sumw: 15723362.6409868002
   sumwnorm: 15723238.0000000000
@@ -245,10 +245,9 @@ WZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X:
   dbs: /sample/not/published
   era: 2022
   nfiles: 47
-    ://cmsweb.cern.ch/das/request?input=dataset%3D%2FWtoLNu-2Jets_TuneCP5_13p6TeV_amcatnloFXFX-pythia8%2FRun3Summer22NanoAODv11-126X_mcRun3_2022_realistic_v2-v1%2FNANOAODSIM&instance=prod/globalount_dict[ch][sign] += tf.Get(f"{i}#mmet_corr-355862-357482-{i}#Nominal#pfmet_corr_{sign}_isoCR").Integral()
   nick: WZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X
   sample_type: diboson
-  xsec: 54.3  # AN2022_103_v7
+  xsec: 54.3 # NNLO from SA + ER # 2.912e+01  GenXSecAnalyzer # 54.3  AN2022_103_v7 # ratio NNLO/genxsec(LO) = 1.864697802197802
   nevents: 7897760.0000000000
   sumw: 7897760.0000000000
   sumwnorm: 7897760.0000000000
@@ -260,7 +259,7 @@ ZZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X:
   nfiles: 52
   nick: ZZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X
   sample_type: diboson
-  xsec: 16.7  # AN2022_103_v7
+  xsec: 16.7 # NNLO from SA + ER # 1.285e+01  GenXSecAnalyzer  # 16.7  AN2022_103_v7 # ratio NNLO/genxsec(LO) = 1.2996108949416343
   nevents: 1183555.0000000000
   sumw: 1183555.0000000000
   sumwnorm: 1183555.0000000000
