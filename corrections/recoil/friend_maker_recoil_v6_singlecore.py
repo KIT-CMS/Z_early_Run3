@@ -13,7 +13,7 @@ ROOT.gSystem.Load("./utils/PdfDiagonalizer_cc.so")
 
 def parse_args():
     parser = argparse.ArgumentParser(description="produce friend of input ntuple with corrected met")
-    parser.add_argument('-I', '--inpath', default='/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_scaleres_EraC/2022/*/mm*/*.root', help='path to input samples')
+    parser.add_argument('-I', '--inpath', default='/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_pu_EraC/2022/*/mm*/*.root', help='path to input samples')
     parser.add_argument('--overwrite', action='store_true', default=True)
     parser.add_argument('--test', action='store_true', default=False)   
     args = parser.parse_args()
@@ -225,9 +225,9 @@ def run(input_dict):
     doStatUnc = (syst_postfix == "")
 
     if args.test:
-        outdir = infile.replace("/ntuples_xsec_sf_scaleres_EraC/", "/test_friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr"+syst_postfix+"/")
+        outdir = infile.replace("/ntuples_xsec_sf_scaleres_pu_EraC/", "/test_friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr"+syst_postfix+"/")
     else:
-        outdir = infile.replace("/ntuples_xsec_sf_scaleres_EraC/", "/friend_xsec_sf_scaleres_EraC_met_corr"+syst_postfix+"/")
+        outdir = infile.replace("/ntuples_xsec_sf_scaleres_pu_EraC/", "/friend_xsec_sf_scaleres_pu_EraC_met_corr"+syst_postfix+"/")
         
 
     outfile = outdir

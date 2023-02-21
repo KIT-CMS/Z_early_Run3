@@ -392,7 +392,9 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
         hnew_downs = []
         for ibin in xrange(1, histos_norm[isomin].GetNbinsX()+1):
             val = max(vals_pol0_par1[ibin-1][0], 0.)
-            err = vals_pol0_par1[ibin-1][1]
+            stat = vals_pol0_par1[ibin-1][1]
+            pol1 = hnew.GetBinContent(ibin) - hnew_pol1.GetBinContent(ibin)
+            err = np.sqrt(stat**2 + pol1**2)
             hnew_up   = hnew.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_bin{}shapeUp".format(str(ibin)))
             hnew_down = hnew.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_bin{}shapeDown".format(str(ibin)))
             hnew_up.SetBinContent(ibin, val+err)
@@ -450,7 +452,7 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
             DrawHistos( h_todraws, labels, 0, 3, "#frac{p_{T}}{m_{T}}", 0., 1.25*h_isoSR_noMCscale.GetMaximum(), "A.U.", "QCDShapeCompare_"+variable+"_"+channel+mc_scale_str, dology=False, nMaxDigits=3, legendPos=[0.60, 0.72, 0.88, 0.88], lheader=extraText, noCMS = True)
         elif "mt" in variable:
             #DrawHistos( h_todraws, labels, 0, 120, "m_{T} [GeV]", 0., 1.25*h_isoSR_noMCscale.GetMaximum(), "A.U.", "QCDShapeCompare_"+variable+"_" +channel+mc_scale_str, dology=False, nMaxDigits=3, legendPos=[0.60, 0.72, 0.88, 0.88], lheader=extraText, noCMS = True)
-            DrawHistos( h_todraws, labels, 0, 20, "m_{T} [GeV]", 0., 1.25*h_isoSR_noMCscale.GetMaximum(), "A.U.", "QCDShapeCompare_"+variable+"_" +channel+mc_scale_str, dology=False, nMaxDigits=3, legendPos=[0.60, 0.72, 0.88, 0.88], lheader=extraText, noCMS = True)
+            DrawHistos( h_todraws, labels, 0, 120, "m_{T} [GeV]", 0., 1.25*h_isoSR_noMCscale.GetMaximum(), "A.U.", "QCDShapeCompare_"+variable+"_" +channel+mc_scale_str, dology=False, nMaxDigits=3, legendPos=[0.60, 0.72, 0.88, 0.88], lheader=extraText, noCMS = True)
         elif "met" in variable:
             DrawHistos( h_todraws, labels, 0, 120, "MET [GeV]", 0., 1.25*h_isoSR_noMCscale.GetMaximum(), "A.U.", "QCDShapeCompare_"+variable+"_"+channel+mc_scale_str, dology=False, nMaxDigits=3, legendPos=[0.60, 0.72, 0.88, 0.88], lheader=extraText, noCMS = True)
 
@@ -474,7 +476,7 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
             DrawHistos( h_todraws, labels, 0, 3, "#frac{p_{T}}{m_{T}}", 0., 0.1, "A.U.", "shapes_QCD_"+variable+"_"+suffix, dology=False, nMaxDigits=3, legendPos=[0.75, 0.40, 0.95, 0.83], lheader=extraText, noCMS = True, donormalize=True, drawashist=True, showratio=True, ratiobase=-1, yrlabel="#scale[0.4]{Ratio to last iso bin}", yrmin=0.51, addOverflow = True, yrmax=1.49)
         elif "mt" in variable:
             #DrawHistos( h_todraws, labels, 0, 120, "m_{T} [GeV]", 0., 0.1, "A.U.", "shapes_QCD_"+variable+"_"+suffix, dology=False, nMaxDigits=3, legendPos=[0.75, 0.40, 0.95, 0.83], lheader=extraText, noCMS = True, donormalize=True, drawashist=True, showratio=True, ratiobase=-1, yrlabel="#scale[0.4]{Ratio to last iso bin}", yrmin=0.51, addOverflow = True, yrmax=1.49)
-            DrawHistos( h_todraws, labels, 0, 20, "m_{T} [GeV]", 0., 0.1, "A.U.", "shapes_QCD_"+variable+"_"+suffix, dology=False, nMaxDigits=3, legendPos=[0.75, 0.40, 0.95, 0.83], lheader=extraText, noCMS = True, donormalize=True, drawashist=True, showratio=True, ratiobase=-1, yrlabel="#scale[0.4]{Ratio to last iso bin}", yrmin=0.51, addOverflow = True, yrmax=1.49)
+            DrawHistos( h_todraws, labels, 0, 120, "m_{T} [GeV]", 0., 0.1, "A.U.", "shapes_QCD_"+variable+"_"+suffix, dology=False, nMaxDigits=3, legendPos=[0.75, 0.40, 0.95, 0.83], lheader=extraText, noCMS = True, donormalize=True, drawashist=True, showratio=True, ratiobase=-1, yrlabel="#scale[0.4]{Ratio to last iso bin}", yrmin=0.51, addOverflow = True, yrmax=1.49)
         elif "met" in variable:
             DrawHistos( h_todraws, labels, 0, 120, "MET [GeV]", 0., 0.1, "A.U.", "shapes_QCD_"+variable+"_"+suffix, dology=False, nMaxDigits=3, legendPos=[0.75, 0.40, 0.95, 0.83], lheader=extraText, noCMS = True, donormalize=True, drawashist=True, showratio=True, ratiobase=-1, yrlabel="#scale[0.4]{Ratio to last iso bin}", yrmin=0.51, addOverflow = True, yrmax=1.49)
 
@@ -514,7 +516,7 @@ if __name__ == "__main__":
     isobins = ["iso5", "iso6", "iso7", "iso8", "iso9", "iso10", "iso11", "iso12", "iso13", "iso14", "iso15", "iso16", "iso17", "iso18", "iso19", "iso20"]
     lepEtaBins = [""]  # ["_barrel", "_endcap"]
     met_tag = "pf"
-    variables = [met_tag+"mt_corr", met_tag+"met_corr"]  # , "ptOverPfmt_corr"
+    variables = [met_tag+"mt_corr"] # , met_tag+"met_corr"]  # , "ptOverPfmt_corr"
 
     number_of_qcd_events_pos = dict()
     number_of_qcd_events_neg = dict()
@@ -538,29 +540,29 @@ if __name__ == "__main__":
 
 
         
-        for variable in variables:
-            number_of_qcd_events_normed["{}_pos".format(variable)] = number_of_qcd_events_pos[variable] / number_of_qcd_events_pos[met_tag+"met_corr"]
-            number_of_qcd_events_normed["{}_neg".format(variable)] = number_of_qcd_events_neg[variable] / number_of_qcd_events_pos[met_tag+"met_corr"]
-        print("Positive: ", number_of_qcd_events_pos)
-        print("Negative: ", number_of_qcd_events_neg)
-        print(number_of_qcd_events_normed)
+        # for variable in variables:
+        #     number_of_qcd_events_normed["{}_pos".format(variable)] = number_of_qcd_events_pos[variable] / number_of_qcd_events_pos[met_tag+"met_corr"]
+        #     number_of_qcd_events_normed["{}_neg".format(variable)] = number_of_qcd_events_neg[variable] / number_of_qcd_events_pos[met_tag+"met_corr"]
+        # print("Positive: ", number_of_qcd_events_pos)
+        # print("Negative: ", number_of_qcd_events_neg)
+        # print(number_of_qcd_events_normed)
 
 
-    if doElectron:
-        fname = "XXX"
-        for variable in variables:
-            for wptbin in ["WpT_bin0"]:
-                oname = "qcdshape_extrapolated_eplus_"+variable
-                events = ExtrapolateQCD(fname, oname+"_"+wptbin+"_eplus.root", "pos", variable, wptbin, lepEtaBins, isobins)
-                number_of_qcd_events_pos[variable] = events
+    # if doElectron:
+        # fname = "XXX"
+        # for variable in variables:
+            # for wptbin in ["WpT_bin0"]:
+                # oname = "qcdshape_extrapolated_eplus_"+variable
+                # events = ExtrapolateQCD(fname, oname+"_"+wptbin+"_eplus.root", "pos", variable, wptbin, lepEtaBins, isobins)
+                # number_of_qcd_events_pos[variable] = events
 
-                oname = "qcdshape_extrapolated_eminus_"+variable
-                events = ExtrapolateQCD(fname, oname+"_"+wptbin+"_eminus.root", "neg", variable, wptbin, lepEtaBins, isobins)
-                number_of_qcd_events_neg[variable] = events
+                # oname = "qcdshape_extrapolated_eminus_"+variable
+                # events = ExtrapolateQCD(fname, oname+"_"+wptbin+"_eminus.root", "neg", variable, wptbin, lepEtaBins, isobins)
+                # number_of_qcd_events_neg[variable] = events
 
-        for variable in variables:
-            number_of_qcd_events_normed["{}_pos".format(variable)] = number_of_qcd_events_pos[variable] / number_of_qcd_events_pos[met_tag+"met_corr"]
-            number_of_qcd_events_normed["{}_neg".format(variable)] = number_of_qcd_events_neg[variable] / number_of_qcd_events_pos[met_tag+"met_corr"]
-        print("Positive: ", number_of_qcd_events_pos)
-        print("Negative: ", number_of_qcd_events_neg)
-        print(number_of_qcd_events_normed)
+        # for variable in variables:
+            # number_of_qcd_events_normed["{}_pos".format(variable)] = number_of_qcd_events_pos[variable] / number_of_qcd_events_pos[met_tag+"met_corr"]
+            # number_of_qcd_events_normed["{}_neg".format(variable)] = number_of_qcd_events_neg[variable] / number_of_qcd_events_pos[met_tag+"met_corr"]
+        # print("Positive: ", number_of_qcd_events_pos)
+        # print("Negative: ", number_of_qcd_events_neg)
+        # print(number_of_qcd_events_normed)

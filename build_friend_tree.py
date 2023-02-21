@@ -163,7 +163,8 @@ def generate_friend_trees(dataset, ntuples, nthreads):
 
 if __name__ == "__main__":
     # base_path = "/ceph/moh/CROWN_samples/Run3V03/ntuples/20*/*/*/*.root"
-    base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples/20*/*/*/*.root"
+    # base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples/20*/*/*/*.root"
+    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples/20*/*/*/*.root"
     dataset = yaml.load(open("datasets.yaml"), Loader=yaml.Loader)
 
     ntuples = glob.glob(base_path)

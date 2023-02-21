@@ -172,7 +172,8 @@ if __name__ == "__main__":
     ROOT.ROOT.EnableImplicitMT(24)
 
     # base_path = "/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec/2022/*/mm*/*.root"
-    base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec/2022/*/mm*/*.root"
+    # base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec/2022/*/mm*/*.root"
+    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec/2022/*/mm*/*.root"
 
     scalefactors = OrderedDict({
         "trk": {

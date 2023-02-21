@@ -208,8 +208,6 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
     rdf.Snapshot("ntuple", output_path, original_cols + quants + met_cols)
 
     #print("Great success!")
-
-
 #"""
 def generate_files(arguments, nthreads):
     pool = Pool(nthreads, initargs=(RLock(),), initializer=tqdm.set_lock)
@@ -230,7 +228,8 @@ if __name__=='__main__':
     #ROOT.gROOT.SetBatch(True)
 
 
-    base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_EraC/20*/*/*/*.root"
+    # base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_EraC/20*/*/*/*.root"
+    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_EraC/20*/*/*/*.root"
     ntuples = glob.glob(base_path)
     # Load correction files
     x = np.loadtxt('correction_files/Run3/mm/res_sf_extra.txt')
