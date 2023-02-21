@@ -265,7 +265,7 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
     # this is hard coded for now. Will be improved later
     nuisgroups["qcdbkg"] = []
     nbins = nMTBins
-    for syst in [f"bin{ibin}shape" for ibin in range(1, nbins+1)] + ["Pol1shape", "mcScale"]:
+    for syst in [f"bin{ibin}shape" for ibin in range(1, nbins+1)] + ["mcScale"]: # ["Pol1shape", "mcScale"]:
         nuis_QCDStat = Nuisance(name = syst, type = "shape")
         for proc in processes:
             if proc.isQCD:

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 
-export iteration='v17Asimov'
+export iteration='v18Asimov'
 export fit_variable='pfmt_corr'
 export datacard_name='card_mu'
 export script_dir="$PWD"
 
-mkdir -p cards root plots logs pois {cards,root,plots}/${iteration}
+mkdir -p cards root plots logs pois {cards,root,plots}/${iteration}/${fit_variable}/
 
 unset PYTHONHOME PYTHON_INCLUDE_PATH PYTHONPATH PYTHON_VERSION
 source setenv.sh
