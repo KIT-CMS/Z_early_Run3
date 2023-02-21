@@ -1,29 +1,3 @@
-# Summer 2022
-WtoLNu-2Jets_TuneCP5_13p6TeV_amcatnloFXFX-pythia8:
-  dbs: /WtoLNu-2Jets_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer22NanoAODv11-126X_mcRun3_2022_realistic_v2-v1/NANOAODSIM
-  era: 2022
-  nfiles: 45
-  nick: WtoLNu-2Jets_TuneCP5_13p6TeV_amcatnloFXFX-pythia8
-  sample_type: wjets
-  xsec: 63199.9 # AN2022_103_v7
-  nevents: 80257100
-  sumw: 80257100
-  sumwnorm: 80257100
-  negfrac: 0
-  generator_weight: 1
-DYto2L-2Jets_MLL-50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8:
-  dbs: /DYto2L-2Jets_MLL-50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8/Run3Summer22NanoAODv11-126X_mcRun3_2022_realistic_v2-v1/NANOAODSIM
-  era: 2022
-  nfiles: 44
-  nick: DYto2L-2Jets_MLL-50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8
-  sample_type: dyjets
-  xsec: 46221.3
-  nevents: 71028905.0
-  sumw: 71028905.0
-  sumwnorm: 71028905.0
-  negfrac: 0.0
-  generator_weight: 1.0
-
 # 2022
 DYJetsToLL_M-10to50_TuneCP5_13p6TeV-madgraphMLM-pythia8-Run3Winter22MiniAOD-122X:
   dbs: /sample/not/published
@@ -235,7 +209,7 @@ WW_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X:
   nfiles: 82
   nick: WW_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X
   sample_type: diboson
-  xsec: 173.4  # AN2022_103_v7
+  xsec: 8.042e+01  # GenXSecAnalyzer  # 173.4  # AN2022_103_v7
   nevents: 15723238.0000000000
   sumw: 15723362.6409868002
   sumwnorm: 15723238.0000000000
@@ -245,10 +219,9 @@ WZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X:
   dbs: /sample/not/published
   era: 2022
   nfiles: 47
-    ://cmsweb.cern.ch/das/request?input=dataset%3D%2FWtoLNu-2Jets_TuneCP5_13p6TeV_amcatnloFXFX-pythia8%2FRun3Summer22NanoAODv11-126X_mcRun3_2022_realistic_v2-v1%2FNANOAODSIM&instance=prod/globalount_dict[ch][sign] += tf.Get(f"{i}#mmet_corr-355862-357482-{i}#Nominal#pfmet_corr_{sign}_isoCR").Integral()
   nick: WZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X
   sample_type: diboson
-  xsec: 54.3  # AN2022_103_v7
+  xsec: 2.912e+01  # GenXSecAnalyzer  # 54.3  # AN2022_103_v7
   nevents: 7897760.0000000000
   sumw: 7897760.0000000000
   sumwnorm: 7897760.0000000000
@@ -260,7 +233,7 @@ ZZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X:
   nfiles: 52
   nick: ZZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X
   sample_type: diboson
-  xsec: 16.7  # AN2022_103_v7
+  xsec: 1.285e+01  # GenXSecAnalyzer  # 16.7  # AN2022_103_v7
   nevents: 1183555.0000000000
   sumw: 1183555.0000000000
   sumwnorm: 1183555.0000000000
@@ -324,7 +297,11 @@ DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-10
   nfiles: 204
   nick: DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X
   sample_type: dyjets
-  xsec: 6077.22
+  xsec: 6077.22  # 6221.3  # 6077.22  # 13 TeV
+  sumw: 3323477272805.9804687500
+  sumwnorm: 131572454.0000000000
+  negfrac: 0.1635161657
+  generator_weight: 0.6729676686
 DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_RunIISummer20UL18NanoAODv9-106X:
   dbs: /DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1/NANOAODSIM
   era: 2018
@@ -596,7 +573,11 @@ TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X:
   nfiles: 155
   nick: TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X
   sample_type: ttbar
-  xsec: 88.29
+  xsec: 88.29  # 96.9  # 88.29  # 13 TeV
+  sumw: 10457567170.1337890625
+  sumwnorm: 143848848.0000000000
+  negfrac: 0.0040378982
+  generator_weight: 0.9919242036
 TTToHadronic_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X:
   dbs: /TTToHadronic_TuneCP5_13TeV-powheg-pythia8/RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1/NANOAODSIM
   era: 2018
@@ -614,7 +595,12 @@ TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X:
   nfiles: 391
   nick: TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X
   sample_type: ttbar
-  xsec: 365.35
+  xsec: 365.35  # 404.0  # 365.35  # 13 TeV
+  sumw: 143354138329.1336059570
+  sumwnorm: 472557630.0000000000
+  negfrac: 0.0040410426
+  generator_weight: 0.9919179149
+Tau_Run2018A-UL2018:
 Tau_Run2018A-UL2018:
   dbs: /Tau/Run2018A-UL2018_MiniAODv2_NanoAODv9-v1/NANOAOD
   era: 2018
@@ -714,6 +700,10 @@ WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X
   nick: WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X
   sample_type: wjets
   xsec: 53330.0
+  sumw: 10267461200986.7343750000
+  sumwnorm: 138080546.0000000000
+  negfrac: 0.0989252995
+  generator_weight: 0.8021494010
 WJetsToLNu_1J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X:
   dbs: /WJetsToLNu_1J_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1/NANOAODSIM
   era: 2018
@@ -723,6 +713,10 @@ WJetsToLNu_1J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X
   nick: WJetsToLNu_1J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X
   sample_type: wjets
   xsec: 8875.0
+  sumw: 8354983900277.3750000000
+  sumwnorm: 89044378.0000000000
+  negfrac: 0.2573499274
+  generator_weight: 0.4853001453
 WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X:
   dbs: /WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1/NANOAODSIM
   era: 2018
@@ -732,6 +726,10 @@ WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X
   nick: WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X
   sample_type: wjets
   xsec: 3338.0
+  sumw: 2323042060961.6796875000
+  sumwnorm: 29631923.0000000000
+  negfrac: 0.3439207737
+  generator_weight: 0.3121584527
 WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8_RunIISummer20UL18NanoAODv9-106X:
   dbs: /WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/RunIISummer20UL18NanoAODv9-106X_upgrade2018_realistic_v16_L1v1-v1/NANOAODSIM
   era: 2018
