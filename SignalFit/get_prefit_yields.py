@@ -34,7 +34,7 @@ yield_dict = {}
 ifile = ROOT.TFile(filename, "READ")
 
 for i in histos:
-    h_tmp_int = round(ifile.Get(i).Integral(),2)
+    h_tmp_int = ifile.Get(i).Integral()
     print(f"{i}, {h_tmp_int}")
     yield_dict[i] = h_tmp_int
 
@@ -60,3 +60,54 @@ for i in histos:
     if tmp_i == 3:
         tmp_i = 0
         print()
+
+
+
+val = {}
+val['Z'] = {}
+val['Wp'] = {}
+val['Wm'] = {}
+
+for i in histos:
+    if i.endswith('toFit'):
+        val['Z'][i.split('#')[0]] = yield_dict[i]
+    if i.endswith('pos'):
+        val['Wp'][i.split('#')[0]] = yield_dict[i]
+    if i.endswith('neg'):
+        val['Wm'][i.split('#')[0]] = yield_dict[i]
+
+print()
+print()
+print()
+
+print(val)
+
+
+print()
+print()
+print()
+
+print("\\begin{table}[htbp]")
+print("\\topcaption{Expected yields from various processes in $\\PW^{+}$, $\\PW^{-}$, and $\\PZ$ muon final states. }")
+print("\\centering")
+print("\\begin{tabular}{lrrr}")
+print("\\hline")
+#print("Process &      $\\mathrm{W}^{+}\\rightarrow\\mu^{+}\\nu$ &     $\\mathrm{W}^{-}\\rightarrow\\mu^{-}\\bar{\\nu}$ &       $\\mathrm{Z}\\rightarrow\\mu^{+}\\mu^{-}$ \\\\")
+print("Process &      $\\mu^{+}\\nu \, (\\mathrm{W}^{+})$ &     $\\mu^{-}\\bar{\\nu} \, (\\mathrm{W}^{-})$ &       $\\mu^{+}\\mu^{-} \, (\\mathrm{Z})$ \\\\")
+print("\\hline")
+print("W                                     &  " + '{:>12,.0f}'.format(val['Wp']['W']) + " & " + '{:>12,.0f}'.format(val['Wm']['W']) + "  & {} \\\\")
+print("DY                                    &  " + '{:>12,.0f}'.format(val['Wp']['DY']) + " & " + '{:>12,.0f}'.format(val['Wm']['DY']) + "  & " + '{:>12,.0f}'.format(val['Z']['DY']) + " \\\\")
+print("EWK: & & & \\\\")
+print("\\quad W ($\\rightarrow \\tau \\nu$)  &  " + '{:>12,.0f}'.format(val['Wp']['Wtau']) + " & " + '{:>12,.0f}'.format(val['Wm']['Wtau']) + "  & {} \\\\")
+print("\\quad Z ($\\rightarrow \\tau \\tau$) &  " + '{:>12,.0f}'.format(val['Wp']['DYtau']) + " & " + '{:>12,.0f}'.format(val['Wm']['DYtau']) + "  & " + '{:>12,.0f}'.format(val['Z']['DYtau']) + " \\\\")
+print("\\quad single top                     &  " + '{:>12,.0f}'.format(val['Wp']['ST']) + " & " + '{:>12,.0f}'.format(val['Wm']['ST']) + "  & " + '{:>12,.0f}'.format(val['Z']['ST']) + " \\\\")
+print("\\quad VV                             &  " + '{:>12,.0f}'.format(val['Wp']['VV']) + " & " + '{:>12,.0f}'.format(val['Wm']['VV']) + "  & " + '{:>12,.0f}'.format(val['Z']['VV']) + " \\\\")
+print("$t\\bar{t}$                           &  " + '{:>12,.0f}'.format(val['Wp']['TT']) + " & " + '{:>12,.0f}'.format(val['Wm']['TT']) + "  & " + '{:>12,.0f}'.format(val['Z']['TT']) + " \\\\")
+print("QCD                                   &   xxx &   xxx &    {}   \\\\")
+print("\\hline")
+print("data                                  &   xxx &   xxx &    xxx   \\\\")
+#print("data                                  &  " + '{:>12,.0f}'.format(val['Wp']['data']) + " & " + '{:>12,.0f}'.format(val['Wm']['data']) + "  & " + '{:>12,.0f}'.format(val['Z']['data']) + " \\\\")
+print("\\hline")
+print("\\end{tabular}")
+print("\\label{tab:yields_muon_prefit}")
+print("\\end{table}")
