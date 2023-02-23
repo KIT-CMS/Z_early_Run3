@@ -15,6 +15,7 @@ def calc_m(rdf, corr=""):
     rdf = rdf.Define(f"dilep{corr}", f"lv_1{corr} + lv_2{corr}")
     rdf = rdf.Define(f"pt_vis{corr}", f"dilep{corr}.Pt()")
     rdf = rdf.Define(f"m_vis{corr}", f"dilep{corr}.M()")
+    rdf = rdf.Define(f"rap_vis{corr}", f"dilep{corr}.Rapidity()")
     return rdf
 
 
@@ -163,17 +164,22 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
                 "pt_2_corr", "pt_2_corr_up", "pt_2_corr_dn",
                 "m_vis_corr", "m_vis_corr_up", "m_vis_corr_dn",
                 "pt_vis_corr", "pt_vis_corr_up", "pt_vis_corr_dn",
+                "rap_vis_corr",
                 ]
     else:
+        rdf = rdf.Define("lv_1", "ROOT::Math::PtEtaPhiMVector p(pt_1_corr, eta_1, phi_1, mass_1); return p")
+        rdf = rdf.Define("rap_vis_corr", "lv_1.Rapidity()")
         quants =  ["pt_1_corr", "pt_1_corr_up", "pt_1_corr_dn"]
 
     # correct and add recoil variables
     if not ("WtoLNu" in output_path):
         bosonphi = "phi_vis_c"
         bosonpt = "pt_vis_c"
+        bosonrap = "rap_vis_corr"
     else:
         bosonphi = "genbosonphi"
         bosonpt = "genbosonpt"
+        bosonrap = "genbosonrapidity"
 
     if is_dilepton:
         rdf = rdf.Define("pt_vis_c_x", "pt_1_corr*cos(phi_1) + pt_2_corr*cos(phi_2)")
@@ -186,6 +192,7 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
 
     rdf = rdf.Define("bosonpt", f"{bosonpt}")
     rdf = rdf.Define("bosonphi", f"{bosonphi}")
+    rdf = rdf.Define("bosonrap", f"{bosonrap}")
 
     rdf = rdf.Define("uPx", "met_uncorrected*cos(metphi_uncorrected) + pt_vis_c*cos(phi_vis_c)")
     rdf = rdf.Define("uPy", "met_uncorrected*sin(metphi_uncorrected) + pt_vis_c*sin(phi_vis_c)")
@@ -199,7 +206,9 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
     rdf = rdf.Define("pfuP1_uncorrected", f"- (pfuPx*cos({bosonphi}) + pfuPy*sin({bosonphi}))")
     rdf = rdf.Define("pfuP2_uncorrected", f"pfuPx*sin({bosonphi}) - pfuPy*cos({bosonphi})")
 
-    met_cols = ["uP1_uncorrected", "uP2_uncorrected", "pfuP1_uncorrected", "pfuP2_uncorrected", "pt_vis_c", "phi_vis_c", "bosonpt", "bosonphi"]
+    met_cols = [
+        "uP1_uncorrected", "uP2_uncorrected", "pfuP1_uncorrected", "pfuP2_uncorrected", 
+        "pt_vis_c", "phi_vis_c", "bosonpt", "bosonphi", "bosonrap"]
 
     outdir = output_path.replace(output_path.split('/')[-1],"")
     if not os.path.exists(outdir):

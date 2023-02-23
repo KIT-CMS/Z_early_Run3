@@ -13,7 +13,7 @@ ROOT.gSystem.Load("./utils/PdfDiagonalizer_cc.so")
 
 def parse_args():
     parser = argparse.ArgumentParser(description="produce friend of input ntuple with corrected met")
-    parser.add_argument('-I', '--inpath', default='/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_pu_EraC/2022/*/mm*/*.root', help='path to input samples')
+    parser.add_argument('-I', '--inpath', default='/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_scaleres_EraC/2022/*/mm*/*.root', help='path to input samples')
     parser.add_argument('--overwrite', action='store_true', default=True)
     parser.add_argument('--test', action='store_true', default=False)   
     args = parser.parse_args()
@@ -225,9 +225,9 @@ def run(input_dict):
     doStatUnc = (syst_postfix == "")
 
     if args.test:
-        outdir = infile.replace("/ntuples_xsec_sf_scaleres_pu_EraC/", "/test_friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr"+syst_postfix+"/")
+        outdir = infile.replace("/ntuples_xsec_sf_scaleres_EraC/", "/test_friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr"+syst_postfix+"/")
     else:
-        outdir = infile.replace("/ntuples_xsec_sf_scaleres_pu_EraC/", "/friend_xsec_sf_scaleres_pu_EraC_met_corr"+syst_postfix+"/")
+        outdir = infile.replace("/ntuples_xsec_sf_scaleres_EraC/", "/friend_xsec_sf_scaleres_EraC_met_corr"+syst_postfix+"/")
         
 
     outfile = outdir
@@ -583,72 +583,71 @@ if __name__=='__main__':
     #ROOT.ROOT.EnableImplicitMT(32)
     ws_dicts = [
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_data_triple_muon_sigAndBck/", 
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck/", 
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly/",
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigAndBck/", 
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck/", 
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly/",
         },
 
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_data_double_muon_sigAndBck/", 
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_ZllMC_double_muon_sigOnly/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WnegMC_double_muon_sigOnly/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WposMC_double_muon_sigOnly/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_data_double_muon_sigAndBck/", 
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_ZllMC_double_muon_sigOnly/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WnegMC_double_muon_sigOnly/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WposMC_double_muon_sigOnly/",
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_double_muon_sigAndBck/", 
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_double_muon_sigOnly/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_double_muon_sigOnly/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_double_muon_sigOnly/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_double_muon_sigAndBck/", 
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_double_muon_sigOnly/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_double_muon_sigOnly/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_double_muon_sigOnly/",
         },
 
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_data_triple_muon_sigOnly/", 
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_data_triple_muon_sigOnly/", 
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly/",
-        },
-         
-        {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap0/",
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap0/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap0/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap0/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap0/",
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap0/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap0/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap0/",
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigOnly/", 
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigOnly/", 
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly/",
         },
 
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap1/",
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap1/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap1/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap1/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap1/",
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap1/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap1/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap1/",
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap0/",
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap0/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap0/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap0/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap0/",
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap0/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap0/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap0/",
         },
 
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap2/",
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap2/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap2/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap2/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap2/",
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap2/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap2/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap2/",
-        }, 
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap1/",
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap1/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap1/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap1/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap1/",
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap1/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap1/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap1/",
+        },
+
+        {
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap2/",
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap2/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap2/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap2/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap2/",
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap2/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap2/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap2/",
+        },
     ]
-    print(ws_dicts)
 
     ntuples = glob.glob(args.inpath)
     arguments = [{"ntuple": ntuple, "args": args, "ws_dict": ws_dict} for ntuple in ntuples for ws_dict in ws_dicts]

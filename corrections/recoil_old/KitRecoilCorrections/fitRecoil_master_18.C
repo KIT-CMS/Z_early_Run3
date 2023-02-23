@@ -36,7 +36,7 @@
 #include "RooHist.h"
 #include "RooHistPdf.h"
 #include "RooKeysPdf.h"
-#include "RooMinimizer.h"
+#include "RooMinuit.h"
 #include "RooPlot.h"
 #include "RooRealIntegral.h"
 #include "RooRealVar.h"
@@ -45,15 +45,18 @@
 #include "RooProdPdf.h"
 #include "RooPolynomial.h"
 
-//#include "RooCrystalBall.h"
+#include "RooCrystalBall.h"
 
 #endif
 
 using namespace RooFit;
 using namespace std;
 
-int etaBinCategory = 0;
+bool doLikelihoodScan = false;
+bool doLog = false; // true for data; false for MC
 bool do_keys = 0;
+bool do_5TeV = 0;
+int etaBinCategory = 0;
 
 //=== FUNCTION DECLARATIONS ======================================================================================
 //--------------------------------------------------------------------------------------------------
@@ -83,22 +86,18 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
 
 //=== MAIN MACRO =================================================================================================
 
-void fitRecoil(
+void fitRecoil_master(
     Int_t pfu1model = 2, // u1 model (0=> CrystalBall + Gaussian, 1 => single Gaussian, 2 => double Gaussian, 3 => triple Gaussian)
     Int_t pfu2model = 2, // u2 model (0=> CrystalBall + Gaussian, 1 => single Gaussian, 2 => double Gaussian, 3 => triple Gaussian)
     Bool_t sigOnly = 1, // 1=> signal event only, 0=> add background
     Bool_t doElectron = 0, // 0=> Muon channels, 1=> Electron channels
     Double_t inputType = 0, // Which dataset to run on 0=> Data, 1=> Z->ll MC, 2=> W+ jets MC, 3=> W- jets MC
-    std::string inputDirectory = "/storage/9/jdriesch/earlyrun3/samples/Run3V06",
-    std::string metVar = "pfmet_uncorrected",
-    std::string metPhiVar = "pfmetphi_uncorrected",
+    std::string inputDirectory = "/ceph/moh/CROWN_samples/EarlyRun3_V12",
+    std::string metVar = "met_uncorrected",
+    std::string metPhiVar = "metphi_uncorrected",
     TString outputDir = "./", // output directory
-    Double_t lumi = 1,
-    Int_t rapbin = -1,
-    TString hist_file = "/work/jdriesch/earlyrun3/Z_early_Run3/output/earlyRun3_2022_Zpt.root")
+    Double_t lumi = 1)
 {
-    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-    RooMsgService::instance().setSilentMode(true);
 
     //--------------------------------------------------------------------------------------------------------------
     // Settings and files
@@ -112,28 +111,125 @@ void fitRecoil(
     else if (pfu1model==2) {outputname += TString("_double");} else if (pfu1model==3) {outputname += TString("_triple");};
     if (doElectron) { outputname += TString("_elec"); } else { outputname += TString("_muon"); } ;
     if (sigOnly) { outputname += TString("_sigOnly"); } else { outputname += TString("_sigAndBck"); };
-    TString zrapbin = "";
-    if (rapbin > -1) {
-        outputname += TString::Format("_zrap%d", rapbin);
-        zrapbin = TString::Format("_zrap%d", rapbin);
-    }
     CPlot::sOutDir = outputDir + TString("/") + outputname + TString("/plots");
     outputDir =  outputDir + TString("/") + outputname;
-    gSystem->mkdir(outputDir, kTRUE);
+    gSystem->mkdir(outputDir, kTRUE); 
 
     // preserving the fine binning at low pT but the higher-pT bins (>75 GeV have been adjusted to be slightly wider)
+    //Double_t ptbins[] = { 0, 5.0, 25, 100, 1000 };
+    //Double_t ptbins[] = {45, 47};
     Double_t ptbins[] = {0,1.0,2.0,3.0,4.0,5.0,6.0,7.5,10,12.5,15,17.5,20,22.5,25,27.5,30,32.5,35,37.5,40,42.5,45,47.5,50,52.5,55,57.5,60,65,70,75,80,90,100,125,150,1000};
+    //Double_t ptbins[] = {0,3.0,6.0,12.5,20,27.5,37.5,50,60,75,90,125,200,1000}; 
     Int_t nbins = sizeof(ptbins) / sizeof(Double_t) - 1;
 
+    TString formulaPFu1mean("pol2");
+    TString formulaPFu2mean("pol2");
+    TString formulaPFu1meanScale("pol2");
+    TString formulaPFu2meanScale("pol2");
+
     // Instantiate booleans (modified later)
-    bool sigIsData = (inputType == 0);
+    bool sigIsData = false;
     bool doCrystalBall = false;
+
+    vector<TChain*> fnamev;
+    vector<Bool_t> isBkgv;
+
+    TChain *bkgv_chain = new TChain();
+    TChain *sig_chain = new TChain();
+    TChain *sig_friend_chain = new TChain();
+    TChain *bkgv_friend_chain = new TChain();
+
+    TString infilename = inputDirectory + "/ntuples/2018/";
+    TString infilename_friend = infilename;
+    infilename_friend = infilename_friend.ReplaceAll("ntuples", "friends/crosssection");
+    TString bkgvdirname;
+    if (doElectron)
+        bkgvdirname = inputDirectory + "/ntuples/2018/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X/ee/";
+    if (!doElectron)
+        bkgvdirname = inputDirectory + "/ntuples/2018/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8_RunIISummer20UL18NanoAODv9-106X/mm/";
+    TString bkgvdirname_friend = bkgvdirname;
+    bkgvdirname_friend = bkgvdirname_friend.ReplaceAll("ntuples", "friends/crosssection");
+
+    //Data samples
+    if(inputType == 0) {
+        sigIsData = true;
+        if(!doElectron) {
+            sig_chain->Add(infilename + "SingleMuon_Run2018A-UL2018/mm/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "SingleMuon_Run2018A-UL2018/mm/*.root/ntuple");
+            sig_chain->Add(infilename + "SingleMuon_Run2018B-UL2018/mm/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "SingleMuon_Run2018B-UL2018/mm/*.root/ntuple");
+            sig_chain->Add(infilename + "SingleMuon_Run2018C-UL2018/mm/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "SingleMuon_Run2018C-UL2018/mm/*.root/ntuple");
+            sig_chain->Add(infilename + "SingleMuon_Run2018D-UL2018/mm/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "SingleMuon_Run2018D-UL2018/mm/*.root/ntuple");
+        }
+        if(doElectron) {
+            sig_chain->Add(infilename + "EGamma_Run2018A-UL2018/ee/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "EGamma_Run2018A-UL2018/ee/*.root/ntuple");
+            sig_chain->Add(infilename + "EGamma_Run2018B-UL2018/ee/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "EGamma_Run_2018B-UL2018/ee/*.root/ntuple");
+            sig_chain->Add(infilename + "EGamma_Run2018C-UL2018/ee/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "EGamma_Run2018C-UL2018/ee/*.root/ntuple");
+            sig_chain->Add(infilename + "EGamma_Run2018D-UL2018/ee/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "EGamma_Run2018D-UL2018/ee/*.root/ntuple");
+        }
+    }
+    //Z->ll SIMULATION SAMPLE
+    if (inputType == 1) {
+        if(doElectron) {
+            sig_chain->Add(infilename + "DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/ee/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/ee/*.root/ntuple");
+        } else {
+            sig_chain->Add(infilename + "DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mm/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mm/*.root/ntuple");
+        }    
+    }
+    // W SIMULATION SAMPLE
+    if (inputType > 1) {
+        if (!doElectron) {
+            sig_chain->Add(infilename + "WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mmet/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mmet/*.root/ntuple");
+            sig_chain->Add(infilename + "WJetsToLNu_1J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mmet/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "WJetsToLNu_1J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mmet/*.root/ntuple");
+            sig_chain->Add(infilename + "WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mmet/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mmet/*.root/ntuple");
+        }
+        if (doElectron) {
+            sig_chain->Add(infilename + "WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/emet/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "WJetsToLNu_0J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/emet/*.root/ntuple");
+            sig_chain->Add(infilename + "WJetsToLNu_1J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/emet/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "WJetsToLNu_1J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/emet/*.root/ntuple");
+            sig_chain->Add(infilename + "WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/emet/*.root/ntuple");
+            sig_friend_chain->Add(infilename_friend + "WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/emet/*.root/ntuple");
+        }
+    }
+
+    bkgv_chain->Add(bkgvdirname + "*.root/ntuple");
+    bkgv_friend_chain->Add(bkgvdirname_friend + "*.root/ntuple");
+
+    bkgv_chain->AddFriend(bkgv_friend_chain);
+    sig_chain->AddFriend(sig_friend_chain);
+
+    //pushing the chains to the event loop
+    fnamev.push_back(sig_chain); isBkgv.push_back(kFALSE);
+    if (!sigOnly) {
+        fnamev.push_back(bkgv_chain); isBkgv.push_back(kTRUE);
+    }
+
+    const Double_t MASS_LOW = 60;
+    const Double_t MASS_HIGH = 120;
+    const Double_t PT_CUT = 25;
+    const Double_t ETA_CUT = 2.4;
+    Double_t lep_MASS = 0.1057; //Muon Mass
+    if (doElectron) {
+        lep_MASS = 0.000511; //Electron Mass
+    }
 
     //--------------------------------------------------------------------------------------------------------------
     // Main analysis code
     //==============================================================================================================
 
-    char hname_out[100];
+    char hname[100];
     vector<TH1D*> hPTv;
     vector<TH1D*> hPFu1v, hPFu1Bkgv;
     vector<TH1D*> hPFu2v, hPFu2Bkgv;
@@ -142,147 +238,40 @@ void fitRecoil(
 
     vector<RooRealVar> vu1Var;
     vector<RooRealVar> vu2Var;
+    vector<RooRealVar> vptVar;
 
     RooWorkspace pdfsU1("pdfsU1");
     RooWorkspace pdfsU2("pdfsU2");
 
-    TFile *fin = TFile::Open(hist_file);
-    cout << ">>> Input file: " << hist_file << endl;
-
     for (Int_t ibin = 0; ibin < nbins; ibin++) {
 
-        TString uP1_var, uP2_var, bosonpt_var, hnamein_data, hnamein_DY, hnamein_W, hnamein_TT, hnamein_ST, hnamein_VV, hnamein_DYtau, hnamein_Wtau, hnamein_pt;
-        if (inputType < 2) { //Z events
-            uP1_var = "uP1_uncorrected";
-            if (metVar == "pfmet_uncorrected") {
-                uP1_var = "pf"+uP1_var;
-            }
-            bosonpt_var = "bosonpt";
+        // Puppi-PF
+        int range = 100;
+        if (ptbins[ibin] > 80)
+            range = 125;
+        if (ptbins[ibin] > 150)
+            range = 150;
 
-            hnamein_data = TString::Format("data#mm_corr-355862-357482-data#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            cout << "string: " << hnamein_data << endl;
-            hnamein_DY = TString::Format("DY#mm_corr-355862-357482-DY#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_W = TString::Format("W#mm_corr-355862-357482-W#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_TT = TString::Format("TT#mm_corr-355862-357482-TT#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_ST = TString::Format("ST#mm_corr-355862-357482-ST#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_VV = TString::Format("VV#mm_corr-355862-357482-VV#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_DYtau = TString::Format("DYtau#mm_corr-355862-357482-DYtau#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_Wtau = TString::Format("Wtau#mm_corr-355862-357482-Wtau#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            if (inputType == 0) {
-                hnamein_pt = TString::Format("data#mm_corr-355862-357482-data#Nominal#%s_zpt%d%s", bosonpt_var.Data(), ibin, zrapbin.Data());
-            } else if (inputType == 1) {
-                hnamein_pt = TString::Format("DY#mm_corr-355862-357482-DY#Nominal#%s_zpt%d%s", bosonpt_var.Data(), ibin, zrapbin.Data());
-            }
-        } else {
-            if (inputType == 2) {
-                uP1_var = "uP1_uncorrected_pos";
-                bosonpt_var = "bosonpt_pos";
-            } else if (inputType == 3) {
-                uP1_var = "uP1_uncorrected_neg";
-                bosonpt_var = "bosonpt_neg";
-            }
-            if (metVar == "pfmet_uncorrected") {
-                uP1_var = "pf"+uP1_var;
-            }
-            hnamein_data = TString::Format("data#mmet_corr-355862-357482-data#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_DY = TString::Format("DY#mmet_corr-355862-357482-DY#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_W = TString::Format("W#mmet_corr-355862-357482-W#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_TT = TString::Format("TT#mmet_corr-355862-357482-TT#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_ST = TString::Format("ST#mmet_corr-355862-357482-ST#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_VV = TString::Format("VV#mmet_corr-355862-357482-VV#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_DYtau = TString::Format("DYtau#mmet_corr-355862-357482-DYtau#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_Wtau = TString::Format("Wtau#mmet_corr-355862-357482-Wtau#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            hnamein_pt = TString::Format("W#mmet_corr-355862-357482-W#Nominal#%s_zpt%d%s", bosonpt_var.Data(), ibin, zrapbin.Data());
-        }
-        TString hname = TString::Format("huP1_%d", ibin);
-        TH1D *huP1_data = (TH1D*)fin->Get(hnamein_data)->Clone(hname);
-        TH1D *huP1_DY = (TH1D*)fin->Get(hnamein_DY)->Clone(hname+"_DY");
-        TH1D *huP1_W = (TH1D*)fin->Get(hnamein_W)->Clone(hname+"_W");
-        TH1D *huP1_TT = (TH1D*)fin->Get(hnamein_TT)->Clone(hname+"_TT");
-        TH1D *huP1_ST = (TH1D*)fin->Get(hnamein_ST)->Clone(hname+"_ST");
-        TH1D *huP1_VV = (TH1D*)fin->Get(hnamein_VV)->Clone(hname+"_VV");
-        TH1D *huP1_DYtau = (TH1D*)fin->Get(hnamein_DYtau)->Clone(hname+"_DYtau");
-        TH1D *huP1_Wtau = (TH1D*)fin->Get(hnamein_Wtau)->Clone(hname+"_Wtau");
-        TH1D *huP1_bkg = (TH1D*)huP1_W->Clone(hname+"_bkg");
-        huP1_bkg->Add(huP1_TT);
-        huP1_bkg->Add(huP1_ST);
-        huP1_bkg->Add(huP1_VV);
-        huP1_bkg->Add(huP1_DYtau);
-        huP1_bkg->Add(huP1_Wtau);
+        sprintf(hname, "hPFu1_%i", ibin);
+        hPFu1v.push_back(new TH1D(hname, "", 100, -range - ptbins[ibin], range - ptbins[ibin]));
+        hPFu1v[ibin]->Sumw2();
+        sprintf(hname, "hPFu1Bkg_%i", ibin);
+        hPFu1Bkgv.push_back(new TH1D(hname, "", 100, -range - ptbins[ibin], range - ptbins[ibin]));
+        hPFu1Bkgv[ibin]->Sumw2();
 
-        if (inputType < 2) { //Z events
-            uP2_var = "uP2_uncorrected";
-            if (metVar == "pfmet_uncorrected") {
-                uP2_var = "pf"+uP2_var;
-            }
+        sprintf(hname, "hPFu2_%i", ibin);
+        hPFu2v.push_back(new TH1D(hname, "", 100, -range, range));
+        hPFu2v[ibin]->Sumw2();
+        sprintf(hname, "hPFu2Bkg_%i", ibin);
+        hPFu2Bkgv.push_back(new TH1D(hname, "", 100, -range, range));
+        hPFu2Bkgv[ibin]->Sumw2();
 
-            hnamein_data = TString::Format("data#mm_corr-355862-357482-data#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_DY = TString::Format("DY#mm_corr-355862-357482-DY#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_W = TString::Format("W#mm_corr-355862-357482-W#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_TT = TString::Format("TT#mm_corr-355862-357482-TT#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_ST = TString::Format("ST#mm_corr-355862-357482-ST#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_VV = TString::Format("VV#mm_corr-355862-357482-VV#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_DYtau = TString::Format("DYtau#mm_corr-355862-357482-DYtau#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_Wtau = TString::Format("Wtau#mm_corr-355862-357482-Wtau#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-        } else {
-            if (inputType == 2) {
-                uP2_var = "uP2_uncorrected_pos";
-            } else if (inputType == 3) {
-                uP2_var = "uP2_uncorrected_neg";
-            }
-            if (metVar == "pfmet_uncorrected") {
-                uP2_var = "pf"+uP2_var;
-            }
-            hnamein_data = TString::Format("data#mmet_corr-355862-357482-data#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_DY = TString::Format("DY#mmet_corr-355862-357482-DY#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_W = TString::Format("W#mmet_corr-355862-357482-W#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_TT = TString::Format("TT#mmet_corr-355862-357482-TT#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_ST = TString::Format("ST#mmet_corr-355862-357482-ST#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_VV = TString::Format("VV#mmet_corr-355862-357482-VV#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_DYtau = TString::Format("DYtau#mmet_corr-355862-357482-DYtau#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-            hnamein_Wtau = TString::Format("Wtau#mmet_corr-355862-357482-Wtau#Nominal#%s_zpt%d%s", uP2_var.Data(), ibin, zrapbin.Data());
-        }
-        hname = TString::Format("huP2_%d", ibin);
-        TH1D *huP2_data = (TH1D*)fin->Get(hnamein_data)->Clone(hname);
-        TH1D *huP2_DY = (TH1D*)fin->Get(hnamein_DY)->Clone(hname+"_DY");
-        TH1D *huP2_W = (TH1D*)fin->Get(hnamein_W)->Clone(hname+"_W");
-        TH1D *huP2_TT = (TH1D*)fin->Get(hnamein_TT)->Clone(hname+"_TT");
-        TH1D *huP2_ST = (TH1D*)fin->Get(hnamein_ST)->Clone(hname+"_ST");
-        TH1D *huP2_VV = (TH1D*)fin->Get(hnamein_VV)->Clone(hname+"_VV");
-        TH1D *huP2_DYtau = (TH1D*)fin->Get(hnamein_DYtau)->Clone(hname+"_DYtau");
-        TH1D *huP2_Wtau = (TH1D*)fin->Get(hnamein_Wtau)->Clone(hname+"_Wtau");
-        TH1D *huP2_bkg = (TH1D*)huP2_W->Clone(hname+"_bkg");
-        huP2_bkg->Add(huP2_TT);
-        huP2_bkg->Add(huP2_ST);
-        huP2_bkg->Add(huP2_VV);
-        huP2_bkg->Add(huP2_DYtau);
-        huP2_bkg->Add(huP2_Wtau);
-
-        hname = TString::Format("hPt_%d", ibin);
-        TH1D *hPT = (TH1D*)fin->Get(hnamein_pt)->Clone(hname);
-
-        if (inputType == 0) {
-            hPFu1v.push_back(huP1_data);
-            hPFu2v.push_back(huP2_data);
-        } else if (inputType == 1) {
-            hPFu1v.push_back(huP1_DY);
-            hPFu2v.push_back(huP2_DY);
-        } else {
-            hPFu1v.push_back(huP1_W);
-            hPFu2v.push_back(huP2_W);
-        }
-
-        hPFu1Bkgv.push_back(huP1_bkg);
-        hPFu2Bkgv.push_back(huP2_bkg);
-
-        hPTv.push_back(hPT);
+        sprintf(hname, "hPT_%i", ibin);
+        hPTv.push_back(new TH1D(hname, "", 100, -range + ptbins[ibin], range + ptbins[ibin]));
+        //hPTv[ibin]->Sumw2();
 
         std::stringstream name;
         name << "u_" << ibin;
-
-        int range = 250;
-        if (ptbins[ibin] > 140)
-            range = 500;
 
         RooRealVar u1Var(name.str().c_str(), name.str().c_str(), 0, -range - ptbins[ibin], range - ptbins[ibin]);
         RooRealVar u2Var(name.str().c_str(), name.str().c_str(), 0, -range, range);
@@ -292,15 +281,302 @@ void fitRecoil(
         vu1Var.push_back(u1Var);
         vu2Var.push_back(u2Var);
 
-        sprintf(hname_out, "hDataSetU1_%i", ibin);
-        RooDataSet dataSetU1(hname_out, hname_out, RooArgSet(u1Var));
+        //RooRealVar ptVar(name.str().c_str(), name.str().c_str(), 0, -range - ptbins[ibin], range - ptbins[ibin]);
+        //ptVar.setBins(100);
+        //ptVar.push_back(ptVar)
+
+        sprintf(hname, "hDataSetU1_%i", ibin);
+        RooDataSet dataSetU1(hname, hname, RooArgSet(u1Var));
         lDataSetU1.push_back(dataSetU1);
-        sprintf(hname_out, "hDataSetU2_%i", ibin);
-        RooDataSet dataSetU2(hname_out, hname_out, RooArgSet(u2Var));
+        sprintf(hname, "hDataSetU2_%i", ibin);
+        RooDataSet dataSetU2(hname, hname, RooArgSet(u2Var));
         lDataSetU2.push_back(dataSetU2);
     }
 
-    cout << ">>> Input histograms loaded" << endl;
+    TFile* infile = 0;
+    TTree* intree = 0;
+
+    UInt_t category;
+    UInt_t runNum;
+    Float_t genVPt, genVPhi, genVy, genVMass;
+    Float_t lep1_pt, lep1_eta, lep1_phi, lep1_mass;
+    Float_t lep2_pt, lep2_eta, lep2_phi, lep2_mass;
+    Float_t scale1fb;
+    Float_t met, metPhi;
+    Int_t q1, q2;
+    Float_t scale1fbSumW, genWeight;
+    Float_t eCorr_1, eCorr_2;
+    Double_t pt_rc_1, pt_rc_2;
+    TLorentzVector *dilep = 0, *lep1 = 0, *lep2 = 0, *lep1_raw = 0, *lep2_raw = 0, *genlep1 = 0, *genlep2 = 0;
+
+    for (UInt_t ifile = 0; ifile < fnamev.size(); ifile++) {
+
+        intree = fnamev.at(ifile);
+        bool isData = sigIsData && !isBkgv[ifile];
+
+        intree->SetBranchAddress("run", &runNum);
+        intree->SetBranchAddress("genbosonpt", &genVPt); // GEN boson pT (signal MC)
+        intree->SetBranchAddress("genbosonphi", &genVPhi); // GEN boson phi (signal MC)
+        intree->SetBranchAddress("genbosonrapidity", &genVy); // GEN boson rapidity (signal MC)
+        intree->SetBranchAddress("genbosonmass", &genVMass); // GEN boson mass (signal MC)
+        if (!isData){
+            intree->SetBranchAddress("scale1fb_sumw", &scale1fbSumW);
+            intree->SetBranchAddress("genweight", &genWeight);
+        }
+        intree->SetBranchAddress(TString(metVar), &met); // Uncorrected MET
+        intree->SetBranchAddress(TString(metPhiVar), &metPhi); // phi(MET)
+        intree->SetBranchAddress("q_1", &q1); // charge of tag lepton
+        intree->SetBranchAddress("pt_1", &lep1_pt); // pt of tag lepton
+        intree->SetBranchAddress("eta_1", &lep1_eta); // eta of tag lepton
+        intree->SetBranchAddress("phi_1", &lep1_phi); // phi of tag lepton
+        intree->SetBranchAddress("mass_1", &lep1_mass); // mass of tag lepton
+        if (doElectron) {
+            intree->SetBranchAddress("eCorr_1", &eCorr_1); // pt correction factor (already applied to pt_1 in ntuple)
+        } else {
+            intree->SetBranchAddress("pt_rc_1", &pt_rc_1); //rochester corrected pt for tag lepton
+        }
+
+        if (inputType<2) { // Z specific variables
+            intree->SetBranchAddress("q_2", &q2); // charge of probe lepton
+            intree->SetBranchAddress("pt_2", &lep2_pt); // pt of probe lepton
+            intree->SetBranchAddress("eta_2", &lep2_eta); // eta of probe lepton
+            intree->SetBranchAddress("phi_2", &lep2_phi); // phi of probe lepton
+            intree->SetBranchAddress("mass_2", &lep2_mass); // mass of probe lepton
+            if (doElectron) {
+                intree->SetBranchAddress("eCorr_2", &eCorr_2); // pt correction factor (already applied to pt_2 in ntuple)
+            } else {
+                intree->SetBranchAddress("pt_rc_2", &pt_rc_2); //rochester corrected pt for probe lepton
+            }
+        }
+
+        //
+        // Loop over events
+        //
+        int iterator = 1;
+        for (Int_t ientry = 0; ientry < intree->GetEntries(); ientry += iterator) {
+            intree->GetEntry(ientry);
+
+            if (isData) { //proper scaling
+                scale1fb=1;
+            } else {
+                scale1fb = scale1fbSumW*genWeight;
+            } 
+            
+            /////////
+            /// Creating leptons 
+            //
+            TLorentzVector mu1, mu2;
+            TLorentzVector dl;
+            double mll, etall, ptll;
+
+            // cout << "368" << endl;
+            // cout << lep_MASS <<endl;
+            // cout << lep1_mass << endl;
+            // cout << lep2_mass << endl;
+            // cout << lep1_pt << endl;
+            // cout << lep1_eta << endl;
+            // cout << lep1_phi << endl;
+            // cout << lep2_pt << endl;
+            // cout << lep2_eta << endl;
+            // cout << lep2_phi << endl;
+
+            if (inputType < 2 ) { //Z events
+                if (doElectron) {
+                    mu1.SetPtEtaPhiM(lep1_pt, lep1_eta, lep1_phi, lep1_mass);
+                    mu2.SetPtEtaPhiM(lep2_pt, lep2_eta, lep2_phi, lep2_mass);
+                } else {
+                    mu1.SetPtEtaPhiM(pt_rc_1, lep1_eta, lep1_phi, lep1_mass);
+                    mu2.SetPtEtaPhiM(pt_rc_2, lep2_eta, lep2_phi, lep2_mass);
+                }
+
+                dl = mu1 + mu2;
+                mll = dl.M();
+                etall = dl.Rapidity();
+                ptll = dl.Pt();
+            } else { //W Events
+                if (doElectron) {
+                    mu1.SetPtEtaPhiM(lep1_pt, lep1_eta, lep1_phi, lep1_mass);
+                } else {
+                    mu1.SetPtEtaPhiM(pt_rc_1, lep1_eta, lep1_phi, lep1_mass);
+                }
+            }
+
+            // cout << "391" << endl;
+            // cout << mll << " " << etall << " " << ptll << endl;
+
+            /////////
+            /// Applying Cuts
+            //
+            if (inputType < 2 ){ //Z events
+                if (!isBkgv[ifile]) {
+                    if (mll < MASS_LOW || mll > MASS_HIGH)
+                        continue;
+                }
+                if (mu1.Pt() < PT_CUT || mu2.Pt() < PT_CUT)
+                    continue;
+                if (fabs(mu1.Eta()) > ETA_CUT || fabs(mu2.Eta()) > ETA_CUT)
+                    continue;
+
+            } else { //W events
+                if (inputType == 2 && q1 < 0)
+                    continue;
+                if (inputType == 3 && q2 > 0)
+                    continue;
+                if (mu1.Pt() < PT_CUT)
+                    continue;
+                if (fabs(lep1_eta) > ETA_CUT)
+                    continue;
+
+            }
+
+            //// TODO: implement this to do eta bin categorizing
+            if (!isBkgv[ifile]) {
+                if (!isData) {
+                    if (etaBinCategory == 1 && fabs(genVy) > 0.5)
+                        continue;
+                    if (etaBinCategory == 2 && (fabs(genVy) <= 0.5 || fabs(genVy) >= 1))
+                        continue;
+                    if (etaBinCategory == 3 && fabs(genVy) < 1)
+                        continue;
+                } else {
+                    if (etaBinCategory == 1 && fabs(etall) > 0.5)
+                        continue;
+                    if (etaBinCategory == 2 && (fabs(etall) <= 0.5 || fabs(etall) >= 1))
+                        continue;
+                    if (etaBinCategory == 3 && fabs(etall) < 1)
+                        continue;
+                }
+            }
+
+            /////////
+            /// Boson pt binning
+            //
+            Int_t ipt = -1;
+            if (inputType < 2) {
+                for (Int_t ibin = 0; ibin < nbins; ibin++) {
+                    if (ptll > ptbins[ibin] && ptll <= ptbins[ibin + 1])
+                        ipt = ibin;
+                }
+            } else {
+                for (Int_t ibin = 0; ibin < nbins; ibin++) {
+                    if (genVPt > ptbins[ibin] && genVPt <= ptbins[ibin + 1])
+                        ipt = ibin;
+                }
+            }
+            if (ipt < 0)
+                continue;
+
+            /////////
+            /// RECOIL Filling
+            //
+            double pU1 = 0.;
+            double pU2 = 0.;
+            double pUX = 0.;
+            double pUY = 0.;
+            double pU  = 0.;
+            double pSin = 0.;
+            double pCos = 0.;
+            
+            TVector2 vLepRaw1, vLepRaw2;
+            TVector2 vLepCor1, vLepCor2;
+            if (inputType < 2) { //Z Events
+                if (doElectron) {
+                    vLepRaw1.Set((lep1_pt/eCorr_1) * cos(lep1_phi), (lep1_pt/eCorr_1) * sin(lep1_phi));
+                    vLepRaw2.Set((lep2_pt/eCorr_2) * cos(lep2_phi), (lep2_pt/eCorr_2) * sin(lep2_phi));
+
+                    vLepCor1.Set((lep1_pt) * cos(lep1_phi), (lep1_pt) * sin(lep1_phi));
+                    vLepCor2.Set((lep2_pt) * cos(lep2_phi), (lep2_pt) * sin(lep2_phi));
+                } else {
+                    vLepRaw1.Set((lep1_pt) * cos(lep1_phi), (lep1_pt) * sin(lep1_phi));
+                    vLepRaw2.Set((lep2_pt) * cos(lep2_phi), (lep2_pt) * sin(lep2_phi));
+
+                    vLepCor1.Set((pt_rc_1) * cos(lep1_phi), (pt_rc_1) * sin(lep1_phi));
+                    vLepCor2.Set((pt_rc_2) * cos(lep2_phi), (pt_rc_2) * sin(lep2_phi));
+                }
+
+                TVector2 vMetCorr((met)*cos(metPhi), (met)*sin(metPhi));
+                Double_t corrMetWithLepton = (vMetCorr + vLepRaw1 + vLepRaw2 - vLepCor1 - vLepCor2).Mod();
+                Double_t corrMetWithLeptonPhi = (vMetCorr + vLepRaw1 + vLepRaw2 - vLepCor1 - vLepCor2).Phi();
+                pUX = corrMetWithLepton * cos(corrMetWithLeptonPhi) + dl.Pt() * cos(dl.Phi());
+                pUY = corrMetWithLepton * sin(corrMetWithLeptonPhi) + dl.Pt() * sin(dl.Phi());
+                pU = sqrt(pUX * pUX + pUY * pUY);
+                pCos = -(pUX * cos(dl.Phi()) + pUY * sin(dl.Phi())) / pU;
+                pSin = (pUX * sin(dl.Phi()) - pUY * cos(dl.Phi())) / pU;
+
+            } else {
+                if (doElectron) {
+                    vLepRaw1.Set((lep1_pt/eCorr_1) * cos(lep1_phi), (lep1_pt/eCorr_1) * sin(lep1_phi));
+                    vLepCor1.Set((lep1_pt) * cos(lep1_phi), (lep1_pt) * sin(lep1_phi));
+                } else {
+                    vLepRaw1.Set((lep1_pt) * cos(lep1_phi), (lep1_pt) * sin(lep1_phi));
+                    vLepCor1.Set((pt_rc_1) * cos(lep1_phi), (pt_rc_1) * sin(lep1_phi));
+                }
+
+                TVector2 vMetCorr((met)*cos(metPhi), (met)*sin(metPhi));
+                Double_t corrMetWithLepton = (vMetCorr + vLepRaw1 - vLepCor1).Mod();
+                Double_t corrMetWithLeptonPhi = (vMetCorr + vLepRaw1 - vLepCor1).Phi();
+                pUX = corrMetWithLepton * cos(corrMetWithLeptonPhi) + mu1.Pt() * cos(lep1_phi);
+                pUY = corrMetWithLepton * sin(corrMetWithLeptonPhi) + mu1.Pt() * sin(lep1_phi);
+                pU = sqrt(pUX * pUX + pUY * pUY);
+                pCos = -(pUX * cos(genVPhi) + pUY * sin(genVPhi)) / pU;
+                pSin = (pUX * sin(genVPhi) - pUY * cos(genVPhi)) / pU;
+            }
+
+            pU1 = pU * pCos; // U1 in data
+            pU2 = pU * pSin; // U2 in data
+
+            // cout << "boson pt: " << dl.Pt() << endl;
+            // cout << "pu1: " << pU1 << endl;
+            // cout << "pu2: " << pU2 << endl; 
+
+
+            if (isBkgv[ifile]) {
+                hPFu1Bkgv[ipt]->Fill(pU1, scale1fb * lumi);
+                hPFu2Bkgv[ipt]->Fill(pU2, scale1fb * lumi);
+                
+            } else {
+                if (isData) {
+                    hPFu1v[ipt]->Fill(pU1, 1);
+                    hPFu2v[ipt]->Fill(pU2, 1);
+                }
+                if(!isData) {
+                    hPFu1v[ipt]->Fill(pU1, scale1fb * lumi);
+                    hPFu2v[ipt]->Fill(pU2, scale1fb * lumi);
+                }
+
+                if (inputType<2) {
+                    hPTv[ipt]->Fill(ptll);
+                } else {
+                    hPTv[ipt]->Fill(genVPt);
+                }
+
+                // this is the dataset for the RooKey
+                // clean the under/overflow
+                int range = 100;
+                if (ptbins[ipt] > 80)
+                    range = 125;
+                if (ptbins[ipt] > 150)
+                    range = 150;
+
+                if (pU1 < (-range - ptbins[ipt]))
+                    continue;
+                if (pU1 > (range - ptbins[ipt]))
+                    continue;
+                if (pU2 < (-range))
+                    continue;
+                if (pU2 > (range))
+                    continue;
+
+                vu1Var[ipt].setVal(pU1);
+                vu2Var[ipt].setVal(pU2);
+
+                lDataSetU1[ipt].add(RooArgSet(vu1Var[ipt])); // need to add the weights
+                lDataSetU2[ipt].add(RooArgSet(vu2Var[ipt]));
+            }
+        }
+        delete infile;
+        infile = 0, intree = 0;
+    }
 
     TCanvas* c = MakeCanvas("c", "c", 800, 800);
 
@@ -337,6 +613,7 @@ void fitRecoil(
     CPlot plotPFu1mean("pfu1mean","","Dimuon p_{T} [GeV/c]","<u_{#parallel}>/<p_{T}>");
     plotPFu1mean.AddTextBox("CMS        Hadronic Recoil Response   (13.0 TeV)", 0.1, 0.92, 0.95, 0.97, 0, kBlack, -1);
     plotPFu1mean.AddGraph(grPFu1mean,"",kBlack,kOpenCircle);
+    //latexLabel.DrawLatex(0.20, 0.8, label);
     plotPFu1mean.Draw(c,kTRUE,"png");
 
     grPFu2mean = new TGraph(nbins,ptMean,dataMean2);
@@ -346,6 +623,7 @@ void fitRecoil(
     CPlot plotPFu2mean("pfu2mean","","Dimuon p_{T} [GeV/c]","<u_{#perp}  >/<p_{T}>");
     plotPFu2mean.AddTextBox( "CMS           Hadronic Recoil Response   (13.0 TeV)", 0.1, 0.92, 0.95, 0.97, 0, kBlack, -1);
     plotPFu2mean.AddGraph(grPFu2mean,"",kBlack,kOpenCircle);
+    //latexLabel.DrawLatex(0.20, 0.8, label);
     plotPFu2mean.Draw(c,kTRUE,"png");
 
     grPFu1meanerr = new TGraph(nbins,ptMean,dataRMS1);
@@ -355,6 +633,7 @@ void fitRecoil(
     CPlot plotPFu1meanerr("pfu1meanerr","","Dimuon p_{T} [GeV/c]","RMS(u_{#parallel})");
     plotPFu1meanerr.AddTextBox("CMS     Hadronic Recoil Resolution  (13.0 TeV)", 0.1, 0.92, 0.95, 0.97, 0, kBlack, -1);
     plotPFu1meanerr.AddGraph(grPFu1meanerr,"",kBlack,kOpenCircle);
+    //latexLabel.DrawLatex(0.20, 0.8, label);
     plotPFu1meanerr.Draw(c,kTRUE,"png");
 
     grPFu2meanerr = new TGraph(nbins,ptMean,dataRMS2);
@@ -364,9 +643,10 @@ void fitRecoil(
     CPlot plotPFu2meanerr("pfu2meanerr","","Dimuon p_{T} [GeV/c]","RMS(u_{#perp}  )");
     plotPFu2meanerr.AddTextBox("CMS        Hadronic Recoil Resolution  (13.0 TeV)", 0.1, 0.92, 0.95, 0.97, 0, kBlack, -1);
     plotPFu2meanerr.AddGraph(grPFu2meanerr,"",kBlack,kOpenCircle);
+    //latexLabel.DrawLatex(0.20, 0.8, label);
     plotPFu2meanerr.Draw(c,kTRUE,"png");
 
-    cout << ">>> Mean Plots Created" << endl;
+    cout << "Mean Plots Created" << endl;
 
     //
     // Arrays and graphs to store fit results
@@ -390,6 +670,7 @@ void fitRecoil(
     Double_t pfu1nRArr[nbins],     pfu1nRErrArr[nbins];
 
     TGraphErrors *grPFu1chi2=0;
+    ;
 
     Double_t pfu2Mean[nbins], pfu2MeanErr[nbins];
     Double_t pfu2Mean2[nbins], pfu2Mean2Err[nbins];
@@ -408,7 +689,7 @@ void fitRecoil(
 
     TGraphErrors *grPFu2chi2=0;
 
-    char outpdfname[100];
+    char outpdfname[50];
     sprintf(outpdfname, "%s/%s.root", outputDir.Data(), "pdfsU1");
 
     doCrystalBall = false;
@@ -446,6 +727,7 @@ void fitRecoil(
     grPFu1chi2 ->SetName("grPFu1chi2");
     CPlot plotPFu1chi2("pfu1chi2","","p_{T} [GeV/c]","#chi^{2}(u_{#parallel})");
     plotPFu1chi2.AddGraph(grPFu1chi2,"",kBlack,kOpenCircle);
+    //latexLabel.DrawLatex(0.20, 0.8, label);
     plotPFu1chi2.Draw(c,kTRUE,"png");
 
     sprintf(outpdfname, "%s/%s.root", outputDir.Data(), "pdfsU2");
@@ -485,6 +767,7 @@ void fitRecoil(
     grPFu2chi2 ->SetName("grPFu2chi2");
     CPlot plotPFu2chi2("pfu2chi2","","p_{T} [GeV/c]","#chi^{2}(u_{#perp} ) [GeV]");
     plotPFu2chi2.AddGraph(grPFu2chi2,"",kBlack,kOpenCircle);
+    //latexLabel.DrawLatex(0.20, 0.8, label);
     plotPFu2chi2.Draw(c,kTRUE,"png");
 
     cout << endl;
@@ -552,20 +835,26 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
     double sigma3_ini = 0;
 
     for (Int_t ibin = 0; ibin < nbins; ibin++) {
-        if (!sigOnly) {
-            hv[ibin]->Add(hbkgv[ibin], -1.0);
-        }
 
         TH1D* hvLOG = (TH1D*)hv[ibin]->Clone();
         for (Int_t i = 0; i < hv[ibin]->GetNbinsX() + 1; i++) {
-            if (hv[ibin]->GetBinContent(i) <= 0) {
-                hv[ibin]->SetBinContent(i, 0);
-                hv[ibin]->SetBinError(i, 0);
+            if (hv[ibin]->GetBinContent(i) == 0) {
                 hvLOG->SetBinContent(i, 0);
                 hvLOG->SetBinError(i, 0);
             } else {
                 hvLOG->SetBinContent(i, TMath::Log10(hv[ibin]->GetBinContent(i)));
                 hvLOG->SetBinError(i, 0);
+            }
+        }
+
+        TH1D* hbkgvLOG = (TH1D*)hbkgv[ibin]->Clone();
+        for (Int_t i = 0; i < hbkgv[ibin]->GetNbinsX() + 1; i++) {
+            if (hbkgv[ibin]->GetBinContent(i) == 0) {
+                hbkgvLOG->SetBinContent(i, 0);
+                hbkgvLOG->SetBinError(i, 0);
+            } else {
+                hbkgvLOG->SetBinContent(i, TMath::Log10(hbkgv[ibin]->GetBinContent(i)));
+                hbkgvLOG->SetBinError(i, 0);
             }
         }
 
@@ -576,8 +865,24 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         name.str("");
         u.setBins(100);
 
-        // data hist
+        //    HERE THE LOG histo
         RooDataHist dataHist("dataHist", "dataHist", RooArgSet(u), hv[ibin]);
+        RooDataHist dataHistLog("dataHistLog", "dataHistLog", RooArgSet(u), hvLOG);
+
+        //
+        // Set up background histogram templates
+        //
+        RooDataHist bkgHist("bkgHist", "bkgHist", RooArgSet(u), hbkgv[ibin]);
+        RooDataHist bkgHistLog("bkgHistLog", "bkgHistLog", RooArgSet(u), hbkgvLOG);
+        //    RooHistPdf bkg("bkg","bkg",u,bkgHist,0);
+        name.str("");
+        name << "bkg_" << ibin << std::endl;
+        RooHistPdf bkg(name.str().c_str(), name.str().c_str(), u, bkgHist, 0);
+        name.str("");
+        name.str("");
+        name << "bkgLog_" << ibin << std::endl;
+        RooHistPdf bkgLog(name.str().c_str(), name.str().c_str(), u, bkgHistLog, 0);
+        name.str("");
 
         //
         // Set up fit parameters
@@ -605,7 +910,7 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
 
         name.str("");
         name << "sigma1_" << ibin;
-        RooRealVar sigma1(name.str().c_str(), name.str().c_str(), 0.7 * (hv[ibin]->GetRMS()), 0.5 * hv[ibin]->GetRMS(), 2.5 * (hv[ibin]->GetRMS()));
+        RooRealVar sigma1(name.str().c_str(), name.str().c_str(), 0.3 * (hv[ibin]->GetRMS()), 0.1 * hv[ibin]->GetRMS(), 2.5 * (hv[ibin]->GetRMS()));
         name.str("");
         name << "sigma2_" << ibin;
         RooRealVar sigma2(name.str().c_str(), name.str().c_str(), 1.0 * (hv[ibin]->GetRMS()), 0.1 * hv[ibin]->GetRMS(), 4.5 * (hv[ibin]->GetRMS()));
@@ -653,6 +958,7 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         RooGaussian constGauss2("constGauss2", "constGauss2", mean2, RooConst(hv[ibin]->GetMean()), RooConst(0.15 * hv[ibin]->GetRMS()));
         RooGaussian constGauss3("constGauss3", "constGauss3", mean3, RooConst(0.85 * hv[ibin]->GetMean()), RooConst(0.15 * hv[ibin]->GetRMS()));
         
+        //cout << " Mean of const: " << hv[ibin]->GetMean() << ", Std Dev of const: " << 0.001 * hv[ibin]->GetRMS() << endl;
         RooGaussian constGauss_forCB("constGauss_forCB", "constGauss_forCB", mean1,  RooConst(hv[ibin]->GetMean()), RooConst(0.15 * hv[ibin]->GetRMS()));
 
         name.str("");
@@ -680,7 +986,7 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
 
         name.str("");
         name << "doubleCB_" << ibin;
-        //RooCrystalBall doubleCB(name.str().c_str(), name.str().c_str(), u, mean1, sigmaL, sigmaR, alphaL, nL, alphaR, nR);
+        RooCrystalBall doubleCB(name.str().c_str(), name.str().c_str(), u, mean1, sigmaL, sigmaR, alphaL, nL, alphaR, nR);
         name.str("");
 
 
@@ -740,8 +1046,10 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
                 fracs.add(frac2);
         } 
         if (doCrystalBall) {
-            shapes.add(gauss1);  //consider swapping the order here
             //shapes.add(doubleCB);
+
+            shapes.add(gauss1);  //consider swapping the order here
+            shapes.add(doubleCB);
             fracs.add(frac2);
         }
 
@@ -750,13 +1058,24 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         RooAddPdf sig(name.str().c_str(), name.str().c_str(), shapes, fracs);
         name.str("");
 
+        name.str("");
+        name << "sig_" << ibin;
+        RooCrystalBall sigCB(name.str().c_str(), name.str().c_str(), u, mean1, sigmaL, sigmaR, alphaL, nL, alphaR, nR);
+        name.str("");
+
         RooArgList parts;
         if(doCrystalBall) {
+            //parts.add(sigCB);
             parts.add(sig);
         }
         if(!doCrystalBall) {
             parts.add(sig);
         }
+
+        if (!sigOnly && !doLog)
+            parts.add(bkg);
+        if (!sigOnly && doLog)
+            parts.add(bkgLog);
 
         RooArgList yields;
 
@@ -766,33 +1085,54 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         name.str("");
         name << "nbkg_" << ibin;
         RooRealVar nbkg(name.str().c_str(), name.str().c_str(), (hbkgv[ibin]->Integral()), 0.1 * (hbkgv[ibin]->Integral()), 0.25 * (hv[ibin]->Integral()));
-        double bkg_frac = (hv[ibin]->Integral() / (hv[ibin]->Integral() + hbkgv[ibin]->Integral()));
-        RooRealVar* lAbkgFrac = new RooRealVar("AbkgFrac", "AbkgFrac", bkg_frac, 0.95*bkg_frac, 1.05*bkg_frac);
+        RooRealVar* lAbkgFrac = new RooRealVar("AbkgFrac", "AbkgFrac", (hv[ibin]->Integral() / (hv[ibin]->Integral() + hbkgv[ibin]->Integral())), 0.9, .98);
 
-        yields.add(nsig);
-        nbkg.setVal(0);
+        if (sigOnly) {
+            yields.add(nsig);
+            nbkg.setVal(0);
+        } else {
+            RooFormulaVar* sigbkgFrac = new RooFormulaVar("bkgfrac", "@0", RooArgSet(*lAbkgFrac));
+            yields.add(*sigbkgFrac);
+        }
 
         name.str("");
         name << "modelpdf_" << ibin << std::endl;
         RooAddPdf modelpdf(name.str().c_str(), name.str().c_str(), parts, yields);
         name.str("");
 
+        RooFitResult* fitResultLOG = 0;
+        if (doLog) {
+            if(!doCrystalBall) {
+                fitResultLOG = modelpdf.fitTo(dataHistLog,
+                    NumCPU(4),
+                    Minimizer("Minuit2", "minimize"),
+                    ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //				    ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
+                    RooFit::Minos(),
+                    RooFit::Strategy(2),
+                    RooFit::Save());
+            }
+            if(doCrystalBall) {
+                fitResultLOG = modelpdf.fitTo(dataHistLog,
+                    NumCPU(4),
+                    Minimizer("Minuit2", "minimize"),
+                    //ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //				    ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
+                    ExternalConstraints(RooArgSet(constGauss_forCB, constGauss1)),
+                    RooFit::Minos(),
+                    RooFit::Strategy(2),
+                    RooFit::Save());
+            }
+        }
+        
         RooFitResult* fitResult = 0;
 
         if(!doCrystalBall) {
-            auto externalConstraintsArgSet = RooArgSet(constGauss1, constGauss2, constGauss3);
-
-            if (model == 2) {
-                externalConstraintsArgSet = RooArgSet(constGauss1, constGauss2);
-            } else if (model == 1) {
-                externalConstraintsArgSet = RooArgSet(constGauss1);
-            }
-
-
             fitResult = modelpdf.fitTo(dataHist,
                 NumCPU(4),
                 Minimizer("Minuit2", "minimize"),
-                ExternalConstraints(externalConstraintsArgSet),
+                ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                //			       ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                 RooFit::Minos(),
                 RooFit::Strategy(2),
                 RooFit::Save());
@@ -801,39 +1141,52 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
             do {
                 fitResult = modelpdf.fitTo(dataHist,
                     NumCPU(4),
+                    //				 Minimizer("Minuit2","minimize"),
                     Minimizer("Minuit2", "scan"),
-                    ExternalConstraints(externalConstraintsArgSet),
+                    ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //				 ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                     RooFit::Minos(),
                     RooFit::Strategy(2),
                     RooFit::Save());
+
+                // nTries++;
+
                 fitResult = modelpdf.fitTo(dataHist,
                     NumCPU(4),
+                    //				 Minimizer("Minuit2","minimize"),
                     Minimizer("Minuit2", "migrad"),
-                    ExternalConstraints(externalConstraintsArgSet),
+                    ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //				 ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                     RooFit::Hesse(),
                     RooFit::Strategy(2),
                     RooFit::Save());
                 fitResult = modelpdf.fitTo(dataHist,
                     NumCPU(4),
+                    //				 Minimizer("Minuit2","minimize"),
                     Minimizer("Minuit2", "improve"),
-                    ExternalConstraints(externalConstraintsArgSet),
+                    ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //				 ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                     RooFit::Minos(),
                     RooFit::Strategy(2),
                     RooFit::Save());
+
                 fitResult = modelpdf.fitTo(dataHist,
                     NumCPU(4),
                     Minimizer("Minuit2", "minimize"),
-                    ExternalConstraints(externalConstraintsArgSet),
+                    ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //			       ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                     RooFit::Minos(),
                     RooFit::Strategy(2),
                     RooFit::Save());
                 nTries++;
-            } while ((fitResult->status() > 0 || fitResult->covQual() < 3) && nTries < 5);
+            } while ((fitResult->status() > 0 || fitResult->covQual() < 3) && nTries < 10);
         }
         if (doCrystalBall) {
             fitResult = modelpdf.fitTo(dataHist,
                 NumCPU(4),
                 Minimizer("Minuit2", "minimize"),
+                //ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                //			       ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                 ExternalConstraints(RooArgSet(constGauss_forCB, constGauss1)),
                 RooFit::Minos(),
                 RooFit::Strategy(2),
@@ -843,28 +1196,43 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
             do {
                 fitResult = modelpdf.fitTo(dataHist,
                     NumCPU(4),
+                    //				 Minimizer("Minuit2","minimize"),
                     Minimizer("Minuit2", "scan"),
+                    //ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //				 ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                     ExternalConstraints(RooArgSet(constGauss_forCB, constGauss1)),
                     RooFit::Minos(),
                     RooFit::Strategy(2),
                     RooFit::Save());
+
+                // nTries++;
+
                 fitResult = modelpdf.fitTo(dataHist,
                     NumCPU(4),
+                    //				 Minimizer("Minuit2","minimize"),
                     Minimizer("Minuit2", "migrad"),
+                    //ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //				 ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                     ExternalConstraints(RooArgSet(constGauss_forCB, constGauss1)),
                     RooFit::Hesse(),
                     RooFit::Strategy(2),
                     RooFit::Save());
                 fitResult = modelpdf.fitTo(dataHist,
                     NumCPU(4),
+                    //				 Minimizer("Minuit2","minimize"),
                     Minimizer("Minuit2", "improve"),
+                    //ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //				 ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                     ExternalConstraints(RooArgSet(constGauss_forCB, constGauss1)),
                     RooFit::Minos(),
                     RooFit::Strategy(2),
                     RooFit::Save());
+
                 fitResult = modelpdf.fitTo(dataHist,
                     NumCPU(4),
                     Minimizer("Minuit2", "minimize"),
+                    //ExternalConstraints(RooArgSet(constGauss1, constGauss2, constGauss3)), //ExternalConstraints(constGauss2), ExternalConstraints(constGauss3),
+                    //			       ExternalConstraints(constGauss2),ExternalConstraints(constGauss3),
                     ExternalConstraints(RooArgSet(constGauss_forCB, constGauss1)),
                     RooFit::Minos(),
                     RooFit::Strategy(2),
@@ -895,12 +1263,14 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         if(!doCrystalBall)
             wksp->import(sig);
         if(doCrystalBall)
-            wksp->import(sig);
+            wksp->import(sigCB);
+        if (!doLog)
+            wksp->import(bkg);
+        if (doLog)
+            wksp->import(bkgLog);
 
         mean1Arr[ibin] = mean1.getVal();
         mean1ErrArr[ibin] = mean1.getError();
-        sigma1Arr[ibin] = sigma1.getVal();
-        sigma1ErrArr[ibin] = sigma1.getError();
         if(!doCrystalBall) {
             frac2_ini = frac2.getVal();
             frac3_ini = frac3.getVal();
@@ -960,6 +1330,15 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         dataHist.plotOn(frame, MarkerStyle(kFullCircle), MarkerSize(0.8), DrawOption("ZP"));
         modelpdf.plotOn(frame);
 
+        if (!doLog)
+            name.str("");
+        name << "bkg_" << ibin;
+        if (doLog)
+            name.str("");
+        name << "bkgLog_" << ibin;
+        if (!sigOnly)
+            modelpdf.plotOn(frame, Components(bkg), FillColor(kRed), DrawOption("F"));
+
         if(!doCrystalBall) {
             name.str("");
             name << "gauss1_" << ibin;
@@ -975,6 +1354,10 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
                 sig.plotOn(frame, Components(name.str().c_str()), LineStyle(kDashed), LineColor(kGreen + 2));
         }
         if(doCrystalBall) {
+            //name.str("");
+            //name << "doubleCB_" << ibin;
+            //sigCB.plotOn(frame, Components(name.str().c_str()), LineStyle(kDashed), LineColor(kRed));
+
             name.str("");
             name << "doubleCB_" << ibin;
             sig.plotOn(frame, Components(name.str().c_str()), LineStyle(kDashed), LineColor(kRed));
@@ -984,12 +1367,27 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
             sig.plotOn(frame, Components(name.str().c_str()), LineStyle(kDashed), LineColor(kGreen));
         }
 
+        
+        if (!doLog)
+            name.str("");
+        name << "bkg_" << ibin;
+        if (doLog)
+            name.str("");
+        name << "bkgLog_" << ibin;
+
         // draw the curve
+        if (!sigOnly)
+            modelpdf.plotOn(frame, FillColor(kGray), VisualizeError(*fitResult, 1), RooFit::Components(modelpdf)); // 1 sigma band
+        if (!sigOnly)
+            modelpdf.plotOn(frame, RooFit::LineColor(kGray + 2));
         if (!doCrystalBall) {
             sig.plotOn(frame, FillColor(7), VisualizeError(*fitResult, 1), RooFit::Components(sig)); // 1 sigma band
             sig.plotOn(frame, RooFit::LineColor(kBlue));
         } 
         if (doCrystalBall) {
+            //sigCB.plotOn(frame, FillColor(7), VisualizeError(*fitResult, 1), RooFit::Components(sig)); // 1 sigma band
+            //sigCB.plotOn(frame, RooFit::LineColor(kBlue));
+
             sig.plotOn(frame, FillColor(7), VisualizeError(*fitResult, 1), RooFit::Components(sig)); // 1 sigma band
             sig.plotOn(frame, RooFit::LineColor(kBlue));
         }  
@@ -998,8 +1396,11 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         dataHist.plotOn(frame, MarkerStyle(kFullCircle), MarkerSize(0.8), DrawOption("ZP"));
 
         if (do_keys) {
+
+            //      lDataSet[ibin].Print();
             name.str("");
             name << "key_" << ibin;
+            //      RooKeysPdf * pdf_keys = new RooKeysPdf(name.str().c_str(),name.str().c_str(), u, dataHist, RooKeysPdf::NoMirror, 2);
             RooKeysPdf pdf_keys(name.str().c_str(), name.str().c_str(), lVar[ibin], lDataSet[ibin], RooKeysPdf::NoMirror, 2);
 
             RooPlot* xframe = lVar[ibin].frame(Title(Form("%s Zp_{T}=%.1f - %.1f GeV/c ", plabel, ptbins[ibin], ptbins[ibin + 1])));
@@ -1015,7 +1416,12 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
             name.str("");
 
             pdf_keys.plotOn(frame, LineColor(kRed));
+
+            //      wksp->import(lDataSet[ibin]);
             wksp->import(pdf_keys);
+            //      wksp->import(lVar[ibin],RooFit::RecycleConflictNodes(),RooFit::Silence());
+            //      wksp->import(pdf_keys,RooFit::RecycleConflictNodes(),RooFit::Silence());
+
             wksp->Print();
         }
 
@@ -1033,14 +1439,13 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
 
         RooHist* hist_pull = hist->makePullHist(*fitCurve);
         hist_pull->SetTitle("");
-        hist_pull->GetXaxis()->SetRangeUser(frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax());
         hist_pull->GetYaxis()->SetTitle("pull");
         hist_pull->GetYaxis()->SetRangeUser(-5., 5.);
         hist_pull->SetMarkerColor(kAzure);
         hist_pull->SetLineColor(kAzure);
         hist_pull->SetFillColor(kAzure);
-        hist_pull->GetYaxis()->SetTitleFont(42);
-        hist_pull->GetXaxis()->SetTitleFont(42);
+        //    hist_pull->GetYaxis()->SetTitleFont(42);
+        //    hist_pull->GetXaxis()->SetTitleFont(42);
         hist_pull->GetYaxis()->SetTitleSize(0.055);
         hist_pull->GetYaxis()->SetTitleOffset(1.600);
         hist_pull->GetYaxis()->SetLabelOffset(0.014);
@@ -1060,7 +1465,10 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         } // just a larger number so that is easy to notice on the plot
         //    cout << " chi2Arr[ibin]=" << chi2Arr[ibin] << " chi2ErrArr[ibin]=" << chi2ErrArr[ibin] << endl;
 
+        // if(do_5TeV) sprintf(lumi,"CMS                               27.4 pb^{-1} (5 TeV)");
+        // if(!do_5TeV) sprintf(lumi,"CMS                               2.2 fb^{-1} (13 TeV)");
         sprintf(lumi,"CMS Preliminary                    %.1f fb^{-1} (13 TeV)", luminosity);
+        //sprintf(lumi,"CMS Preliminary                     92.8 fb^{-1} (13 TeV)");
         sprintf(pname, "%sfit_%i", plabel, ibin);
         sprintf(ylabel, "Events / %.1f GeV", hv[ibin]->GetBinWidth(1));
         if (string(plabel) == string("pfu1")) {
@@ -1068,7 +1476,7 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         } else {
             sprintf(xlabel_new, "u_{#perp}");
         }
-        sprintf(binlabel, "p_{T}(V) = %.1f - %.1f GeV/c", ptbins[ibin], ptbins[ibin + 1]);
+        sprintf(binlabel, "p_{T}(Z) = %.1f - %.1f GeV/c", ptbins[ibin], ptbins[ibin + 1]);
 
         if (etaBinCategory == 1)
             sprintf(binYlabel, "|y| < 0.5");
@@ -1077,8 +1485,13 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         if (etaBinCategory == 3)
             sprintf(binYlabel, "|y| > 1");
 
-        sprintf(nsigtext, "N_{evts} = %.0f", (double)hv[ibin]->Integral());
-
+        if (sigOnly) {
+            sprintf(nsigtext, "N_{evts} = %i", (Int_t)hv[ibin]->Integral());
+        } else {
+            sprintf(nsigtext, "N_{sig}/(N_{bkg}+N_{sig}) = %.3f #pm %.3f", lAbkgFrac->getVal(), lAbkgFrac->getError());
+            //      sprintf(nsigtext,"N_{sig} = %.1f #pm %.1f",nsig.getVal(),nsig.getError());
+            //      sprintf(nbkgtext,"N_{bkg} = %.1f #pm %.1f",nbkg.getVal(),nbkg.getError());
+        }
         if (doCrystalBall) {
             sprintf(mean1text, "#mu_{1} = %.1f #pm %.1f", mean1Arr[ibin], mean1ErrArr[ibin]);
             sprintf(sig1text, "#sigma_{L} = %.1f #pm %.1f", sigma1Arr[ibin], sigma1ErrArr[ibin]);
@@ -1094,10 +1507,12 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         }
         if (!doCrystalBall) {
             sprintf(mean1text, "#mu_{1} = %.1f #pm %.1f", mean1Arr[ibin], mean1ErrArr[ibin]);
-            sprintf(sig1text, "#sigma_{1} = %.1f #pm %.1f", sigma1Arr[ibin], sigma1ErrArr[ibin]);
+            sprintf(sig1text, "#sigma = %.1f #pm %.1f", sigma1Arr[ibin], sigma1ErrArr[ibin]);
             if (model >= 2) {
                 sprintf(mean2text, "#mu_{2} = %.1f #pm %.1f", mean2Arr[ibin], mean2ErrArr[ibin]);
+                //      sprintf(mean2text,"#mu_{2} = #mu_{1} ");
                 sprintf(sig0text, "#sigma = %.1f #pm %.1f", sigma0Arr[ibin], sigma0ErrArr[ibin]);
+                //sprintf(sig1text, "#sigma_{1} = %.1f #pm %.1f", sigma1Arr[ibin], sigma1ErrArr[ibin]);
                 sprintf(sig2text, "#sigma_{2} = %.1f #pm %.1f", sigma2Arr[ibin], sigma2ErrArr[ibin]);
             }
             if (model >= 3) {
@@ -1135,18 +1550,23 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         plot.AddTextBox(xlabel_new, 0.75, 0.1, 1.00, 0, 0, kBlack, -1);
         if (etaBinCategory != 0)
             plot.AddTextBox(binYlabel, 0.21, 0.85, 0.51, 0.9, 0, kBlack, -1);
-        plot.AddTextBox(nsigtext, 0.21, 0.78, 0.51, 0.73, 0, kBlack, -1);
-
+        if (sigOnly)
+            plot.AddTextBox(nsigtext, 0.21, 0.78, 0.51, 0.73, 0, kBlack, -1);
+        //    else        plot.AddTextBox(0.21,0.78,0.51,0.68,0,kBlack,-1,2,nsigtext,nbkgtext);
+        else
+        plot.AddTextBox(nsigtext, 0.21, 0.78, 0.51, 0.73, 0, kBlack, -1); // this print the fraction now
         if(!doCrystalBall) {
             if (model == 1)
                 plot.AddTextBox(0.70, 0.90, 0.95, 0.80, 0, kBlack, -1, 2, mean1text, sig1text);
             else if (model == 2)
-                plot.AddTextBox(0.70, 0.90, 0.95, 0.70, 0, kBlack, -1, 4, mean1text, mean2text, sig1text, sig2text);
+                plot.AddTextBox(0.70, 0.90, 0.95, 0.70, 0, kBlack, -1, 5, mean1text, mean2text, sig0text, sig1text, sig2text);
+            //    else if(model==3) plot.AddTextBox(0.70,0.90,0.95,0.65,0,kBlack,-1,7,mean1text,mean2text,mean3text,sig0text,sig1text,sig2text,sig3text);
             else if (model == 3)
-                plot.AddTextBox(0.70, 0.90, 0.95, 0.65, 0, kBlack, -1, 6, mean1text, mean2text, mean3text, sig1text, sig2text, sig3text);  // sig0text
+                plot.AddTextBox(0.70, 0.90, 0.95, 0.65, 0, kBlack, -1, 7, mean1text, mean2text, mean3text, sig0text, sig1text, sig2text, sig3text);
         }
         if(doCrystalBall)
             plot.AddTextBox(0.70, 0.90, 0.95, 0.70, 0, kBlack, -1, 10, mean1text, sig0text, sig1text, sig2text, alphaLtext, alphaRtext, nLtext, nRtext, sig1text, frac2text);
+            //plot.AddTextBox(0.70, 0.90, 0.95, 0.70, 0, kBlack, -1, 8, mean1text, sig0text, sig1text, sig2text, alphaLtext, alphaRtext, nLtext, nRtext);
         plot.Draw(cLin, kFALSE, "png", 1);
         plot.Draw(cLin, kFALSE, "pdf", 1);
 
@@ -1184,6 +1604,7 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
 
         sprintf(pname, "%sfitlog_%i", plabel, ibin);
         plot.SetYRange(0.1, 10 * hv[ibin]->GetMaximum());
+        //plot.SetYRange(0.001, 10 * hv[ibin]->GetMaximum());
         plot.SetName(pname);
         plot.SetLogy();
         plot.Draw(c1, kFALSE, "png", 1);

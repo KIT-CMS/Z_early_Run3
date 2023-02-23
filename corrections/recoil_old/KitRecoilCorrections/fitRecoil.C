@@ -45,7 +45,7 @@
 #include "RooProdPdf.h"
 #include "RooPolynomial.h"
 
-//#include "RooCrystalBall.h"
+#include "RooCrystalBall.h"
 
 #endif
 
@@ -89,13 +89,13 @@ void fitRecoil(
     Bool_t sigOnly = 1, // 1=> signal event only, 0=> add background
     Bool_t doElectron = 0, // 0=> Muon channels, 1=> Electron channels
     Double_t inputType = 0, // Which dataset to run on 0=> Data, 1=> Z->ll MC, 2=> W+ jets MC, 3=> W- jets MC
-    std::string inputDirectory = "/storage/9/jdriesch/earlyrun3/samples/Run3V06",
-    std::string metVar = "pfmet_uncorrected",
-    std::string metPhiVar = "pfmetphi_uncorrected",
+    std::string inputDirectory = "/ceph/moh/CROWN_samples/EarlyRun3_V12",
+    std::string metVar = "met_uncorrected",
+    std::string metPhiVar = "metphi_uncorrected",
     TString outputDir = "./", // output directory
     Double_t lumi = 1,
     Int_t rapbin = -1,
-    TString hist_file = "/work/jdriesch/earlyrun3/Z_early_Run3/output/earlyRun3_2022_Zpt.root")
+    TString hist_file = "/home/moh/CROWN_working/Z_early_Run3/output/earlyRun3_2022_Zpt.root")
 {
     RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
     RooMsgService::instance().setSilentMode(true);
@@ -160,7 +160,6 @@ void fitRecoil(
             bosonpt_var = "bosonpt";
 
             hnamein_data = TString::Format("data#mm_corr-355862-357482-data#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
-            cout << "string: " << hnamein_data << endl;
             hnamein_DY = TString::Format("DY#mm_corr-355862-357482-DY#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
             hnamein_W = TString::Format("W#mm_corr-355862-357482-W#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
             hnamein_TT = TString::Format("TT#mm_corr-355862-357482-TT#Nominal#%s_zpt%d%s", uP1_var.Data(), ibin, zrapbin.Data());
@@ -680,7 +679,7 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
 
         name.str("");
         name << "doubleCB_" << ibin;
-        //RooCrystalBall doubleCB(name.str().c_str(), name.str().c_str(), u, mean1, sigmaL, sigmaR, alphaL, nL, alphaR, nR);
+        RooCrystalBall doubleCB(name.str().c_str(), name.str().c_str(), u, mean1, sigmaL, sigmaR, alphaL, nL, alphaR, nR);
         name.str("");
 
 
@@ -741,7 +740,7 @@ void performFit(const vector<TH1D*> hv, const vector<TH1D*> hbkgv, const Double_
         } 
         if (doCrystalBall) {
             shapes.add(gauss1);  //consider swapping the order here
-            //shapes.add(doubleCB);
+            shapes.add(doubleCB);
             fracs.add(frac2);
         }
 

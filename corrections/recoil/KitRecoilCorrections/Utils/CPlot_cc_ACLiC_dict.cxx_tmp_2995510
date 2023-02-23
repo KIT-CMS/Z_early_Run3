@@ -1,0 +1,572 @@
+// Do NOT change. Changes will be lost next time file is generated
+
+#define R__DICTIONARY_FILENAME dIworkdIjdrieschdIearlyrun3dIZ_early_Run3dIcorrectionsdIrecoildIKitRecoilCorrectionsdIdOdIUtilsdICPlot_cc_ACLiC_dict
+#define R__NO_DEPRECATION
+
+/*******************************************************************/
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#define G__DICTIONARY
+#include "RConfig.h"
+#include "TClass.h"
+#include "TDictAttributeMap.h"
+#include "TInterpreter.h"
+#include "TROOT.h"
+#include "TBuffer.h"
+#include "TMemberInspector.h"
+#include "TInterpreter.h"
+#include "TVirtualMutex.h"
+#include "TError.h"
+
+#ifndef G__ROOT
+#define G__ROOT
+#endif
+
+#include "RtypesImp.h"
+#include "TIsAProxy.h"
+#include "TFileMergeInfo.h"
+#include <algorithm>
+#include "TCollectionProxyInfo.h"
+/*******************************************************************/
+
+#include "TDataMember.h"
+
+// The generated code does not explicitly qualifies STL entities
+namespace std {} using namespace std;
+
+// Header files passed as explicit arguments
+#include "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/./Utils/CPlot.cc"
+
+// Header files passed via #pragma extra_include
+
+namespace ROOT {
+   static TClass *CPlotItem_Dictionary();
+   static void CPlotItem_TClassManip(TClass*);
+   static void *new_CPlotItem(void *p = 0);
+   static void *newArray_CPlotItem(Long_t size, void *p);
+   static void delete_CPlotItem(void *p);
+   static void deleteArray_CPlotItem(void *p);
+   static void destruct_CPlotItem(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::CPlotItem*)
+   {
+      ::CPlotItem *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::CPlotItem));
+      static ::ROOT::TGenericClassInfo 
+         instance("CPlotItem", "Utils/CPlot.hh", 39,
+                  typeid(::CPlotItem), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &CPlotItem_Dictionary, isa_proxy, 4,
+                  sizeof(::CPlotItem) );
+      instance.SetNew(&new_CPlotItem);
+      instance.SetNewArray(&newArray_CPlotItem);
+      instance.SetDelete(&delete_CPlotItem);
+      instance.SetDeleteArray(&deleteArray_CPlotItem);
+      instance.SetDestructor(&destruct_CPlotItem);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::CPlotItem*)
+   {
+      return GenerateInitInstanceLocal((::CPlotItem*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::CPlotItem*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *CPlotItem_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const ::CPlotItem*)0x0)->GetClass();
+      CPlotItem_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void CPlotItem_TClassManip(TClass* theClass){
+      theClass->CreateAttributeMap();
+      TDictAttributeMap* attrMap( theClass->GetAttributeMap() );
+      attrMap->AddProperty("file_name","/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/./Utils/CPlot.hh");
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   static TClass *CPlot_Dictionary();
+   static void CPlot_TClassManip(TClass*);
+   static void *new_CPlot(void *p = 0);
+   static void *newArray_CPlot(Long_t size, void *p);
+   static void delete_CPlot(void *p);
+   static void deleteArray_CPlot(void *p);
+   static void destruct_CPlot(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const ::CPlot*)
+   {
+      ::CPlot *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::CPlot));
+      static ::ROOT::TGenericClassInfo 
+         instance("CPlot", "Utils/CPlot.hh", 58,
+                  typeid(::CPlot), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &CPlot_Dictionary, isa_proxy, 4,
+                  sizeof(::CPlot) );
+      instance.SetNew(&new_CPlot);
+      instance.SetNewArray(&newArray_CPlot);
+      instance.SetDelete(&delete_CPlot);
+      instance.SetDeleteArray(&deleteArray_CPlot);
+      instance.SetDestructor(&destruct_CPlot);
+      return &instance;
+   }
+   TGenericClassInfo *GenerateInitInstance(const ::CPlot*)
+   {
+      return GenerateInitInstanceLocal((::CPlot*)0);
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::CPlot*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *CPlot_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const ::CPlot*)0x0)->GetClass();
+      CPlot_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void CPlot_TClassManip(TClass* theClass){
+      theClass->CreateAttributeMap();
+      TDictAttributeMap* attrMap( theClass->GetAttributeMap() );
+      attrMap->AddProperty("file_name","/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/./Utils/CPlot.hh");
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_CPlotItem(void *p) {
+      return  p ? new(p) ::CPlotItem : new ::CPlotItem;
+   }
+   static void *newArray_CPlotItem(Long_t nElements, void *p) {
+      return p ? new(p) ::CPlotItem[nElements] : new ::CPlotItem[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_CPlotItem(void *p) {
+      delete ((::CPlotItem*)p);
+   }
+   static void deleteArray_CPlotItem(void *p) {
+      delete [] ((::CPlotItem*)p);
+   }
+   static void destruct_CPlotItem(void *p) {
+      typedef ::CPlotItem current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::CPlotItem
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_CPlot(void *p) {
+      return  p ? new(p) ::CPlot : new ::CPlot;
+   }
+   static void *newArray_CPlot(Long_t nElements, void *p) {
+      return p ? new(p) ::CPlot[nElements] : new ::CPlot[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_CPlot(void *p) {
+      delete ((::CPlot*)p);
+   }
+   static void deleteArray_CPlot(void *p) {
+      delete [] ((::CPlot*)p);
+   }
+   static void destruct_CPlot(void *p) {
+      typedef ::CPlot current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class ::CPlot
+
+namespace ROOT {
+   static TClass *vectorlETPaveTextmUgR_Dictionary();
+   static void vectorlETPaveTextmUgR_TClassManip(TClass*);
+   static void *new_vectorlETPaveTextmUgR(void *p = 0);
+   static void *newArray_vectorlETPaveTextmUgR(Long_t size, void *p);
+   static void delete_vectorlETPaveTextmUgR(void *p);
+   static void deleteArray_vectorlETPaveTextmUgR(void *p);
+   static void destruct_vectorlETPaveTextmUgR(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<TPaveText*>*)
+   {
+      vector<TPaveText*> *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TPaveText*>));
+      static ::ROOT::TGenericClassInfo 
+         instance("vector<TPaveText*>", -2, "vector", 386,
+                  typeid(vector<TPaveText*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlETPaveTextmUgR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<TPaveText*>) );
+      instance.SetNew(&new_vectorlETPaveTextmUgR);
+      instance.SetNewArray(&newArray_vectorlETPaveTextmUgR);
+      instance.SetDelete(&delete_vectorlETPaveTextmUgR);
+      instance.SetDeleteArray(&deleteArray_vectorlETPaveTextmUgR);
+      instance.SetDestructor(&destruct_vectorlETPaveTextmUgR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<TPaveText*> >()));
+
+      ::ROOT::AddClassAlternate("vector<TPaveText*>","std::vector<TPaveText*, std::allocator<TPaveText*> >");
+      return &instance;
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const vector<TPaveText*>*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *vectorlETPaveTextmUgR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const vector<TPaveText*>*)0x0)->GetClass();
+      vectorlETPaveTextmUgR_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void vectorlETPaveTextmUgR_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_vectorlETPaveTextmUgR(void *p) {
+      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TPaveText*> : new vector<TPaveText*>;
+   }
+   static void *newArray_vectorlETPaveTextmUgR(Long_t nElements, void *p) {
+      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TPaveText*>[nElements] : new vector<TPaveText*>[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_vectorlETPaveTextmUgR(void *p) {
+      delete ((vector<TPaveText*>*)p);
+   }
+   static void deleteArray_vectorlETPaveTextmUgR(void *p) {
+      delete [] ((vector<TPaveText*>*)p);
+   }
+   static void destruct_vectorlETPaveTextmUgR(void *p) {
+      typedef vector<TPaveText*> current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class vector<TPaveText*>
+
+namespace ROOT {
+   static TClass *vectorlETLinemUgR_Dictionary();
+   static void vectorlETLinemUgR_TClassManip(TClass*);
+   static void *new_vectorlETLinemUgR(void *p = 0);
+   static void *newArray_vectorlETLinemUgR(Long_t size, void *p);
+   static void delete_vectorlETLinemUgR(void *p);
+   static void deleteArray_vectorlETLinemUgR(void *p);
+   static void destruct_vectorlETLinemUgR(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<TLine*>*)
+   {
+      vector<TLine*> *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TLine*>));
+      static ::ROOT::TGenericClassInfo 
+         instance("vector<TLine*>", -2, "vector", 386,
+                  typeid(vector<TLine*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlETLinemUgR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<TLine*>) );
+      instance.SetNew(&new_vectorlETLinemUgR);
+      instance.SetNewArray(&newArray_vectorlETLinemUgR);
+      instance.SetDelete(&delete_vectorlETLinemUgR);
+      instance.SetDeleteArray(&deleteArray_vectorlETLinemUgR);
+      instance.SetDestructor(&destruct_vectorlETLinemUgR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<TLine*> >()));
+
+      ::ROOT::AddClassAlternate("vector<TLine*>","std::vector<TLine*, std::allocator<TLine*> >");
+      return &instance;
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const vector<TLine*>*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *vectorlETLinemUgR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const vector<TLine*>*)0x0)->GetClass();
+      vectorlETLinemUgR_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void vectorlETLinemUgR_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_vectorlETLinemUgR(void *p) {
+      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TLine*> : new vector<TLine*>;
+   }
+   static void *newArray_vectorlETLinemUgR(Long_t nElements, void *p) {
+      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TLine*>[nElements] : new vector<TLine*>[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_vectorlETLinemUgR(void *p) {
+      delete ((vector<TLine*>*)p);
+   }
+   static void deleteArray_vectorlETLinemUgR(void *p) {
+      delete [] ((vector<TLine*>*)p);
+   }
+   static void destruct_vectorlETLinemUgR(void *p) {
+      typedef vector<TLine*> current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class vector<TLine*>
+
+namespace ROOT {
+   static TClass *vectorlETLegendEntrymUgR_Dictionary();
+   static void vectorlETLegendEntrymUgR_TClassManip(TClass*);
+   static void *new_vectorlETLegendEntrymUgR(void *p = 0);
+   static void *newArray_vectorlETLegendEntrymUgR(Long_t size, void *p);
+   static void delete_vectorlETLegendEntrymUgR(void *p);
+   static void deleteArray_vectorlETLegendEntrymUgR(void *p);
+   static void destruct_vectorlETLegendEntrymUgR(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<TLegendEntry*>*)
+   {
+      vector<TLegendEntry*> *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TLegendEntry*>));
+      static ::ROOT::TGenericClassInfo 
+         instance("vector<TLegendEntry*>", -2, "vector", 386,
+                  typeid(vector<TLegendEntry*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlETLegendEntrymUgR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<TLegendEntry*>) );
+      instance.SetNew(&new_vectorlETLegendEntrymUgR);
+      instance.SetNewArray(&newArray_vectorlETLegendEntrymUgR);
+      instance.SetDelete(&delete_vectorlETLegendEntrymUgR);
+      instance.SetDeleteArray(&deleteArray_vectorlETLegendEntrymUgR);
+      instance.SetDestructor(&destruct_vectorlETLegendEntrymUgR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<TLegendEntry*> >()));
+
+      ::ROOT::AddClassAlternate("vector<TLegendEntry*>","std::vector<TLegendEntry*, std::allocator<TLegendEntry*> >");
+      return &instance;
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const vector<TLegendEntry*>*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *vectorlETLegendEntrymUgR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const vector<TLegendEntry*>*)0x0)->GetClass();
+      vectorlETLegendEntrymUgR_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void vectorlETLegendEntrymUgR_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_vectorlETLegendEntrymUgR(void *p) {
+      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TLegendEntry*> : new vector<TLegendEntry*>;
+   }
+   static void *newArray_vectorlETLegendEntrymUgR(Long_t nElements, void *p) {
+      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TLegendEntry*>[nElements] : new vector<TLegendEntry*>[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_vectorlETLegendEntrymUgR(void *p) {
+      delete ((vector<TLegendEntry*>*)p);
+   }
+   static void deleteArray_vectorlETLegendEntrymUgR(void *p) {
+      delete [] ((vector<TLegendEntry*>*)p);
+   }
+   static void destruct_vectorlETLegendEntrymUgR(void *p) {
+      typedef vector<TLegendEntry*> current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class vector<TLegendEntry*>
+
+namespace ROOT {
+   static TClass *vectorlETF1mUgR_Dictionary();
+   static void vectorlETF1mUgR_TClassManip(TClass*);
+   static void *new_vectorlETF1mUgR(void *p = 0);
+   static void *newArray_vectorlETF1mUgR(Long_t size, void *p);
+   static void delete_vectorlETF1mUgR(void *p);
+   static void deleteArray_vectorlETF1mUgR(void *p);
+   static void destruct_vectorlETF1mUgR(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<TF1*>*)
+   {
+      vector<TF1*> *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TF1*>));
+      static ::ROOT::TGenericClassInfo 
+         instance("vector<TF1*>", -2, "vector", 386,
+                  typeid(vector<TF1*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlETF1mUgR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<TF1*>) );
+      instance.SetNew(&new_vectorlETF1mUgR);
+      instance.SetNewArray(&newArray_vectorlETF1mUgR);
+      instance.SetDelete(&delete_vectorlETF1mUgR);
+      instance.SetDeleteArray(&deleteArray_vectorlETF1mUgR);
+      instance.SetDestructor(&destruct_vectorlETF1mUgR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<TF1*> >()));
+
+      ::ROOT::AddClassAlternate("vector<TF1*>","std::vector<TF1*, std::allocator<TF1*> >");
+      return &instance;
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const vector<TF1*>*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *vectorlETF1mUgR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const vector<TF1*>*)0x0)->GetClass();
+      vectorlETF1mUgR_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void vectorlETF1mUgR_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_vectorlETF1mUgR(void *p) {
+      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TF1*> : new vector<TF1*>;
+   }
+   static void *newArray_vectorlETF1mUgR(Long_t nElements, void *p) {
+      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TF1*>[nElements] : new vector<TF1*>[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_vectorlETF1mUgR(void *p) {
+      delete ((vector<TF1*>*)p);
+   }
+   static void deleteArray_vectorlETF1mUgR(void *p) {
+      delete [] ((vector<TF1*>*)p);
+   }
+   static void destruct_vectorlETF1mUgR(void *p) {
+      typedef vector<TF1*> current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class vector<TF1*>
+
+namespace ROOT {
+   static TClass *vectorlETBoxmUgR_Dictionary();
+   static void vectorlETBoxmUgR_TClassManip(TClass*);
+   static void *new_vectorlETBoxmUgR(void *p = 0);
+   static void *newArray_vectorlETBoxmUgR(Long_t size, void *p);
+   static void delete_vectorlETBoxmUgR(void *p);
+   static void deleteArray_vectorlETBoxmUgR(void *p);
+   static void destruct_vectorlETBoxmUgR(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<TBox*>*)
+   {
+      vector<TBox*> *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TBox*>));
+      static ::ROOT::TGenericClassInfo 
+         instance("vector<TBox*>", -2, "vector", 386,
+                  typeid(vector<TBox*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlETBoxmUgR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<TBox*>) );
+      instance.SetNew(&new_vectorlETBoxmUgR);
+      instance.SetNewArray(&newArray_vectorlETBoxmUgR);
+      instance.SetDelete(&delete_vectorlETBoxmUgR);
+      instance.SetDeleteArray(&deleteArray_vectorlETBoxmUgR);
+      instance.SetDestructor(&destruct_vectorlETBoxmUgR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<TBox*> >()));
+
+      ::ROOT::AddClassAlternate("vector<TBox*>","std::vector<TBox*, std::allocator<TBox*> >");
+      return &instance;
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const vector<TBox*>*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *vectorlETBoxmUgR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const vector<TBox*>*)0x0)->GetClass();
+      vectorlETBoxmUgR_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void vectorlETBoxmUgR_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_vectorlETBoxmUgR(void *p) {
+      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TBox*> : new vector<TBox*>;
+   }
+   static void *newArray_vectorlETBoxmUgR(Long_t nElements, void *p) {
+      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<TBox*>[nElements] : new vector<TBox*>[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_vectorlETBoxmUgR(void *p) {
+      delete ((vector<TBox*>*)p);
+   }
+   static void deleteArray_vectorlETBoxmUgR(void *p) {
+      delete [] ((vector<TBox*>*)p);
+   }
+   static void destruct_vectorlETBoxmUgR(void *p) {
+      typedef vector<TBox*> current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class vector<TBox*>
+
+namespace ROOT {
+   static TClass *vectorlECPlotItemgR_Dictionary();
+   static void vectorlECPlotItemgR_TClassManip(TClass*);
+   static void *new_vectorlECPlotItemgR(void *p = 0);
+   static void *newArray_vectorlECPlotItemgR(Long_t size, void *p);
+   static void delete_vectorlECPlotItemgR(void *p);
+   static void deleteArray_vectorlECPlotItemgR(void *p);
+   static void destruct_vectorlECPlotItemgR(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<CPlotItem>*)
+   {
+      vector<CPlotItem> *ptr = 0;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<CPlotItem>));
+      static ::ROOT::TGenericClassInfo 
+         instance("vector<CPlotItem>", -2, "vector", 386,
+                  typeid(vector<CPlotItem>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlECPlotItemgR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<CPlotItem>) );
+      instance.SetNew(&new_vectorlECPlotItemgR);
+      instance.SetNewArray(&newArray_vectorlECPlotItemgR);
+      instance.SetDelete(&delete_vectorlECPlotItemgR);
+      instance.SetDeleteArray(&deleteArray_vectorlECPlotItemgR);
+      instance.SetDestructor(&destruct_vectorlECPlotItemgR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<CPlotItem> >()));
+
+      ::ROOT::AddClassAlternate("vector<CPlotItem>","std::vector<CPlotItem, std::allocator<CPlotItem> >");
+      return &instance;
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const vector<CPlotItem>*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *vectorlECPlotItemgR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal((const vector<CPlotItem>*)0x0)->GetClass();
+      vectorlECPlotItemgR_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void vectorlECPlotItemgR_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_vectorlECPlotItemgR(void *p) {
+      return  p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<CPlotItem> : new vector<CPlotItem>;
+   }
+   static void *newArray_vectorlECPlotItemgR(Long_t nElements, void *p) {
+      return p ? ::new((::ROOT::Internal::TOperatorNewHelper*)p) vector<CPlotItem>[nElements] : new vector<CPlotItem>[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_vectorlECPlotItemgR(void *p) {
+      delete ((vector<CPlotItem>*)p);
+   }
+   static void deleteArray_vectorlECPlotItemgR(void *p) {
+      delete [] ((vector<CPlotItem>*)p);
+   }
+   static void destruct_vectorlECPlotItemgR(void *p) {
+      typedef vector<CPlotItem> current_t;
+      ((current_t*)p)->~current_t();
+   }
+} // end of namespace ROOT for class vector<CPlotItem>
+

@@ -13,9 +13,17 @@ from multiprocessing import Pool, RLock
 def job_wrapper(args):
     return apply_corrections(*args)
 
-def apply_corrections(f, puweights, hrange):
+def apply_corrections(f, wfile, hrange):
     output_path = f.replace("ntuples_xsec_sf_scaleres", "ntuples_xsec_sf_scaleres_pu")
     
+    wf = ROOT.TFile(wfile, "READ")
+    wdict = {}
+    for var in hrange.keys():
+        wdict[str(var)] = wf.Get(var+"weight")
+        wdict[var].SetDirectory(ROOT.nullptr)
+    wf.Close()
+
+
     rdf = ROOT.RDataFrame('ntuple', f)
 
     # extract original columns for later snapshot
@@ -25,20 +33,21 @@ def apply_corrections(f, puweights, hrange):
     is_data = (rdf.Sum("is_data").GetValue()>0) 
     
     rdf = rdf.Define('puweight', '0')
-    quants = original_cols + ["puweight"]
+    quants = original_cols + ["puweight", "puweightUp", "puweightDn"]
         
     for var in hrange.keys():
         bins = np.linspace(hrange[var][0], hrange[var][1], hrange[var][2]+1)
 
         rdf = rdf.Define(var+'weight','1')
-        
+
         if not is_data:
+            rdf = rdf.Redefine(var+'weight','1')
             for i in range(hrange[var][2]):
                 rdf = rdf.Redefine(
                     var+'weight',
                     'double w;'\
-                    f'if ({var} > {bins[i]} && {var} < {bins[i+1]})'\
-                    f'w = {puweights[var][i]};'\
+                    f'if ({var} >= {bins[i]} && {var} < {bins[i+1]})'\
+                    f'w = {wdict[var].GetBinContent(i)};'\
                     f'else w = {var}weight;'\
                     'return w;'
                 )
@@ -52,6 +61,8 @@ def apply_corrections(f, puweights, hrange):
     # print(quants)
     mean = rdf.Mean("puweight").GetValue()
     rdf = rdf.Redefine("puweight", f"puweight/{mean}")
+    rdf = rdf.Define("puweightUp", "puweight + abs(puweight-npvGoodweight)")
+    rdf = rdf.Define("puweightDn", "puweight - abs(puweight-npvGoodweight)")
     
     outdir = output_path.replace(output_path.split('/')[-1], "")
     if not os.path.exists(outdir):
@@ -83,10 +94,8 @@ if __name__=='__main__':
     base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_EraC/20*/*/*/*.root"
     ntuples = glob.glob(base_path)
 
-    # Load correction files
-    jsonfile = 'puweights.json'
-    with open(jsonfile) as f:
-        puweights = json.load(f)
+    # Load weight files
+    rfile_w = 'weights.root'
 
     hrange = {
         'npvGood': [0, 60, 60],
@@ -94,7 +103,7 @@ if __name__=='__main__':
         'rhoFastjetCentralCalo': [0, 35, 35]
     }    
     nthreads = 16
-    arguments = [(ntuple, puweights, hrange) for ntuple in ntuples]
+    arguments = [(ntuple, rfile_w, hrange) for ntuple in ntuples]
     # print(arguments[0])
     # apply_corrections(ntuples[0], puweights, hrange)
     generate_files(arguments, nthreads)
