@@ -251,6 +251,15 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
             for sysweight in nuisgroups["effsys"]:
                 sysweight[proc.name] = 1.0
 
+    # pileup systematic
+    nuisgroups["Pileup"] = []
+    for syst in ["pileup"]:
+        nuisgroups["Pileup"].append(Nuisance(name = syst, type = "shape")))
+    for proc in processes:
+        if not proc.isQCD:
+            for sysweight in nuisgroups["Pileup"]:
+                sysweight[proc.name] = 1.0
+
     # recoil correction systematics
     nuisgroups["recoil"] = []
     for syst in ["RecoilDoubleGauss", "RecoilSigOnlyFit", "RecoilZrap0", "RecoilZrap1", "RecoilZrap2"] + [f"RecoilStat{istat}" for istat in range(6)]:  # range(15)
@@ -399,6 +408,15 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
             # all the samples except the QCD apply the corrections
             # so they should be affected by sf systematics
             for sysweight in nuisgroups["effsys"]:
+                sysweight[proc.name] = 1.0
+
+    # pileup systematic
+    nuisgroups["Pileup"] = []
+    for syst in ["pileup"]:
+        nuisgroups["Pileup"].append(Nuisance(name = syst, type = "shape")))
+    for proc in processes:
+        if not proc.isQCD:
+            for sysweight in nuisgroups["Pileup"]:
                 sysweight[proc.name] = 1.0
 
     # momentum and resolution correction systematics
