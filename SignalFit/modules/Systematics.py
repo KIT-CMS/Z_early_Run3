@@ -53,5 +53,8 @@ syst_groups = {
     "Momentum": [
         "LepCorr",
     ],
+    "Pileup": [
+        "pileup",
+    ],
 
 }

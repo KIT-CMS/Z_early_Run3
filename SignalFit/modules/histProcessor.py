@@ -268,7 +268,11 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
         ] + [
             "LepCorrUp",
             "LepCorrDn",
+        ] + [
+            "PileupUp",
+            "PileupDn",
         ]
+
     )
 
     # W histograms
@@ -307,6 +311,9 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMURDown",
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
+        ] + [
+            "PileupUp",
+            "PileupDn",
         ]
     )
 
@@ -345,6 +352,9 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMURDown",
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
+        ] + [
+            "PileupUp",
+            "PileupDn",
         ]
     )
 
