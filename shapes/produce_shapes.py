@@ -40,6 +40,7 @@ from config.shapes.data_selection import (
 from config.shapes.variations import (
     mu_sf_weight,
     pdf_weight,
+    pu_weight,
 )
 
 from config.shapes.control_binning import get_control_binning
@@ -310,6 +311,7 @@ def main(args):
 
     def get_mc_units(channel, era, datasets, control_binning, run_list, run_lumi):
         n_trg_matches = [None]  # [2, 1, 0, -1] if channel == "mm" else [None]
+        # corr_postfixs = ["_corr", "_corr_up", "_corr_dn"]  # ["", "_corr"]
         corr_postfixs = ["_corr"]  # ["", "_corr"]
 
         run_tag = ""
@@ -427,6 +429,7 @@ def main(args):
 
     def get_control_units(channel, era, datasets, control_binning):
         n_trg_matches = [None]  # [2, 1, 0, -1] if channel == "mm" else [None]
+        # corr_postfixs = ["_corr", "_corr_up", "_corr_dn"]  # ["", "_corr"]
         corr_postfixs = ["_corr"]  # ["", "_corr"]
 
         data_dict = {}
@@ -573,6 +576,8 @@ def main(args):
                 print(f"\t{syst.name}")
             for syst in pdf_weight:
                 print(f"\t{syst.name}")
+            for syst in pu_weight:
+                print(f"\t{syst.name}")
             print("="*50)
             print("")
             # SF weights
@@ -596,6 +601,18 @@ def main(args):
                 ],
                 [
                     *pdf_weight,
+                ],
+                enable_check=args.enable_booking_check,
+            )
+            # PileUp weights
+            um.book(
+                [
+                    unit
+                    for d in procMC
+                    for unit in nominals[args.era]["units"][ch_][d]
+                ],
+                [
+                    *pu_weight,
                 ],
                 enable_check=args.enable_booking_check,
             )
