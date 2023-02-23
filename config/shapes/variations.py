@@ -31,6 +31,12 @@ pdf_weight = [
     ReplaceWeight("LHEScaleWeightMUFMURDown", "LHEScaleWeight", ("LHEScaleWeight0", "LHEScaleWeightMUFMURDown")),
 ]
 
+
+pu_weight = [
+    ReplaceWeight("puWeightUp", "puweight", ("puweightUp", "puWeightUp")),
+    ReplaceWeight("puWeightDn", "puweight", ("puweightDn", "puWeightDn")),
+]
+
 # mt_cuts = [
 #     ReplaceCut("pfmtcut10", "pfmtcut", ("(sqrt(2.*pt_1_corr*pfmet_corr*(1.-cos(phi_1 - pfmetphi_corr)))) > 10.", "pfmtcut10")),
 #     ReplaceCut("pfmtcut20", "pfmtcut", ("(sqrt(2.*pt_1_corr*pfmet_corr*(1.-cos(phi_1 - pfmetphi_corr)))) > 20.", "pfmtcut20")),

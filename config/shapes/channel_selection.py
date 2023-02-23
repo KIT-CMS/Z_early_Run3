@@ -9,7 +9,7 @@ def channel_selection(channel, era, doQCD = False, n_trg_match_mm = None, corr_p
             (f"(pt_1{corr_postfix}>25. && abs(eta_1) < 2.4)", "acceptance"),
             ("(trg_single_mu24_1)", "trg_matching"),
             ("(extramuon_veto == 1)", "lepton_veto"),
-            ("(sqrt(2.*pt_1_corr*pfmet_corr*(1.-cos(phi_1 - pfmetphi_corr)))) > -1.", "pfmtcut"),
+            # ("(sqrt(2.*pt_1_corr*pfmet_corr*(1.-cos(phi_1 - pfmetphi_corr)))) > -1.", "pfmtcut"),
         ]
         if not doQCD:
             cuts.append(
