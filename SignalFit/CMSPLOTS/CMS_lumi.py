@@ -26,7 +26,7 @@ relExtraDY = 1.2
 
 extraOverCmsTextSize  = 0.72/0.75
 
-lumi_13p6TeV = "5.05 fb^{-1}"
+lumi_13p6TeV = "5.04 fb^{-1}"
 lumi_13TeV = "200 pb^{-1}"
 lumi_5TeV = "298 pb^{-1}"
 lumi_8TeV  = "19.7 fb^{-1}"

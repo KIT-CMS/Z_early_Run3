@@ -284,7 +284,7 @@ class DrawConfig(object):
         self.redrawihist = kwargs.get('redrawihist', 0)
         self.extraText = kwargs.get('extraText', None)
         self.noCMS = kwargs.get('noCMS', False)
-        
+
         self.nMaxDigits = kwargs.get('nMaxDigits', 3)
 
         self.outputname = kwargs.get('outputname', 'test')
@@ -461,7 +461,7 @@ def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outpu
 
     myhistos_clone = []
     for ihisto in myhistos:
-        # clone the histogram for plotting, 
+        # clone the histogram for plotting,
         # so the original histogram is unchanged
         ihcolone = ihisto.Clone("%s_Clone" % ihisto.GetName())
         # ihcolone.SetDirectory(0)
@@ -479,7 +479,7 @@ def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outpu
         tmp = [legendoptions for i in range(len(myhistos_clone))]
         legendoptions = tmp
 
-    #print(("legend options ", legendoptions))
+    print(("legend options ", legendoptions))
 
     ileg = 0
     for idx in range(0, len(myhistos_clone)):
@@ -524,7 +524,8 @@ def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outpu
                     ileg += 1
             else:
                 legend.AddEntry(myhistos_clone[idx], str(
-                    mylabels[ileg]), legendoptions[idx])
+                    # mylabels[ileg]), legendoptions[idx])
+                    mylabels[ileg]), 'PE X0')
                 ileg += 1
 
     #print("draw options ", drawoptions)
@@ -672,7 +673,7 @@ def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outpu
                     if drawashist:
                         ratiooptions.append("HIST")
                     else:
-                        ratiooptions.append("")
+                        ratiooptions.append("PE X0")
                 hratio.SetFillColor(0)
                 hratio.Draw(ratiooptions[idx] + " same")
                 idx += 1
