@@ -2,33 +2,75 @@ import math
 
 Wp = {}
 Wm = {}
+W = {}
 Z = {}
 
-Wp['val'] = 5427.8
-Wm['val'] = 4155.3
-Z['val'] = 753.05
+
+### fid
+# Wp['val'] = 5427.8
+# Wm['val'] = 4155.3
+# W['val'] = Wp['val'] + Wm['val']
+# Z['val'] = 753.05
+
+# Wp['err_scale_up'] = 0
+# Wm['err_scale_up'] = 0
+# W['err_scale_up'] = Wp['err_scale_up'] + Wm['err_scale_up']
+# Z['err_scale_up'] = 2.07
+
+# Wp['err_scale_down'] = 0
+# Wm['err_scale_down'] = 0
+# W['err_scale_down'] = Wp['err_scale_down'] + Wm['err_scale_down']
+# Z['err_scale_down'] = 4.47
+
+# Wp['err_pdf_up'] = 77.80
+# Wm['err_pdf_up'] = 68.3
+# W['err_pdf_up'] = Wp['err_pdf_up'] + Wm['err_pdf_up']
+# Z['err_pdf_up'] = 14.1
+
+# Wp['err_pdf_down'] = 121.9
+# Wm['err_pdf_down'] = 107.8
+# W['err_pdf_down'] = Wp['err_pdf_down'] + Wm['err_pdf_down']
+# Z['err_pdf_down'] = 22.6
+
+# corr = {}
+# corr['WW_scale'] = 1
+# corr['WZ_scale'] = 0
+# corr['WW_pdf'] = 1
+# corr['WZ_pdf'] = 0
+
+
+### total
+Wp['val'] = 11939.2
+Wm['val'] = 8857.4
+W['val'] = Wp['val'] + Wm['val']
+Z['val'] = 2019.81
 
 Wp['err_scale_up'] = 0
 Wm['err_scale_up'] = 0
-Z['err_scale_up'] = 2.07
+W['err_scale_up'] = Wp['err_scale_up'] + Wm['err_scale_up']
+Z['err_scale_up'] = 17.6
 
 Wp['err_scale_down'] = 0
 Wm['err_scale_down'] = 0
-Z['err_scale_down'] = 4.47
+W['err_scale_down'] = Wp['err_scale_down'] + Wm['err_scale_down']
+Z['err_scale_down'] = 23.3
 
-Wp['err_pdf_up'] = 77.80
-Wm['err_pdf_up'] = 68.3
-Z['err_pdf_up'] = 14.1
+Wp['err_pdf_up'] = 268.0
+Wm['err_pdf_up'] = 184.3
+W['err_pdf_up'] = Wp['err_pdf_up'] + Wm['err_pdf_up']
+Z['err_pdf_up'] = 34.0
 
-Wp['err_pdf_down'] = 121.9
-Wm['err_pdf_down'] = 107.8
-Z['err_pdf_down'] = 22.6
+Wp['err_pdf_down'] = 416.2
+Wm['err_pdf_down'] = 227.6
+W['err_pdf_down'] = Wp['err_pdf_down'] + Wm['err_pdf_down']
+Z['err_pdf_down'] = 50.6
 
 corr = {}
 corr['WW_scale'] = 1
 corr['WZ_scale'] = 0
 corr['WW_pdf'] = 1
 corr['WZ_pdf'] = 0
+
 
 
 WpWm = {}
@@ -52,10 +94,20 @@ WmZ['err_scale_down'] = WmZ['val'] * math.sqrt( (Wm['err_scale_down']/Wm['val'])
 WmZ['err_pdf_up'] = WmZ['val'] * math.sqrt( (Wm['err_pdf_up']/Wm['val'])**2 + (Z['err_pdf_up']/Z['val'])**2 - 2*corr['WZ_pdf']*Wm['err_pdf_up']*Z['err_pdf_up']/(Wm['val']*Z['val']))
 WmZ['err_pdf_down'] = WmZ['val'] * math.sqrt( (Wm['err_pdf_down']/Wm['val'])**2 + (Z['err_pdf_down']/Z['val'])**2 - 2*corr['WZ_pdf']*Wm['err_pdf_down']*Z['err_pdf_down']/(Wm['val']*Z['val']))
 
+WZ = {}
+WZ['val'] = W['val']/Z['val']
+WZ['err_scale_up'] = WZ['val'] * math.sqrt( (W['err_scale_up']/W['val'])**2 + (Z['err_scale_up']/Z['val'])**2 - 2*corr['WZ_scale']*W['err_scale_up']*Z['err_scale_up']/(W['val']*Z['val']))
+WZ['err_scale_down'] = WZ['val'] * math.sqrt( (W['err_scale_down']/W['val'])**2 + (Z['err_scale_down']/Z['val'])**2 - 2*corr['WZ_scale']*W['err_scale_down']*Z['err_scale_down']/(W['val']*Z['val']))
+WZ['err_pdf_up'] = WZ['val'] * math.sqrt( (W['err_pdf_up']/W['val'])**2 + (Z['err_pdf_up']/Z['val'])**2 - 2*corr['WZ_pdf']*W['err_pdf_up']*Z['err_pdf_up']/(W['val']*Z['val']))
+WZ['err_pdf_down'] = WZ['val'] * math.sqrt( (W['err_pdf_down']/W['val'])**2 + (Z['err_pdf_down']/Z['val'])**2 - 2*corr['WZ_pdf']*W['err_pdf_down']*Z['err_pdf_down']/(W['val']*Z['val']))
+
+
+
 print()
 
 print(Wp)
 print(Wm)
+print(W)
 print(Z)
 
 print()
@@ -63,11 +115,13 @@ print()
 print(WpWm)
 print(WpZ)
 print(WmZ)
+print(WZ)
 
 print()
 
 print(f"Wp: {Wp['val']:2.1f} +{Wp['err_pdf_up']:2.1f} -{Wp['err_pdf_down']:2.1f} (PDF) +{Wp['err_scale_up']:2.1f} -{Wp['err_scale_down']:2.1f} (scale)")
 print(f"Wm: {Wm['val']:2.1f} +{Wm['err_pdf_up']:2.1f} -{Wm['err_pdf_down']:2.1f} (PDF) +{Wm['err_scale_up']:2.1f} -{Wm['err_scale_down']:2.1f} (scale)")
+print(f"W: {W['val']:2.1f} +{W['err_pdf_up']:2.1f} -{W['err_pdf_down']:2.1f} (PDF) +{W['err_scale_up']:2.1f} -{W['err_scale_down']:2.1f} (scale)")
 print(f"Z: {Z['val']:2.1f} +{Z['err_pdf_up']:2.1f} -{Z['err_pdf_down']:2.1f} (PDF) +{Z['err_scale_up']:2.1f} -{Z['err_scale_down']:2.1f} (scale)")
 
 print()
@@ -75,3 +129,4 @@ print()
 print(f"WpZ: {WpZ['val']:2.3f} +{WpZ['err_pdf_up']:2.3f} -{WpZ['err_pdf_down']:2.3f} (PDF) +{WpZ['err_scale_up']:2.3f} -{WpZ['err_scale_down']:2.3f} (scale)")
 print(f"WmZ: {WmZ['val']:2.3f} +{WmZ['err_pdf_up']:2.3f} -{WmZ['err_pdf_down']:2.3f} (PDF) +{WmZ['err_scale_up']:2.3f} -{WmZ['err_scale_down']:2.3f} (scale)")
 print(f"WpWm: {WpWm['val']:2.3f} +{WpWm['err_pdf_up']:2.3f} -{WpWm['err_pdf_down']:2.3f} (PDF) +{WpWm['err_scale_up']:2.3f} -{WpWm['err_scale_down']:2.3f} (scale)")
+print(f"WZ: {WZ['val']:2.3f} +{WZ['err_pdf_up']:2.3f} -{WZ['err_pdf_down']:2.3f} (PDF) +{WZ['err_scale_up']:2.3f} -{WZ['err_scale_down']:2.3f} (scale)")
