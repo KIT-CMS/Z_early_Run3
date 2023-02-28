@@ -62,7 +62,11 @@ def apply_corrections(f, wfile, hrange):
     mean = rdf.Mean("puweight").GetValue()
     rdf = rdf.Redefine("puweight", f"puweight/{mean}")
     rdf = rdf.Define("puweightUp", "puweight + abs(puweight-npvGoodweight)")
+    mean_up = rdf.Mean("puweightUp").GetValue()
+    rdf = rdf.Redefine("puweightUp", f"puweightUp/{mean_up}")
     rdf = rdf.Define("puweightDn", "puweight - abs(puweight-npvGoodweight)")
+    mean_dn = rdf.Mean("puweightDn").GetValue()
+    rdf = rdf.Redefine("puweightDn", f"puweightDn/{mean_dn}")
     
     outdir = output_path.replace(output_path.split('/')[-1], "")
     if not os.path.exists(outdir):
@@ -91,7 +95,7 @@ if __name__=='__main__':
 
 
     # Load ntuples
-    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_EraC/20*/*/*/*.root"
+    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_EraC/2022/*/*/*.root"
     ntuples = glob.glob(base_path)
 
     # Load weight files

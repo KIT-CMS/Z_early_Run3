@@ -51,8 +51,10 @@ files = {
         "mm": dict(
             {
                 "data": [
-                    "SingleMuon_Run2022C-PromptReco-v1",
-                    "Muon_Run2022C-PromptReco-v1",
+                    "SingleMuon_Run2022C-PromptNanoAODv10_v1-v1",
+                    # "SingleMuon_Run2022C-PromptReco-v1",
+                    # "Muon_Run2022C-PromptReco-v1",
+                    "Muon_Run2022C-PromptNanoAODv10_v1-v1",
                     # "Muon_Run2022D-PromptReco-v1",
                     # "Muon_Run2022D-PromptReco-v2",
                 ],
@@ -72,8 +74,10 @@ files = {
         "mmet": dict(
             {
                 "data": [
-                    "SingleMuon_Run2022C-PromptReco-v1",
-                    "Muon_Run2022C-PromptReco-v1",
+                    # "SingleMuon_Run2022C-PromptReco-v1",
+                    "SingleMuon_Run2022C-PromptNanoAODv10_v1-v1",
+                    "Muon_Run2022C-PromptNanoAODv10_v1-v1",
+                    # "SingleMuon_Run2022C-PromptReco-v1",
                     # "Muon_Run2022D-PromptReco-v1",
                     # "Muon_Run2022D-PromptReco-v2",
                 ],

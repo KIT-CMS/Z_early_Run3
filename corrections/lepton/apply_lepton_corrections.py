@@ -238,7 +238,7 @@ if __name__=='__main__':
 
 
     # base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_EraC/20*/*/*/*.root"
-    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_EraC/20*/*/*/*.root"
+    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_EraC/2022/*/*/*.root"
     ntuples = glob.glob(base_path)
     # Load correction files
     x = np.loadtxt('correction_files/Run3/mm/res_sf_extra.txt')

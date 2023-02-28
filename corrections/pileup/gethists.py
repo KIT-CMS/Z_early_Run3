@@ -202,7 +202,7 @@ def make_hists_for_comparison(fdict):
             rrange = [.9, 1.1]
 
         else:
-            var = "m_vis_corr"
+            var = "m_vis"
             h = rdf.Histo1D(
                 (var, "Di-Muon Mass", 30, 60, 120),
                 var
@@ -246,14 +246,14 @@ if __name__=='__main__':
     
     w_hists = 'weights.root'
 
-    #basedir = '/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_pu_EraC/2022'
-    basedir =  '/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_EraC/2022'
+    basedir = '/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_pu_EraC/2022'
+    #basedir =  '/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_EraC/2022'
     muon = 'Muon_Run2022C-PromptReco-v1'
     dy = 'DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X'
     wj = 'WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X'
     fdict = {
         'data': [
-            f'{basedir}/Single{muon}/mm/Single{muon}_*.root',
+            f'{basedir}/Single{muon}/mm/Single{muon}_*.root', #add mmet in the future
             f'{basedir}/{muon}/mm/{muon}*.root',
         ],
         'mc': [
