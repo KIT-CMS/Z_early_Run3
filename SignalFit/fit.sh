@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-export iteration='v18Asimov'
+export iteration='v20'
 export fit_variable='pfmt_corr'
 export datacard_name='card_mu'
 export script_dir="$PWD"

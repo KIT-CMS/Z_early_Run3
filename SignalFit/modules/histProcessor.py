@@ -269,8 +269,8 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LepCorrUp",
             "LepCorrDn",
         ] + [
-            "PileupUp",
-            "PileupDn",
+            "puWeightUp",
+            "puWeightDn",
         ]
 
     )
@@ -312,8 +312,8 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
         ] + [
-            "PileupUp",
-            "PileupDn",
+            "puWeightUp",
+            "puWeightDn",
         ]
     )
 
@@ -353,8 +353,8 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
         ] + [
-            "PileupUp",
-            "PileupDn",
+            "puWeightUp",
+            "puWeightDn",
         ]
     )
 
