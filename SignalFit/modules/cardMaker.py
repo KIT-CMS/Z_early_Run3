@@ -253,8 +253,8 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
 
     # pileup systematic
     nuisgroups["Pileup"] = []
-    for syst in ["pileup"]:
-        nuisgroups["Pileup"].append(Nuisance(name = syst, type = "shape")))
+    for syst in ["puWeight"]:
+        nuisgroups["Pileup"].append(Nuisance(name = syst, type = "shape"))
     for proc in processes:
         if not proc.isQCD:
             for sysweight in nuisgroups["Pileup"]:
@@ -412,8 +412,8 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
 
     # pileup systematic
     nuisgroups["Pileup"] = []
-    for syst in ["pileup"]:
-        nuisgroups["Pileup"].append(Nuisance(name = syst, type = "shape")))
+    for syst in ["puWeight"]:
+        nuisgroups["Pileup"].append(Nuisance(name = syst, type = "shape"))
     for proc in processes:
         if not proc.isQCD:
             for sysweight in nuisgroups["Pileup"]:

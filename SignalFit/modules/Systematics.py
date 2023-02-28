@@ -54,7 +54,7 @@ syst_groups = {
         "LepCorr",
     ],
     "Pileup": [
-        "pileup",
+        "puWeight",
     ],
 
 }

@@ -219,13 +219,13 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         # w's
         xlabel = None
         if "mt" in suffix:
-            xlabel = "m_{T} [GeV]"
+            xlabel = "m_{T} (GeV)"
         elif "met" in suffix:
-            xlabel = "MET [GeV]"
+            xlabel = "MET (GeV])"
         outputname = f"{prepost}_w_{channel}_{suffix}"
     else:
         # z's
-        xlabel = "m_{ll} [GeV]"
+        xlabel = "m_{ll} (GeV)"
         outputname = f"{prepost}_z_{channel}_{suffix}"
     if x_label != "":
         xlabel = x_label
@@ -303,7 +303,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         hratiopanel=hratio,
         ratiopanel_label=ratiopanel_label,
         drawoptions=[
-            'PE',
+            'PE X0',
             'HIST same'
         ],
         showpull=showpull,
@@ -371,7 +371,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         hratiopanel=hratio,
         ratiopanel_label=ratiopanel_label,
         drawoptions=[
-            'PE',
+            'PE X0',
             'HIST same'
         ],
         showpull=showpull,

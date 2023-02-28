@@ -479,8 +479,6 @@ def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outpu
         tmp = [legendoptions for i in range(len(myhistos_clone))]
         legendoptions = tmp
 
-    print(("legend options ", legendoptions))
-
     ileg = 0
     for idx in range(0, len(myhistos_clone)):
         if addOverflow:
