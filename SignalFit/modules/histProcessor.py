@@ -170,20 +170,20 @@ def ProcessHists(
                     h_renamed_dn.Scale(2.)
                     h_renamed_dn.Add(h_renamed_up, -1.)
                     n_renamed_dn = h_renamed_dn.Integral(0, -1)
-                    h_renamed_up.Scale(n_renamed_no/n_renamed_up)
-                    h_renamed_dn.Scale(n_renamed_no/n_renamed_dn)
+                    #h_renamed_up.Scale(n_renamed_no/n_renamed_up)
+                    #h_renamed_dn.Scale(n_renamed_no/n_renamed_dn)
                     SaveHistToFile(h_renamed_up, foutput)
                     SaveHistToFile(h_renamed_dn, foutput)
-                    assert h_renamed_up.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_up.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
-                    assert h_renamed_dn.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_dn.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
+                    #assert h_renamed_up.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_up.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
+                    #assert h_renamed_dn.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_dn.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
                 elif syst in ["LHEPdfWeightAlphaSUp", "LHEPdfWeightAlphaSDown", "LHEScaleWeightMUFUp", "LHEScaleWeightMUFDown", "LHEScaleWeightMURUp", "LHEScaleWeightMURDown", "LHEScaleWeightMUFMURUp", "LHEScaleWeightMUFMURDown"]:
                     h_renamed_no = hists_all[h_renamed.GetName().replace(f"_{syst}", "")].Clone(h_renamed.GetName()+"Nominal")
                     n_renamed_no = h_renamed_no.Integral(0, -1)
                     h_renamed_sy = h_renamed.Clone(h_renamed.GetName())
                     n_renamed_sy = h_renamed_sy.Integral(0, -1)
-                    h_renamed_sy.Scale(n_renamed_no/n_renamed_sy)
+                    #h_renamed_sy.Scale(n_renamed_no/n_renamed_sy)
                     SaveHistToFile(h_renamed_sy, foutput)
-                    assert h_renamed_sy.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_sy.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
+                    #assert h_renamed_sy.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_sy.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
                 else:
                     hists_all[h_renamed.GetName()] = h_renamed
                     SaveHistToFile(h_renamed, foutput)

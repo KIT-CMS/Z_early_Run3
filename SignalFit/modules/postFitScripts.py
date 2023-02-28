@@ -57,7 +57,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
     # ewk processes for z's
     hnames_ewks = [f"expproc_ewk_{prepost}"]
     hnames_ttbar = [f"expproc_tt_{prepost}"]
-    
+
     ## read the postfit plots from input file
     hexpsig = None
     hexpsig_z = None
@@ -71,7 +71,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
                 hexpsig = ifile.Get(hkey)
             else:
                 hexpsig.Add( ifile.Get(hkey) )
-        
+
         if hkey in hnames_sig_z:
             if hexpsig_z is None:
                 hexpsig_z = ifile.Get(hkey)
@@ -83,19 +83,19 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
                 hexpewk = ifile.Get(hkey)
             else:
                 hexpewk.Add( ifile.Get(hkey) )
-        
+
         if hkey in hnames_ttbar:
             if hexpttbar is None:
                 hexpttbar = ifile.Get(hkey)
             else:
                 hexpttbar.Add( ifile.Get(hkey) )
-        
+
         if hkey in hnames_qcd:
             if hexpqcd is None:
                 hexpqcd = ifile.Get(hkey)
             else:
                 hexpqcd.Add( ifile.Get(hkey) )
-        
+
     # the combined prediction of all processes,
     # which should have included the correct total postfit uncertainties
     hexpfull = ifile.Get(f"expfull_{prepost}")
@@ -107,7 +107,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
     bin_width = bins[1] - bins[0]
     for ibin in range(nbins):
         assert bins[ibin+1] - bins[ibin] == bin_width
-    
+
     #binnings = (newbins.shape[0]-1, newbins)
 
     hdata   = ROOT.TH1D("hdata_{}_{}".format( channel, suffix),  "hdata_{}_{}".format( channel, suffix),  *binnings)
@@ -186,10 +186,10 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
     hsig_z.Scale(1.0, "width")
 
     siglabels = {
-        "muplus":  "W^{+}#rightarrow#mu^{+}#nu", 
-        "muminus": "W^{-}#rightarrow#mu^{-}#bar{#nu}", 
+        "muplus":  "W^{+}#rightarrow#mu^{+}#nu",
+        "muminus": "W^{-}#rightarrow#mu^{-}#bar{#nu}",
         "mumu":    "Z#rightarrow #mu^{+}#mu^{-}"
-        # "eplus":   "W^{+}#rightarrow e^{+}#nu", 
+        # "eplus":   "W^{+}#rightarrow e^{+}#nu",
         # "eminus":  "W^{-}#rightarrow e^{-}#bar{#nu}",
         # "ee":      "Z#rightarrow e^{+}e^{-}",
     }
@@ -219,13 +219,13 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         # w's
         xlabel = None
         if "mt" in suffix:
-            xlabel = "m_{T} [GeV]"
+            xlabel = "m_{T} (GeV)"
         elif "met" in suffix:
-            xlabel = "MET [GeV]"
+            xlabel = "MET (GeV])"
         outputname = f"{prepost}_w_{channel}_{suffix}"
     else:
         # z's
-        xlabel = "m_{ll} [GeV]"
+        xlabel = "m_{ll} (GeV)"
         outputname = f"{prepost}_z_{channel}_{suffix}"
     if x_label != "":
         xlabel = x_label
@@ -303,7 +303,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         hratiopanel=hratio,
         ratiopanel_label=ratiopanel_label,
         drawoptions=[
-            'PE',
+            'PE X0',
             'HIST same'
         ],
         showpull=showpull,
@@ -371,7 +371,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         hratiopanel=hratio,
         ratiopanel_label=ratiopanel_label,
         drawoptions=[
-            'PE',
+            'PE X0',
             'HIST same'
         ],
         showpull=showpull,
@@ -426,7 +426,7 @@ def ComparePOIs(vals_x: np.array, vals: list, errs: list, labels: list, colors: 
 
 def result2json(ifilename: str, poiname: str, ofilename: str, hname: str = "nuisance_impact_mu"):
     """
-    script to convert the postfit POI and impacts of nuisance parameters 
+    script to convert the postfit POI and impacts of nuisance parameters
     to json file, which will be used to make impact plots later
     """
     nameMap = {
@@ -504,7 +504,7 @@ def result2json(ifilename: str, poiname: str, ofilename: str, hname: str = "nuis
     with open(ofilename, 'w') as fp:
         json.dump(results, fp, indent=2)
 
-    
+
 def DumpGroupImpacts(ifilename: str, poiname: str, hname = "nuisance_group_impact_mu"):
     """
     print out the grouped impacts
@@ -528,11 +528,15 @@ def DumpGroupImpacts(ifilename: str, poiname: str, hname = "nuisance_group_impac
         nuis = himpact_grouped.GetYaxis().GetBinLabel(ibinY)
         impacts[nuis] = himpact_grouped.GetBinContent(ibinX, ibinY) * 100.0 / val_poi
 
-    stat_unc = np.sqrt(impacts["binByBinStat"]*impacts["binByBinStat"] + impacts["stat"]*impacts["stat"]) * val_poi / 100.
-    lumi_unc = 0.06 * val_poi if "ratio" not in poiname else 0.
+    stat_unc = impacts["stat"] * val_poi / 100.
+    lumi_unc = 0.00 * val_poi if "ratio" not in poiname else 0.
 
     print("")
     print("#"*50)
+
+    # adding BBB unc. to syst, not stats!
+    err_poi = np.sqrt((impacts["binByBinStat"] / 100)**2 + (err_poi/val_poi)**2) * val_poi
+
     if lumi_unc > 0.:
         print(f"{ifilename:50s}|{poiname:30s}| poi = {val_poi:5.5f} +/- {stat_unc:5.5f} (stat) +/- {err_poi:5.5f} (syst) +/- {lumi_unc:5.5f} (lumi)")
     else:
