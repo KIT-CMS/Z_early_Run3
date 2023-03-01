@@ -35,4 +35,3 @@ python MakePostFitPlots.py ${iteration} &> logs/log-${iteration}.log
 
 grep -r "poi =" logs/log-${iteration}.log > pois/res_pois_${iteration}.txt
 python DrawDatacardSysts.py root/${iteration}/output_shapes_pfmt_corr_wbin0_systAll.root plots/syst_shapes_${iteration}/ &> logs/log-${iteration}_DrawDatacardSysts.log
-

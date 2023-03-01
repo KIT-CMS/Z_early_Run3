@@ -51,11 +51,13 @@ if doInclusive:
         errs_qcd_neg = []
 
         for idx in range(nscans):
-            
+
             for syst_name, systs in syst_groups.items():
 
                 workdir = f"cards/{version}/{fit_variable_w}/scan_wbin{idx}_syst{syst_name}/"
                 filename = workdir + f"card_mu.root"
+
+                print(filename)
 
                 mass_bins = mass_bins_w_scan[idx]
                 if mass_bins[0] > 45:
@@ -200,7 +202,7 @@ if doInclusive:
 
 
     # HERE
-    if not doAsimov:
+    if not doAsimov and False:
         workdir = f"cards/{version}/pfmet_pfmt/"
         filename = workdir + f"card_mu.root"
 

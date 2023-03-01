@@ -139,3 +139,6 @@ SignalFit/cards*/**
 # other tmp files
 .#*
 **.swp
+
+combine_logger.out
+bla.*
