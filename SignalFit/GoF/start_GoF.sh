@@ -9,30 +9,25 @@ export ws_name="card.root"
 unset PYTHONHOME PYTHON_INCLUDE_PATH PYTHONIOENCODING PYTHONPATH PYTHON_VERSION
 source ../combine_env.sh
 
-# create datacard for GoF tests
 
+### create datacard for GoF tests
 gof_main_dir="${PWD}"
 
 cd ../cards/${iteration}/${fit_variable}/scan_wbin0_systAll/
 combineCards.py muplus=datacard_muplus_pfmt_corr.txt muminus=datacard_muminus_pfmt_corr.txt mumu=datacard_mumu.txt > ${datacard_name_noxs}.txt
 cp ${datacard_name_noxs}.txt ${gof_main_dir}/
 cd $gof_main_dir
-export gof_input="${datacard_name_noxs}.txt"
-
-# cd ../cards/${iteration}/${fit_variable}/scan_wbin0_systAll/
-# cp ${datacard_name}.txt ${gof_main_dir}/
-# cd $gof_main_dir
-# text2workspace.py ${datacard_name}.txt --maskedChan muplus_xsec --maskedChan muminus_xsec --maskedChan mumu_xsec --X-allow-no-background -o ${ws_name}
-# export gof_input="${ws_name}"
+echo -e '* autoMCStats 0' >> ${datacard_name_noxs}.txt
+text2workspace.py ${datacard_name_noxs}.txt --maskedChan muplus_xsec --maskedChan muminus_xsec --maskedChan mumu_xsec --X-allow-no-background -o ${ws_name}
+export gof_input="card.root"
 
 
-# prepare GoF tests
-
+### prepare GoF tests
 export gof_toy_dir="toys"
 export gof_log_dir="logs"
 mkdir -p $gof_toy_dir $gof_log_dir
 
-# run data snapshot
+### run data snapshot
 echo "data..."
 
 gof_algo="saturated"; gof_toys="--toysFreq"
@@ -46,29 +41,29 @@ gof_algo="saturated"; gof_toys="--toysFreq"
 
 
 
-# run toys
+### run toys
 echo "toys..."
 
 n_jobs=100
-n_toys_per_job=10
+n_toys_per_job=100
 
 start_seed=1
 end_seed=`echo "$start_seed + $n_jobs -1" | bc`
 
-
+# TODO: HTCondor setup...
 for i_seed in $(seq $start_seed $end_seed); do
 
     gof_algo="saturated"; gof_toys="--toysFreq"
     (nice ./run_toys.sh $gof_algo $n_toys_per_job $i_seed $gof_toys &> ${gof_log_dir}/toy_${gof_algo}_${n_toys_per_job}_${i_seed}.log ) &
-    sleep 1s
+    sleep 0.2s
 
     # gof_algo="KS"; gof_toys=" "
     # (nice  ./run_toys.sh $gof_algo $n_toys_per_job $i_seed $gof_toys &> ${gof_log_dir}/toy_${gof_algo}_${n_toys_per_job}_${i_seed}.log ) &
-    # sleep 1s
+    # sleep 0.2s
 
     # gof_algo="AD"; gof_toys=" "
     # (nice ./run_toys.sh $gof_algo $n_toys_per_job $i_seed $gof_toys &> ${gof_log_dir}/toy_${gof_algo}_${n_toys_per_job}_${i_seed}.log ) &
-    # sleep 1s
+    # sleep 0.2s
 
 done
 

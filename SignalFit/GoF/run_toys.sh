@@ -12,5 +12,17 @@ myname="_${gof_algo}_${n_toys}_${my_seed}"
 #model_specific_options="--maskedChan muplus_xsec --maskedChan muminus_xsec --maskedChan mumu_xsec --X-allow-no-background"
 model_specific_options=""
 
-combine -M GoodnessOfFit -n ${myname} -m 125 -d ${gof_input} ${model_specific_options} --algo=${gof_algo} ${gof_toys} -t ${n_toys} -s ${my_seed}
+combine \
+    -M GoodnessOfFit \
+    -n ${myname} \
+    -m 125 \
+    -d ${gof_input} \
+    ${model_specific_options} \
+    --algo=${gof_algo} \
+    -t ${n_toys} \
+    -s ${my_seed} \
+    ${gof_toys}
+    #--fixedSignalStrength=1 \
+
+
 mv higgsCombine${myname}.GoodnessOfFit.mH125.${my_seed}.root ${gof_toy_dir}/

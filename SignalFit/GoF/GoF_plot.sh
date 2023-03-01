@@ -30,6 +30,8 @@ export gof_file_toys="higgsCombine_${gof_algo}_*_*.GoodnessOfFit.mH125.*.root"
 # source ../combine_harvester_env.sh
 
 combineTool.py -M CollectGoodnessOfFit --input toys/${gof_file_data} toys/${gof_file_toys} -m ${mass} -o gof.json
-plotGof.py gof.json --statistic ${gof_algo} --mass ${mass} -o gof_plot --title-right="" #--percentile 0 1
+plotGof.py gof.json --statistic ${gof_algo} --mass ${mass} -o gof_plot --title-right="" #--percentile 0 0.95
+plotGof.py gof.json --statistic ${gof_algo} --mass ${mass} -o gof_plot_0p95 --title-right="" --percentile 0 0.95
+plotGof.py gof.json --statistic ${gof_algo} --mass ${mass} -o gof_plot_0p90 --title-right="" --percentile 0 0.90
 
 # cd -
