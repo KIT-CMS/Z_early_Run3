@@ -10,7 +10,7 @@ case "$CVMFS_CMS_CHECK_CODE" in
     0)
 	if [ -f $VO_CMS_SW_DIR/$VO_CMS_SW_SETUPFILE ]; then
 	    source $VO_CMS_SW_DIR/$VO_CMS_SW_SETUPFILE
-	    cd /work/moh/EarlyRun3/SignalExtraction/CMSSW_10_6_0/src
+	    cd /work/nfaltermann/cmssw/CMSSW_10_6_0/src/
 	    cmsenv
 	    cd -
 	else
