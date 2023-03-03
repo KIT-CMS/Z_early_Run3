@@ -45,10 +45,15 @@ syst_groups = {
 
     "QCDSyst": [
         "mcScale",
-        "Pol1shape",
+        # "Pol1shape",
     ],
     "QCDStat": [
-        f"bin{i}shape" for i in range(1, len(mass_bins_w))
+        [
+            f"QCDp_bin{i}shape" for i in range(1, len(mass_bins_w))
+        ] +
+        [
+            f"QCDm_bin{i}shape" for i in range(1, len(mass_bins_w))
+        ]
     ],
     "Momentum": [
         "LepCorr",

@@ -214,7 +214,14 @@ def ProcessHistsQCD(ifile, foutput, fit_variable = None, bins = None, systs = []
             if syst != "Nominal":
                 hname_syst += "_"+syst
 
+            if 'shape' in syst:
+                if 'QCDp_' in syst:
+                    hname_syst = hname_syst.replace('QCDp_','')
+                if 'QCDm_' in syst:
+                    hname_syst = hname_syst.replace('QCDm_','')
+
             name_base = f"h_qcd_{fit_variable}"
+
             h_tmp = finput.Get(hname_syst)
             h_renamed = renameHist(h_tmp, name_base, syst)
             if bins is not None:
@@ -371,12 +378,12 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
         systs = [
             "mcScaleUp",
             "mcScaleDown",
-            "Pol1shapeUp",
-            "Pol1shapeDown",
+            # "Pol1shapeUp",
+            # "Pol1shapeDown",
         ] + [
-            f"bin{i}shapeUp" for i in range(1, len(mass_bins_w))
+            f"QCDp_bin{i}shapeUp" for i in range(1, len(mass_bins_w))
         ] + [
-            f"bin{i}shapeDown" for i in range(1, len(mass_bins_w))
+            f"QCDp_bin{i}shapeDown" for i in range(1, len(mass_bins_w))
         ]
     )
 
@@ -387,12 +394,12 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
         systs = [
             "mcScaleUp",
             "mcScaleDown",
-            "Pol1shapeUp",
-            "Pol1shapeDown",
+            # "Pol1shapeUp",
+            # "Pol1shapeDown",
         ] + [
-            f"bin{i}shapeUp" for i in range(1, len(mass_bins_w))
+            f"QCDm_bin{i}shapeUp" for i in range(1, len(mass_bins_w))
         ] + [
-            f"bin{i}shapeDown" for i in range(1, len(mass_bins_w))
+            f"QCDm_bin{i}shapeDown" for i in range(1, len(mass_bins_w))
         ]
     )
 
