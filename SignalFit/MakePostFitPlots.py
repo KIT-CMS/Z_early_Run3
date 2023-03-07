@@ -66,12 +66,12 @@ if doInclusive:
                 if w_fit_vars == "ptOverPfmt_corr":
                     mass_bins = mass_bins_w_ptOverMt
 
+                if syst_name != "All":
+                    continue
+
                 _                = MakePostPlot(filename, "muplus",  "prefit",  mass_bins,   f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL,                                  is5TeV=do5TeV)
                 _                = MakePostPlot(filename, "muminus", "prefit",  mass_bins,   f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL, startbin = len(mass_bins),       is5TeV=do5TeV)
                 _                = MakePostPlot(filename, "mumu",    "prefit",  mass_bins_z, f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL, startbin = len(mass_bins)*2 - 1, is5TeV=do5TeV)
-
-                if syst_name != "All":
-                    continue
 
                 nevts = OrderedDict()
                 nevts['muplus']  = MakePostPlot(filename, "muplus",  "postfit", mass_bins,   f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL,                                  is5TeV=do5TeV)
