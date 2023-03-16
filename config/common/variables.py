@@ -180,6 +180,7 @@ def get_all_variables(doZpt, doQCD, doLepCorrBins):
 
     final_vars_mm = [
         "m_toFit",
+        # "m_vis",
         "m_toFit_up",
         "m_toFit_dn"
         ]
