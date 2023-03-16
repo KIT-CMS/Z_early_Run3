@@ -274,7 +274,12 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
     # this is hard coded for now. Will be improved later
     nuisgroups["qcdbkg"] = []
     nbins = nMTBins
-    for syst in [f"bin{ibin}shape" for ibin in range(1, nbins+1)] + ["mcScale"]: # ["Pol1shape", "mcScale"]:
+    qcdbinprefix = ''
+    if 'plus' in channel:
+        qcdbinprefix = 'QCDp_'
+    if 'minus' in channel:
+        qcdbinprefix = 'QCDm_'
+    for syst in [f"{qcdbinprefix}bin{ibin}shape" for ibin in range(1, nbins+1)] + ["mcScale"]: # ["Pol1shape", "mcScale"]:
         nuis_QCDStat = Nuisance(name = syst, type = "shape")
         for proc in processes:
             if proc.isQCD:
@@ -289,7 +294,7 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
             if proc.isMC and proc.name != "ewk":
                 nuis_pdf[proc.name] = 1.0
         nuisgroups["pdfscale"].append(nuis_pdf)
-    for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR"]:
+    for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR", "PSWeight"]:
         nuis_scale = Nuisance(name = syst, type = "shape")
         for proc in processes:
             if proc.isMC and proc.name != "ewk":
@@ -436,7 +441,7 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
             if proc.isMC and proc.name != "ewk":
                 nuis_pdf[proc.name] = 1.0
         nuisgroups["pdfscale"].append(nuis_pdf)
-    for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR"]:
+    for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR", "PSWeight"]:
         nuis_scale = Nuisance(name = syst, type = "shape")
         for proc in processes:
             if proc.isMC and proc.name != "ewk":
