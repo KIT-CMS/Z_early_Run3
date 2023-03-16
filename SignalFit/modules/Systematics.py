@@ -27,6 +27,9 @@ syst_groups = {
         "LHEScaleWeightMUR",
         "LHEScaleWeightMUFMUR",
     ],
+    "PartonShower": [
+        "PSWeight",
+    ],
     "RecoilSyst": [
         "RecoilDoubleGauss",
         "RecoilSigOnlyFit",
