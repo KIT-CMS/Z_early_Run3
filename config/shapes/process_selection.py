@@ -58,7 +58,7 @@ def MC_base_process_selection(channel, era, runPlot, totalLumi, run_list, run_lu
     if channel in ["mmet"]:
         MC_base_process_weights = [
             ("genweight*sumwWeight*crossSectionPerEventWeight", "normWeight"),
-            # ("puweight", "puweight"),
+            ("puweight", "puweight"),
             ("1.", "LHEScaleWeight"),
             ("1.", "LHEPdfWeight"),
             lumi_weight(era, runPlot, totalLumi, run_list, run_lumi, norm1invpb),
@@ -79,7 +79,7 @@ def MC_base_process_selection(channel, era, runPlot, totalLumi, run_list, run_lu
     elif channel in ["mm"]:
         MC_base_process_weights = [
             ("genweight*sumwWeight*crossSectionPerEventWeight", "normWeight"),
-            # ("puweight", "puweight"),
+            ("puweight", "puweight"),
             ("1.", "LHEScaleWeight"),
             ("1.", "LHEPdfWeight"),
             lumi_weight(era, runPlot, totalLumi, run_list, run_lumi, norm1invpb),

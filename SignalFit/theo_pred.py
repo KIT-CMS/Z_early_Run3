@@ -73,25 +73,25 @@ Wm_fid['val'] = 4155.3
 W_fid['val'] = Wp_fid['val'] + Wm_fid['val']
 Z_fid['val'] = 753.05
 
-Wp_fid['err_scale_up'] = 24.7
-Wm_fid['err_scale_up'] = 27.1
+Wp_fid['err_scale_up'] = 0
+Wm_fid['err_scale_up'] = 0
 W_fid['err_scale_up'] = Wp_fid['err_scale_up'] + Wm_fid['err_scale_up']
-Z_fid['err_scale_up'] = 2.06
+Z_fid['err_scale_up'] = 2.07
 
-Wp_fid['err_scale_down'] = 61.3
-Wm_fid['err_scale_down'] = 46.3
+Wp_fid['err_scale_down'] = 0
+Wm_fid['err_scale_down'] = 0
 W_fid['err_scale_down'] = Wp_fid['err_scale_down'] + Wm_fid['err_scale_down']
 Z_fid['err_scale_down'] = 4.47
 
-Wp_fid['err_pdf_up'] = 36.6
-Wm_fid['err_pdf_up'] = 29.6
+Wp_fid['err_pdf_up'] = 77.80
+Wm_fid['err_pdf_up'] = 68.3
 W_fid['err_pdf_up'] = Wp_fid['err_pdf_up'] + Wm_fid['err_pdf_up']
-Z_fid['err_pdf_up'] = 6.45
+Z_fid['err_pdf_up'] = 14.1
 
-Wp_fid['err_pdf_down'] = 36.6
-Wm_fid['err_pdf_down'] = 29.6
+Wp_fid['err_pdf_down'] = 121.9
+Wm_fid['err_pdf_down'] = 107.8
 W_fid['err_pdf_down'] = Wp_fid['err_pdf_down'] + Wm_fid['err_pdf_down']
-Z_fid['err_pdf_down'] = 6.45
+Z_fid['err_pdf_down'] = 22.6
 
 corr_fid = {}
 corr_fid['WW_scale'] = 1
@@ -111,25 +111,25 @@ Wm_tot['val'] = 8857.4
 W_tot['val'] = Wp_tot['val'] + Wm_tot['val']
 Z_tot['val'] = 2019.81
 
-Wp_tot['err_scale_up'] = 110.6
-Wm_tot['err_scale_up'] = 85.3
+Wp_tot['err_scale_up'] = 0
+Wm_tot['err_scale_up'] = 0
 W_tot['err_scale_up'] = Wp_tot['err_scale_up'] + Wm_tot['err_scale_up']
 Z_tot['err_scale_up'] = 17.6
 
-Wp_tot['err_scale_down'] = 156.0
-Wm_tot['err_scale_down'] = 110.9
+Wp_tot['err_scale_down'] = 0
+Wm_tot['err_scale_down'] = 0
 W_tot['err_scale_down'] = Wp_tot['err_scale_down'] + Wm_tot['err_scale_down']
 Z_tot['err_scale_down'] = 23.3
 
-Wp_tot['err_pdf_up'] = 81.9
-Wm_tot['err_pdf_up'] = 54.0
+Wp_tot['err_pdf_up'] = 268.0
+Wm_tot['err_pdf_up'] = 184.3
 W_tot['err_pdf_up'] = Wp_tot['err_pdf_up'] + Wm_tot['err_pdf_up']
-Z_tot['err_pdf_up'] = 12.4
+Z_tot['err_pdf_up'] = 34.0
 
-Wp_tot['err_pdf_down'] = 81.9
-Wm_tot['err_pdf_down'] = 54.0
+Wp_tot['err_pdf_down'] = 416.2
+Wm_tot['err_pdf_down'] = 227.6
 W_tot['err_pdf_down'] = Wp_tot['err_pdf_down'] + Wm_tot['err_pdf_down']
-Z_tot['err_pdf_down'] = 12.4
+Z_tot['err_pdf_down'] = 50.6
 
 corr_tot = {}
 corr_tot['WW_scale'] = 1

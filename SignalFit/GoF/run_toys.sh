@@ -2,7 +2,8 @@
 
 gof_algo="$1"
 n_toys="$2"
-my_seed="$3"
+#my_seed="$3"
+my_seed="-1"
 gof_toys="$4"
 
 echo $1 $2 $3 $4

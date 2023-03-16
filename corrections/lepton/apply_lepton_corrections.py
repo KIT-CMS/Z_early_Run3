@@ -8,13 +8,20 @@ import json
 import glob
 from multiprocessing import Pool, RLock
 
-def calc_m(rdf, corr=""):
-    rdf = rdf.Define(f"lv_1{corr}", f"ROOT::Math::PtEtaPhiMVector p(pt_1{corr}, eta_1, phi_1, mass_1); return p;")
-    rdf = rdf.Define(f"lv_2{corr}", f"ROOT::Math::PtEtaPhiMVector p(pt_2{corr}, eta_2, phi_2, mass_2); return p;")
-    
-    rdf = rdf.Define(f"dilep{corr}", f"lv_1{corr} + lv_2{corr}")
+def calc_m(rdf, corr="", dilep=True):
+    if dilep:
+        rdf = rdf.Define(f"lv_1{corr}", f"ROOT::Math::PtEtaPhiMVector p(pt_1{corr}, eta_1, phi_1, mass_1); return p;")
+        rdf = rdf.Define(f"lv_2{corr}", f"ROOT::Math::PtEtaPhiMVector p(pt_2{corr}, eta_2, phi_2, mass_2); return p;")
+        rdf = rdf.Define(f"dilep{corr}", f"lv_1{corr} + lv_2{corr}")
+
+    else:
+        rdf = rdf.Define(f"lv_1{corr}", f"ROOT::Math::PtEtaPhiMVector p(pt_1{corr}, eta_1, phi_1, mass_1); return p;")
+        rdf = rdf.Define(f"dilep{corr}", f"lv_1{corr}")
+
     rdf = rdf.Define(f"pt_vis{corr}", f"dilep{corr}.Pt()")
     rdf = rdf.Define(f"m_vis{corr}", f"dilep{corr}.M()")
+    rdf = rdf.Define(f"phi_vis{corr}", f"dilep{corr}.Phi()")
+    rdf = rdf.Define(f"rap_vis{corr}", f"dilep{corr}.Rapidity()")
     return rdf
 
 
@@ -28,7 +35,16 @@ def job_wrapper(args):
     return apply_corrections(*args)
 
 def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
-    output_path = f.replace("ntuples_xsec_sf", "ntuples_xsec_sf_scaleres")
+    output_path = f.replace("ntuples_xsec_sf", "ntuples_xsec_sf_scaleres_ptuncorr")
+
+    if os.path.isfile(output_path):
+        f_tmp = None
+        try:
+            f_tmp = ROOT.TFile(output_path)
+        except OSError:
+            os.remove(output_path)
+        if f_tmp and not f_tmp.IsZombie():
+            return 1
     
     rdf = ROOT.RDataFrame('ntuple', f)
 
@@ -153,53 +169,74 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
             rdf = rdf.Redefine("pt_2_corr_up", "pt_2_corr")
             rdf = rdf.Redefine("pt_2_corr_dn", "pt_2_corr")
                     
-    # calculate corrected visible mass for dilepton events
+    # calculate corrected visible mass, pt, phi, rap
+    rdf = calc_m(rdf, '_corr', dilep=is_dilepton)
+    rdf = calc_m(rdf, '_corr_up', dilep=is_dilepton)
+    rdf = calc_m(rdf, '_corr_dn', dilep=is_dilepton)
+    quants =  [
+            "pt_1_corr", "pt_1_corr_up", "pt_1_corr_dn",
+            "m_vis_corr", "m_vis_corr_up", "m_vis_corr_dn",
+            "pt_vis_corr", "pt_vis_corr_up", "pt_vis_corr_dn",
+            "phi_vis_corr", "phi_vis_corr_up", "phi_vis_corr_dn",
+            "rap_vis_corr", "rap_vis_corr_up", "rap_vis_corr_dn",
+            ]
     if is_dilepton:
-        rdf = calc_m(rdf, '_corr')
-        rdf = calc_m(rdf, '_corr_up')
-        rdf = calc_m(rdf, '_corr_dn')
-        quants =  [
-                "pt_1_corr", "pt_1_corr_up", "pt_1_corr_dn",
-                "pt_2_corr", "pt_2_corr_up", "pt_2_corr_dn",
-                "m_vis_corr", "m_vis_corr_up", "m_vis_corr_dn",
-                "pt_vis_corr", "pt_vis_corr_up", "pt_vis_corr_dn",
-                ]
-    else:
-        quants =  ["pt_1_corr", "pt_1_corr_up", "pt_1_corr_dn"]
+        quants += ["pt_2_corr", "pt_2_corr_up", "pt_2_corr_dn"]
 
     # correct and add recoil variables
-    if not ("WtoLNu" in output_path):
-        bosonphi = "phi_vis_c"
-        bosonpt = "pt_vis_c"
+    # set boson quantities to lepton stuff except for W signal sample, there use gen boson quantities
+    if not ("WtoLNu" in output_path or "DYtoLL" in output_path):
+        bosonphi = "phi_vis_corr"
+        bosonpt = "pt_vis_corr"
+        bosonrap = "rap_vis_corr"
     else:
         bosonphi = "genbosonphi"
         bosonpt = "genbosonpt"
+        bosonrap = "genbosonrapidity"
 
-    if is_dilepton:
-        rdf = rdf.Define("pt_vis_c_x", "pt_1_corr*cos(phi_1) + pt_2_corr*cos(phi_2)")
-        rdf = rdf.Define("pt_vis_c_y", "pt_1_corr*sin(phi_1) + pt_2_corr*sin(phi_2)")
-        rdf = rdf.Define("pt_vis_c", "sqrt(pt_vis_c_x*pt_vis_c_x + pt_vis_c_y*pt_vis_c_y)")
-        rdf = rdf.Define("phi_vis_c", "atan2(pt_vis_c_y, pt_vis_c_x)")
+    # define phi_vis (and pt_vis) for recoil correction
+    if is_dilepton:        
+        rdf = rdf.Define("pt_vis_x", "pt_1*cos(phi_1) + pt_2*cos(phi_2)")
+        rdf = rdf.Define("pt_vis_y", "pt_1*sin(phi_1) + pt_2*sin(phi_2)")
+        rdf = rdf.Define("phi_vis", "atan2(pt_vis_y, pt_vis_x)")
     else:
-        rdf = rdf.Define("pt_vis_c", "pt_1_corr")
-        rdf = rdf.Define("phi_vis_c", "phi_1")
+        rdf = rdf.Define("pt_vis", "pt_1")
+        rdf = rdf.Define("phi_vis", "phi_1")
 
     rdf = rdf.Define("bosonpt", f"{bosonpt}")
     rdf = rdf.Define("bosonphi", f"{bosonphi}")
+    rdf = rdf.Define("bosonrap", f"{bosonrap}")
 
-    rdf = rdf.Define("uPx", "met_uncorrected*cos(metphi_uncorrected) + pt_vis_c*cos(phi_vis_c)")
-    rdf = rdf.Define("uPy", "met_uncorrected*sin(metphi_uncorrected) + pt_vis_c*sin(phi_vis_c)")
+    rdf = rdf.Define("uPx", "met_uncorrected*cos(metphi_uncorrected) + pt_vis*cos(phi_vis)")      # changed from pt_vis_c and phi_vis_c
+    rdf = rdf.Define("uPy", "met_uncorrected*sin(metphi_uncorrected) + pt_vis*sin(phi_vis)")
 
+    rdf = rdf.Define("metx_lepcorr", "uPx - pt_vis_corr*cos(phi_vis_corr)")
+    rdf = rdf.Define("mety_lepcorr", "uPy - pt_vis_corr*sin(phi_vis_corr)")
+    
+    rdf = rdf.Define("met_lepcorr", "sqrt(metx_lepcorr*metx_lepcorr + mety_lepcorr*mety_lepcorr)")
+    rdf = rdf.Define("metphi_lepcorr", "atan2(mety_lepcorr, metx_lepcorr)")
+    
     rdf = rdf.Define("uP1_uncorrected", f"- (uPx*cos({bosonphi}) + uPy*sin({bosonphi}))")
     rdf = rdf.Define("uP2_uncorrected", f"uPx*sin({bosonphi}) - uPy*cos({bosonphi})")
 
-    rdf = rdf.Define("pfuPx", "pfmet_uncorrected*cos(pfmetphi_uncorrected) + pt_vis_c*cos(phi_vis_c)")
-    rdf = rdf.Define("pfuPy", "pfmet_uncorrected*sin(pfmetphi_uncorrected) + pt_vis_c*sin(phi_vis_c)")
+    rdf = rdf.Define("pfuPx", "pfmet_uncorrected*cos(pfmetphi_uncorrected) + pt_vis*cos(phi_vis)") # changed from pt_vis_c and phi_vis_c
+    rdf = rdf.Define("pfuPy", "pfmet_uncorrected*sin(pfmetphi_uncorrected) + pt_vis*sin(phi_vis)")
 
+    rdf = rdf.Define("pfmetx_lepcorr", "pfuPx - pt_vis_corr*cos(phi_vis_corr)")
+    rdf = rdf.Define("pfmety_lepcorr", "pfuPy - pt_vis_corr*sin(phi_vis_corr)")
+    
+    rdf = rdf.Define("pfmet_lepcorr", "sqrt(pfmetx_lepcorr*pfmetx_lepcorr + pfmety_lepcorr*pfmety_lepcorr)")
+    rdf = rdf.Define("pfmetphi_lepcorr", "atan2(pfmety_lepcorr, pfmetx_lepcorr)")
+    
     rdf = rdf.Define("pfuP1_uncorrected", f"- (pfuPx*cos({bosonphi}) + pfuPy*sin({bosonphi}))")
     rdf = rdf.Define("pfuP2_uncorrected", f"pfuPx*sin({bosonphi}) - pfuPy*cos({bosonphi})")
 
-    met_cols = ["uP1_uncorrected", "uP2_uncorrected", "pfuP1_uncorrected", "pfuP2_uncorrected", "pt_vis_c", "phi_vis_c", "bosonpt", "bosonphi"]
+    met_cols = [
+        "uP1_uncorrected", "uP2_uncorrected", "pfuP1_uncorrected", "pfuP2_uncorrected", 
+        "bosonpt", "bosonphi", "bosonrap",
+        "met_lepcorr", "metphi_lepcorr",
+        "pfmet_lepcorr", "pfmetphi_lepcorr"
+        ]
 
     outdir = output_path.replace(output_path.split('/')[-1],"")
     if not os.path.exists(outdir):
@@ -229,7 +266,7 @@ if __name__=='__main__':
 
 
     # base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_EraC/20*/*/*/*.root"
-    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_EraC/20*/*/*/*.root"
+    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_EraC/2022/*/*/*.root"
     ntuples = glob.glob(base_path)
     # Load correction files
     x = np.loadtxt('correction_files/Run3/mm/res_sf_extra.txt')

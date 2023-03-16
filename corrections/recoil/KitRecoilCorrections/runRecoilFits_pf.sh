@@ -1,10 +1,10 @@
 #! /bin/bash
 
-OUT=Run3V02_outputs
-IN=/ceph/moh/CROWN_samples/Run3V02
+OUT=Run3V06_ptuncorr_outputs
+IN=/storage/9/jdriesch/earlyrun3/samples/Rund3V06
 METVAR=pfmet_uncorrected
 METPHIVAR=pfmetphi_uncorrected
-LUMI=4.844307925632
+LUMI=5.035650234254
 
 # ####################################################################################################
 # #--------------------------------------------------------------------------------------------------#
@@ -13,13 +13,13 @@ LUMI=4.844307925632
 # ####################################################################################################
 
 #Data
-# root -l -b -q fitRecoil.C\(3,3,1,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_data_triple&
-# root -l -b -q fitRecoil.C\(2,2,1,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_data_double&
+root -l -b -q fitRecoil.C\(3,3,1,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_data_triple&
+root -l -b -q fitRecoil.C\(2,2,1,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_data_double&
 # root -l -b -q fitRecoil.C\(0,0,1,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_data_CB&
 
 #Data and background
-# root -l -b -q fitRecoil.C\(3,3,0,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_dataBckg_triple&
-# root -l -b -q fitRecoil.C\(2,2,0,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_dataBckg_double&
+root -l -b -q fitRecoil.C\(3,3,0,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_dataBckg_triple&
+root -l -b -q fitRecoil.C\(2,2,0,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_dataBckg_double&
 # root -l -b -q fitRecoil.C\(0,0,0,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_dataBckg_CB&
 
 root -l -b -q fitRecoil.C\(3,3,0,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI},0\) &>logpfZmm_dataBckg_zrap0&
@@ -27,8 +27,8 @@ root -l -b -q fitRecoil.C\(3,3,0,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"
 root -l -b -q fitRecoil.C\(3,3,0,0,0,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI},2\) &>logpfZmm_dataBckg_zrap2&
 
 #Simulation
-# root -l -b -q fitRecoil.C\(3,3,1,0,1,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_sim_triple&
-# root -l -b -q fitRecoil.C\(2,2,1,0,1,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_sim_double&
+root -l -b -q fitRecoil.C\(3,3,1,0,1,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_sim_triple&
+root -l -b -q fitRecoil.C\(2,2,1,0,1,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_sim_double&
 # root -l -b -q fitRecoil.C\(0,0,1,0,1,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfZmm_sim_CB&
 
 root -l -b -q fitRecoil.C\(3,3,1,0,1,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI},0\) &>logpfZmm_sim_zrap0&
@@ -60,8 +60,8 @@ root -l -b -q fitRecoil.C\(3,3,1,0,1,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"
 # ####################################################################################################
 
 # Simulation
-# root -l -b -q fitRecoil.C\(3,3,1,0,2,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWpmmet_sim_triple&
-# root -l -b -q fitRecoil.C\(2,2,1,0,2,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWpmmet_sim_double&
+root -l -b -q fitRecoil.C\(3,3,1,0,2,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWpmmet_sim_triple&
+root -l -b -q fitRecoil.C\(2,2,1,0,2,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWpmmet_sim_double&
 # root -l -b -q fitRecoil.C\(0,0,1,0,2,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWpmmet_sim_CB&
 
 root -l -b -q fitRecoil.C\(3,3,1,0,2,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI},0\) &>logpfWpmmet_sim_zrap0&
@@ -75,8 +75,8 @@ root -l -b -q fitRecoil.C\(3,3,1,0,2,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"
 # ####################################################################################################
 
 # Simulation
-# root -l -b -q fitRecoil.C\(3,3,1,0,3,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWnmmet_sim_triple&
-# root -l -b -q fitRecoil.C\(2,2,1,0,3,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWnmmet_sim_double&
+root -l -b -q fitRecoil.C\(3,3,1,0,3,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWnmmet_sim_triple&
+root -l -b -q fitRecoil.C\(2,2,1,0,3,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWnmmet_sim_double&
 # root -l -b -q fitRecoil.C\(0,0,1,0,3,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI}\) &>logpfWnmmet_sim_CB&
 
 root -l -b -q fitRecoil.C\(3,3,1,0,3,\"${IN}\",\"${METVAR}\",\"${METPHIVAR}\",\"${OUT}\",${LUMI},0\) &>logpfWnmmet_sim_zrap0&

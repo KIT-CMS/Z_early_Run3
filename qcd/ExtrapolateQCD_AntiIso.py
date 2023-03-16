@@ -331,8 +331,8 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
         #h_scaled_pol1_par1 = href.Clone("h_scaled_pol1_par1_{}_{}_{}".format(channel, etabin, wptbin)) # interception for the scaled templates
 
         # save the extrapolated shape for HComb
-        hnew = href.Clone("h_QCD_Extrapolated_"+variable+"_"+channel)
-        hnew_pol1 = href.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_Pol1shapeUp")
+        hnew_pol0 = href.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_Pol0shapeUp")
+        hnew_pol1 = href.Clone("h_QCD_Extrapolated_"+variable+"_"+channel)
         hnew_pol2 = href.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_Pol2shapeUp")
         hnew_scaled = href.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_ScaledMCshapeUp")
 
@@ -342,12 +342,12 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
         #
         # run the linear extrapolation bin-by-bin
         #
-        for ibin in xrange(1, histos_norm[isomin].GetNbinsX()+1):
+        for ibin in range(1, histos_norm[isomin].GetNbinsX()+1): # 20 bins of mT
             bincontents = []
             binerrors = []
-            for iso, hist in histos_norm.iteritems():
-                bincontents.append( hist.GetBinContent(ibin) )
-                binerrors.append( hist.GetBinError(ibin) )
+            for iso in isobins:              # bins of isolation
+                bincontents.append( histos_norm[iso].GetBinContent(ibin) )
+                binerrors.append( histos_norm[iso].GetBinError(ibin) )
 
             mTmin = histos_norm[isomin].GetBinLowEdge(ibin)
             mTmax = histos_norm[isomin].GetBinLowEdge(ibin)+histos_norm[isomin].GetBinWidth(ibin)
@@ -367,8 +367,8 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
             binerrors_scaled = None
             results_pol1_par1, results_pol1_par0, results_pol0_par1 = ExpltOneBin(variable, isocenters, bincontents, binerrors, isoSR, mTmin, mTmax, suffix=suffix, extraText=extraText, bincontents_scaled = bincontents_scaled, binerrors_scaled = binerrors_scaled)
 
-            hnew.SetBinContent(ibin, max(results_pol0_par1[0], 0))
-            hnew.SetBinError(ibin, 0.)
+            hnew_pol0.SetBinContent(ibin, max(results_pol0_par1[0], 0))
+            hnew_pol0.SetBinError(ibin, 0.)
             # hnew.SetBinContent(ibin, max(results_pol1_par1[0], 0))
             # hnew.SetBinError(ibin, 0.)
 
@@ -390,13 +390,13 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
         # set the bin-by-bin shape variation (stat.) for HComb
         hnew_ups = []
         hnew_downs = []
-        for ibin in xrange(1, histos_norm[isomin].GetNbinsX()+1):
-            val = max(vals_pol0_par1[ibin-1][0], 0.)
-            stat = vals_pol0_par1[ibin-1][1]
-            pol1 = hnew.GetBinContent(ibin) - hnew_pol1.GetBinContent(ibin)
-            err = np.sqrt(stat**2 + pol1**2)
-            hnew_up   = hnew.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_bin{}shapeUp".format(str(ibin)))
-            hnew_down = hnew.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_bin{}shapeDown".format(str(ibin)))
+        for ibin in range(1, histos_norm[isomin].GetNbinsX()+1):
+            val = max(vals_pol1_par1[ibin-1][0], 0.)
+            stat = vals_pol1_par1[ibin-1][1]
+            pol = hnew_pol0.GetBinContent(ibin) - hnew_pol1.GetBinContent(ibin)
+            err = np.sqrt(stat**2 + pol**2)
+            hnew_up   = hnew_pol1.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_bin{}shapeUp".format(str(ibin)))
+            hnew_down = hnew_pol1.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_bin{}shapeDown".format(str(ibin)))
             hnew_up.SetBinContent(ibin, val+err)
             hnew_up.SetBinError(ibin, 0.)
             hnew_down.SetBinContent(ibin, max(val-err, 0.))
@@ -407,13 +407,13 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
 
         #STOPPED ADDED BY JULIUS
 
-        # pol1 as another systematic
-        hnew_pol1.Scale(hnew.Integral() / hnew_pol1.Integral())
-        hnew_pol1Dn = hnew_pol1.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_Pol1shapeDown")
-        for ibin in xrange(1, hnew.GetNbinsX()+1):
-            hnew_pol1Dn.SetBinContent(ibin, max(0., 2*hnew.GetBinContent(ibin) - hnew_pol1.GetBinContent(ibin)))
-        hnew_ups.append(hnew_pol1)
-        hnew_downs.append(hnew_pol1Dn)
+        # pol0 as another systematic
+        hnew_pol0.Scale(hnew_pol1.Integral() / hnew_pol0.Integral())
+        hnew_pol0Dn = hnew_pol0.Clone("h_QCD_Extrapolated_"+variable+"_"+channel+"_Pol0shapeDown")
+        for ibin in xrange(1, hnew_pol1.GetNbinsX()+1):
+            hnew_pol0Dn.SetBinContent(ibin, max(0., 2*hnew_pol1.GetBinContent(ibin) - hnew_pol0.GetBinContent(ibin)))
+        hnew_ups.append(hnew_pol0)
+        hnew_downs.append(hnew_pol0Dn)
 
         # pol2 as another systematic
         # hnew_pol2.Scale(hnew.Integral() / hnew_pol2.Integral())
@@ -436,8 +436,8 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
         h_pol0_par1.SetMarkerColor(25)
         h_pol1_par1.SetLineColor(46)
         h_pol1_par1.SetMarkerColor(46)
-        h_pol1_par1.Scale(h_pol0_par1.Integral() / h_pol1_par1.Integral())
-        h_pol2_par2.Scale(h_pol0_par1.Integral() / h_pol2_par2.Integral())
+        h_pol0_par1.Scale(h_pol1_par1.Integral() / h_pol0_par1.Integral())
+        h_pol2_par2.Scale(h_pol1_par1.Integral() / h_pol2_par2.Integral())
         h_pol2_par2.SetLineColor(9)
         h_pol2_par2.SetMarkerColor(9)
         h_todraws = [h_pol0_par1, h_pol1_par1]  # , h_pol2_par2]
@@ -475,7 +475,6 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
         if "ptOverPfmt" in variable:
             DrawHistos( h_todraws, labels, 0, 3, "#frac{p_{T}}{m_{T}}", 0., 0.1, "A.U.", "shapes_QCD_"+variable+"_"+suffix, dology=False, nMaxDigits=3, legendPos=[0.75, 0.40, 0.95, 0.83], lheader=extraText, noCMS = True, donormalize=True, drawashist=True, showratio=True, ratiobase=-1, yrlabel="#scale[0.4]{Ratio to last iso bin}", yrmin=0.51, addOverflow = True, yrmax=1.49)
         elif "mt" in variable:
-            #DrawHistos( h_todraws, labels, 0, 120, "m_{T} [GeV]", 0., 0.1, "A.U.", "shapes_QCD_"+variable+"_"+suffix, dology=False, nMaxDigits=3, legendPos=[0.75, 0.40, 0.95, 0.83], lheader=extraText, noCMS = True, donormalize=True, drawashist=True, showratio=True, ratiobase=-1, yrlabel="#scale[0.4]{Ratio to last iso bin}", yrmin=0.51, addOverflow = True, yrmax=1.49)
             DrawHistos( h_todraws, labels, 0, 120, "m_{T} [GeV]", 0., 0.1, "A.U.", "shapes_QCD_"+variable+"_"+suffix, dology=False, nMaxDigits=3, legendPos=[0.75, 0.40, 0.95, 0.83], lheader=extraText, noCMS = True, donormalize=True, drawashist=True, showratio=True, ratiobase=-1, yrlabel="#scale[0.4]{Ratio to last iso bin}", yrmin=0.51, addOverflow = True, yrmax=1.49)
         elif "met" in variable:
             DrawHistos( h_todraws, labels, 0, 120, "MET [GeV]", 0., 0.1, "A.U.", "shapes_QCD_"+variable+"_"+suffix, dology=False, nMaxDigits=3, legendPos=[0.75, 0.40, 0.95, 0.83], lheader=extraText, noCMS = True, donormalize=True, drawashist=True, showratio=True, ratiobase=-1, yrlabel="#scale[0.4]{Ratio to last iso bin}", yrmin=0.51, addOverflow = True, yrmax=1.49)
@@ -485,8 +484,8 @@ def ExtrapolateQCD(fname, oname, channel, variable, wptbin, etabins, isobins, mc
         # write the variations to the output
         #
         ofile.cd()
-        hnew.SetDirectory(ofile)
-        hnew.Write(hnew.GetName()+mc_scale_str)
+        hnew_pol1.SetDirectory(ofile)
+        hnew_pol1.Write(hnew_pol1.GetName()+mc_scale_str)
         # for h in h_todraws+[h_pol1_par0]:
         #     h.SetDirectory(ofile)
         #     h.Write(h.GetName()+mc_scale_str)
