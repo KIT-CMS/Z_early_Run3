@@ -13,7 +13,7 @@ ROOT.gSystem.Load("./utils/PdfDiagonalizer_cc.so")
 
 def parse_args():
     parser = argparse.ArgumentParser(description="produce friend of input ntuple with corrected met")
-    parser.add_argument('-I', '--inpath', default='/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_scaleres_EraC/2022/*/mm*/*.root', help='path to input samples')
+    parser.add_argument('-I', '--inpath', default='/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_ptuncorr_pu_EraC/2022/*/*/*.root', help='path to input samples')
     parser.add_argument('--overwrite', action='store_true', default=True)
     parser.add_argument('--test', action='store_true', default=False)   
     args = parser.parse_args()
@@ -187,12 +187,31 @@ def prep(inpath):
 
 
 def calculateMET(rdf, corrected, data=False, mettype="", postfix=""):
-    rdf = rdf.Define(mettype+"metPx"+corrected+postfix, "-pt_vis_c*cos(phi_vis_c) - "+mettype+"uP1"+corrected+postfix+"*cos(genbosonphi) + "+mettype+"uP2"+corrected+postfix+"*sin(genbosonphi)")
-    rdf = rdf.Define(mettype+"metPy"+corrected+postfix, "-pt_vis_c*sin(phi_vis_c) - "+mettype+"uP1"+corrected+postfix+"*sin(genbosonphi) - "+mettype+"uP2"+corrected+postfix+"*cos(genbosonphi)")
+    rdf = rdf.Define(mettype+"metPx"+corrected+postfix, "-pt_vis_corr*cos(phi_vis_corr) - "+mettype+"uP1"+corrected+postfix+"*cos(bosonphi) + "+mettype+"uP2"+corrected+postfix+"*sin(bosonphi)")
+    rdf = rdf.Define(mettype+"metPy"+corrected+postfix, "-pt_vis_corr*sin(phi_vis_corr) - "+mettype+"uP1"+corrected+postfix+"*sin(bosonphi) - "+mettype+"uP2"+corrected+postfix+"*cos(bosonphi)")
 
     rdf = rdf.Define(mettype+"met"+corrected+postfix, "sqrt("+mettype+"metPx"+corrected+postfix+"*"+mettype+"metPx"+corrected+postfix+" + "+mettype+"metPy"+corrected+postfix+"*"+mettype+"metPy"+corrected+postfix+")")
     rdf = rdf.Define(mettype+"metphi"+corrected+postfix, "atan2("+mettype+"metPy"+corrected+postfix+", "+mettype+"metPx"+corrected+postfix+")")
 
+    if postfix=="":
+        for updn in ["_up", "_dn"]:
+            rdf = rdf.Define(
+                mettype+"metPx"+corrected+updn, 
+                "-pt_vis_corr"+updn+"*cos(phi_vis_corr"+updn+") - "+mettype+"uP1"+corrected+"*cos(bosonphi) + "+mettype+"uP2"+corrected+"*sin(bosonphi)"
+                )
+            rdf = rdf.Define(
+                mettype+"metPy"+corrected+updn, 
+                "-pt_vis_corr"+updn+"*sin(phi_vis_corr"+updn+") - "+mettype+"uP1"+corrected+"*sin(bosonphi) - "+mettype+"uP2"+corrected+"*cos(bosonphi)"
+                )
+
+            rdf = rdf.Define(
+                mettype+"met"+corrected+updn, 
+                "sqrt("+mettype+"metPx"+corrected+updn+"*"+mettype+"metPx"+corrected+updn+" + "+mettype+"metPy"+corrected+updn+"*"+mettype+"metPy"+corrected+updn+")"
+                )
+            rdf = rdf.Define(
+                mettype+"metphi"+corrected+updn, 
+                "atan2("+mettype+"metPy"+corrected+updn+", "+mettype+"metPx"+corrected+updn+")"
+                )
     return rdf
 
 
@@ -225,12 +244,12 @@ def run(input_dict):
     doStatUnc = (syst_postfix == "")
 
     if args.test:
-        outdir = infile.replace("/ntuples_xsec_sf_scaleres_EraC/", "/test_friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr"+syst_postfix+"/")
+        outfile = infile.replace("/ntuples_xsec_sf_scaleres_pu_EraC/", "/test_friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr"+syst_postfix+"/")
     else:
-        outdir = infile.replace("/ntuples_xsec_sf_scaleres_EraC/", "/friend_xsec_sf_scaleres_EraC_met_corr"+syst_postfix+"/")
+        outfile = infile.replace("/ntuples_xsec_sf_scaleres_ptuncorr_pu_EraC/", "/friend_xsec_sf_scaleres_ptuncorr_lepunc_pu_EraC_met_corr"+syst_postfix+"/")
         
 
-    outfile = outdir
+    outdir = outfile.replace(outfile.split('/')[-1], "")
 
     # HERE
     if os.path.isfile(outfile):
@@ -242,6 +261,7 @@ def run(input_dict):
         if f_tmp and not f_tmp.IsZombie():
             return 1    
     # return -1
+    # print(outdir)
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
@@ -278,45 +298,51 @@ def run(input_dict):
         return -1
 
     rdf, _chain = prep(infile)
-    original_cols = [str(col) for col in rdf.GetColumnNames()]
+    # original_cols = [str(col) for col in rdf.GetColumnNames()]
 
     # for other processes than DY: just use uncorrected values
     if not ("DYtoLL" in process or "WtoLNu" in process):
         rdf = rdf.Define("uP1"+corrected+syst_postfix, "uP1_uncorrected")
         rdf = rdf.Define("uP2"+corrected+syst_postfix, "uP2_uncorrected")
-        rdf = rdf.Define("met"+corrected+syst_postfix, 'double(met_uncorrected)')
-        rdf = rdf.Define("metphi"+corrected+syst_postfix, 'double(metphi_uncorrected)')
 
         rdf = rdf.Define("pfuP1"+corrected+syst_postfix, "pfuP1_uncorrected")
         rdf = rdf.Define("pfuP2"+corrected+syst_postfix, "pfuP2_uncorrected")
-        rdf = rdf.Define("pfmet"+corrected+syst_postfix, 'double(pfmet_uncorrected)')
-        rdf = rdf.Define("pfmetphi"+corrected+syst_postfix, 'double(pfmetphi_uncorrected)')
+
+        rdf = calculateMET(rdf, corrected, mettype="", postfix=syst_postfix)
+        rdf = calculateMET(rdf, corrected, mettype="pf", postfix=syst_postfix)
 
         cols_stat_unc = []
         if doStatUnc:
             for stat_unc_idx in range(npars1+npars2):
-                rdf = rdf.Define("met"+corrected+f"_stat{stat_unc_idx}Up", 'double(met_uncorrected)')
-                rdf = rdf.Define("metphi"+corrected+f"_stat{stat_unc_idx}Up", 'double(metphi_uncorrected)')
-                rdf = rdf.Define("pfmet"+corrected+f"_stat{stat_unc_idx}Up", 'double(pfmet_uncorrected)')
-                rdf = rdf.Define("pfmetphi"+corrected+f"_stat{stat_unc_idx}Up", 'double(pfmetphi_uncorrected)')
-                rdf = rdf.Define("met"+corrected+f"_stat{stat_unc_idx}Down", 'double(met_uncorrected)')
-                rdf = rdf.Define("metphi"+corrected+f"_stat{stat_unc_idx}Down", 'double(metphi_uncorrected)')
-                rdf = rdf.Define("pfmet"+corrected+f"_stat{stat_unc_idx}Down", 'double(pfmet_uncorrected)')
-                rdf = rdf.Define("pfmetphi"+corrected+f"_stat{stat_unc_idx}Down", 'double(pfmetphi_uncorrected)')
-                cols_stat_unc.append("met"+corrected+f"_stat{stat_unc_idx}Up")
-                cols_stat_unc.append("metphi"+corrected+f"_stat{stat_unc_idx}Up")
-                cols_stat_unc.append("pfmet"+corrected+f"_stat{stat_unc_idx}Up")
-                cols_stat_unc.append("pfmetphi"+corrected+f"_stat{stat_unc_idx}Up")
-                cols_stat_unc.append("met"+corrected+f"_stat{stat_unc_idx}Down")
-                cols_stat_unc.append("metphi"+corrected+f"_stat{stat_unc_idx}Down")
-                cols_stat_unc.append("pfmet"+corrected+f"_stat{stat_unc_idx}Down")
-                cols_stat_unc.append("pfmetphi"+corrected+f"_stat{stat_unc_idx}Down")
+                for updn in ["Up", "Dn"]:
+                    rdf = rdf.Define("uP1"+corrected+f"_stat{stat_unc_idx}{updn}", "uP1_uncorrected")
+                    rdf = rdf.Define("uP2"+corrected+f"_stat{stat_unc_idx}{updn}", "uP2_uncorrected")
+
+                    rdf = rdf.Define("pfuP1"+corrected+f"_stat{stat_unc_idx}{updn}", "pfuP1_uncorrected")
+                    rdf = rdf.Define("pfuP2"+corrected+f"_stat{stat_unc_idx}{updn}", "pfuP2_uncorrected")
+                
+                    rdf = calculateMET(rdf, corrected, mettype="", postfix=f"_stat{stat_unc_idx}{updn}")
+                    rdf = calculateMET(rdf, corrected, mettype="pf", postfix=f"_stat{stat_unc_idx}{updn}")
+
+                    cols_stat_unc.append("met"+corrected+f"_stat{stat_unc_idx}{updn}")
+                    cols_stat_unc.append("metphi"+corrected+f"_stat{stat_unc_idx}{updn}")
+                    cols_stat_unc.append("pfmet"+corrected+f"_stat{stat_unc_idx}{updn}")
+                    cols_stat_unc.append("pfmetphi"+corrected+f"_stat{stat_unc_idx}{updn}")
+        
+        cols_lepunc = []
+        if syst_postfix=="":
+            cols_lepunc += [
+                "met_corr_up", "met_corr_dn", "metphi_corr_up", "metphi_corr_dn",
+                "pfmet_corr_up", "pfmet_corr_dn", "pfmetphi_corr_up", "pfmetphi_corr_dn"
+            ]
 
         if not os.path.exists(outfile) or args.overwrite:
             rdf.Snapshot("ntuple", outfile, [
-                "uP1"+corrected+syst_postfix, "uP2"+corrected+syst_postfix, "met"+corrected+syst_postfix, "metphi"+corrected+syst_postfix,
-                "pfuP1"+corrected+syst_postfix, "pfuP2"+corrected+syst_postfix, "pfmet"+corrected+syst_postfix, "pfmetphi"+corrected+syst_postfix
-            ] + cols_stat_unc)
+                "uP1"+corrected+syst_postfix, "uP2"+corrected+syst_postfix, 
+                "met"+corrected+syst_postfix, "metphi"+corrected+syst_postfix,
+                "pfuP1"+corrected+syst_postfix, "pfuP2"+corrected+syst_postfix, 
+                "pfmet"+corrected+syst_postfix, "pfmetphi"+corrected+syst_postfix
+            ] + cols_stat_unc + cols_lepunc)
             # rdf.Snapshot("ntuple", outfile, list(set(original_cols + [
             #     "uP1"+corrected+syst_postfix, "uP2"+corrected+syst_postfix, "met"+corrected+syst_postfix, "metphi"+corrected+syst_postfix,
             #     "pfuP1"+corrected+syst_postfix, "pfuP2"+corrected+syst_postfix, "pfmet"+corrected+syst_postfix, "pfmetphi"+corrected+syst_postfix
@@ -372,10 +398,10 @@ def run(input_dict):
         "pfuP2"+corrected+syst_postfix,
         "pfuP1_uncorrected",
         "pfuP2_uncorrected",
-        "pt_vis_c",
-        "phi_vis_c",
-        "genbosonpt",
-        "genbosonphi",
+        "pt_vis_corr", "pt_vis_corr_up", "pt_vis_corr_dn",
+        "phi_vis_corr", "phi_vis_corr_up", "phi_vis_corr_dn",
+        "bosonpt",
+        "bosonphi",
         'q_1'
     ] + cols_stat_unc_u
     fromrdf = rdf.AsNumpy(columns = columns)
@@ -388,20 +414,24 @@ def run(input_dict):
         "pfuP2"+corrected+syst_postfix: fromrdf["pfuP2"+corrected+syst_postfix],
         "pfuP1_uncorrected": fromrdf["pfuP1_uncorrected"],
         "pfuP2_uncorrected": fromrdf["pfuP2_uncorrected"],
-        "pt_vis_c": fromrdf["pt_vis_c"],
-        "phi_vis_c": fromrdf["phi_vis_c"],
-        "genbosonpt": fromrdf["genbosonpt"],
-        "genbosonphi": fromrdf["genbosonphi"]
+        "pt_vis_corr": fromrdf["pt_vis_corr"],
+        "pt_vis_corr_up": fromrdf["pt_vis_corr_up"],
+        "pt_vis_corr_dn": fromrdf["pt_vis_corr_dn"],
+        "phi_vis_corr": fromrdf["phi_vis_corr"],
+        "phi_vis_corr_up": fromrdf["phi_vis_corr_up"],
+        "phi_vis_corr_dn": fromrdf["phi_vis_corr_dn"],
+        "bosonpt": fromrdf["bosonpt"],
+        "bosonphi": fromrdf["bosonphi"]
     }
     if doStatUnc:
         for col in cols_stat_unc_u:
             tordf[col] = fromrdf[col]
 
-    for j in range(len(fromrdf["genbosonpt"])):
+    for j in range(len(fromrdf["bosonpt"])):
         # Get pT bin of genboson
         kBin = nBins-1
         for k in range(nBins):
-            if ((channel == 'mm' or channel == 'ee') and fromrdf["pt_vis_c"][j] < zPtBinEdges[k]) or ((channel == 'mmet' or channel == 'emet') and fromrdf["genbosonpt"][j] < zPtBinEdges[k]): # TODO check if right order
+            if ((channel == 'mm' or channel == 'ee') and fromrdf["pt_vis_corr"][j] < zPtBinEdges[k]) or ((channel == 'mmet' or channel == 'emet') and fromrdf["bosonpt"][j] < zPtBinEdges[k]): # TODO check if right order
                 kBin = k-1
                 break
         sBin = str(kBin)
@@ -471,6 +501,7 @@ def run(input_dict):
                     npars = npars1 if k == 0 else npars2
                     stat_unc_idx = 0
                     for ipar in range(npars):
+                        # print("start: ", sBin)
                         # PUPPI
                         data_cdf   = dataWorkspace[k].function(f"sig_{sBin}_eig_{sBin}_ipar_{ipar}_{updn}_cdf_Int[u_{sBin}_prime|CDF]_Norm[u_{sBin}_prime]")
                         data_xuP   = dataWorkspace[k].var('u_'+sBin)
@@ -524,6 +555,8 @@ def run(input_dict):
 
                         stat_unc_idx += 1
 
+                        # print("done: ", sBin)
+
 
 
     rdf_tosave = ROOT.RDF.MakeNumpyDataFrame(tordf)
@@ -540,12 +573,19 @@ def run(input_dict):
                 cols_stat_unc.append("metphi"+corrected+f"_stat{stat_unc_idx}{updn}")
                 cols_stat_unc.append("pfmet"+corrected+f"_stat{stat_unc_idx}{updn}")
                 cols_stat_unc.append("pfmetphi"+corrected+f"_stat{stat_unc_idx}{updn}")
+    
+    cols_lepunc = []
+    if syst_postfix=="":
+        cols_lepunc += [
+            "met_corr_up", "met_corr_dn", "metphi_corr_up", "metphi_corr_dn",
+            "pfmet_corr_up", "pfmet_corr_dn", "pfmetphi_corr_up", "pfmetphi_corr_dn"
+        ]
 
     if not os.path.exists(outfile) or args.overwrite:
         rdf_tosave.Snapshot("ntuple", outfile, [
             "uP1"+corrected+syst_postfix, "uP2"+corrected+syst_postfix, "met"+corrected+syst_postfix, "metphi"+corrected+syst_postfix,
             "pfuP1"+corrected+syst_postfix, "pfuP2"+corrected+syst_postfix, "pfmet"+corrected+syst_postfix, "pfmetphi"+corrected+syst_postfix
-        ] + cols_stat_unc)
+        ] + cols_stat_unc + cols_lepunc)
         # rdf_tosave.Snapshot("ntuple", outfile, list(set(original_cols + [
         #     "uP1"+corrected+syst_postfix, "uP2"+corrected+syst_postfix, "met"+corrected+syst_postfix, "metphi"+corrected+syst_postfix,
         #     "pfuP1"+corrected+syst_postfix, "pfuP2"+corrected+syst_postfix, "pfmet"+corrected+syst_postfix, "pfmetphi"+corrected+syst_postfix
@@ -580,74 +620,75 @@ def run(input_dict):
 if __name__=='__main__':
     args = parse_args()
     ROOT.gROOT.SetBatch(True) 
-    ROOT.ROOT.EnableImplicitMT(32)
+    #ROOT.ROOT.EnableImplicitMT(32)
     ws_dicts = [
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigAndBck/", 
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck/", 
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly/",
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_data_triple_muon_sigAndBck/", 
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck/", 
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly/",
         },
 
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_double_muon_sigAndBck/", 
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_double_muon_sigOnly/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_double_muon_sigOnly/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_double_muon_sigOnly/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_double_muon_sigAndBck/", 
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_double_muon_sigOnly/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_double_muon_sigOnly/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_double_muon_sigOnly/",
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_data_double_muon_sigAndBck/", 
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_ZllMC_double_muon_sigOnly/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WnegMC_double_muon_sigOnly/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WposMC_double_muon_sigOnly/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_data_double_muon_sigAndBck/", 
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_ZllMC_double_muon_sigOnly/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WnegMC_double_muon_sigOnly/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WposMC_double_muon_sigOnly/",
         },
 
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigOnly/", 
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigOnly/", 
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly/",
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_data_triple_muon_sigOnly/", 
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WposMC_triple_muon_sigOnly/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_data_triple_muon_sigOnly/", 
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly/",
+        },
+         
+        {
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap0/",
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap0/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap0/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap0/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap0/",
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap0/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap0/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap0/",
         },
 
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap0/",
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap0/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap0/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap0/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap0/",
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap0/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap0/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap0/",
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap1/",
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap1/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap1/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap1/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap1/",
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap1/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap1/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap1/",
         },
 
         {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap1/",
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap1/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap1/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap1/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap1/",
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap1/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap1/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap1/",
-        },
-
-        {
-            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap2/",
-            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap2/",
-            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap2/",
-            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap2/",
-            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap2/",
-            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap2/",
-            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap2/",
-            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V02_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap2/",
-        },
+            "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_data_triple_muon_sigAndBck_zrap2/",
+            "Zmm":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_ZllMC_triple_muon_sigOnly_zrap2/",
+            "Wmneg":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WnegMC_triple_muon_sigOnly_zrap2/",
+            "Wmpos":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_WposMC_triple_muon_sigOnly_zrap2/",
+            "data_mm_pf":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_data_triple_muon_sigAndBck_zrap2/",
+            "Zmm_pf":      "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_ZllMC_triple_muon_sigOnly_zrap2/",
+            "Wmneg_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WnegMC_triple_muon_sigOnly_zrap2/",
+            "Wmpos_pf":    "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/pfmet_uncorrected_WposMC_triple_muon_sigOnly_zrap2/",
+        }, 
     ]
+    # print(ws_dicts)
 
     ntuples = glob.glob(args.inpath)
     arguments = [{"ntuple": ntuple, "args": args, "ws_dict": ws_dict} for ntuple in ntuples for ws_dict in ws_dicts]
@@ -655,9 +696,10 @@ if __name__=='__main__':
     nthreads = 32
     if nthreads > len(arguments):
         nthreads = len(arguments)
-
+    
     if args.test:
         run(arguments[0])
+
     else:
         with Pool(nthreads, initargs=(RLock(),), initializer=tqdm.set_lock, maxtasksperchild=1) as pool:
             for _ in tqdm(
