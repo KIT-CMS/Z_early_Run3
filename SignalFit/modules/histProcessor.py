@@ -179,7 +179,7 @@ def ProcessHists(
                     if onlyShapeTheo:
                         assert h_renamed_up.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_up.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
                         assert h_renamed_dn.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_dn.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
-                elif syst in ["LHEPdfWeightAlphaSUp", "LHEPdfWeightAlphaSDown", "LHEScaleWeightMUFUp", "LHEScaleWeightMUFDown", "LHEScaleWeightMURUp", "LHEScaleWeightMURDown", "LHEScaleWeightMUFMURUp", "LHEScaleWeightMUFMURDown"]:
+                elif syst in ["LHEPdfWeightAlphaSUp", "LHEPdfWeightAlphaSDown", "LHEScaleWeightMUFUp", "LHEScaleWeightMUFDown", "LHEScaleWeightMURUp", "LHEScaleWeightMURDown", "LHEScaleWeightMUFMURUp", "LHEScaleWeightMUFMURDown", "PSWeightUp", "PSWeightDown"]:
                     h_renamed_no = hists_all[h_renamed.GetName().replace(f"_{syst}", "")].Clone(h_renamed.GetName()+"Nominal")
                     n_renamed_no = h_renamed_no.Integral(0, -1)
                     h_renamed_sy = h_renamed.Clone(h_renamed.GetName())
@@ -214,7 +214,14 @@ def ProcessHistsQCD(ifile, foutput, fit_variable = None, bins = None, systs = []
             if syst != "Nominal":
                 hname_syst += "_"+syst
 
+            if 'shape' in syst:
+                if 'QCDp_' in syst:
+                    hname_syst = hname_syst.replace('QCDp_','')
+                if 'QCDm_' in syst:
+                    hname_syst = hname_syst.replace('QCDm_','')
+
             name_base = f"h_qcd_{fit_variable}"
+
             h_tmp = finput.Get(hname_syst)
             h_renamed = renameHist(h_tmp, name_base, syst)
             if bins is not None:
@@ -271,6 +278,9 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
         ] + [
+            "PSWeightUp",
+            "PSWeightDown",
+        ] + [
             "LepCorrUp",
             "LepCorrDn",
         ] + [
@@ -317,6 +327,9 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
         ] + [
+            "PSWeightUp",
+            "PSWeightDown",
+        ] + [
             "puWeightUp",
             "puWeightDn",
         ]
@@ -358,6 +371,9 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
         ] + [
+            "PSWeightUp",
+            "PSWeightDown",
+        ] + [
             "puWeightUp",
             "puWeightDn",
         ]
@@ -371,12 +387,12 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
         systs = [
             "mcScaleUp",
             "mcScaleDown",
-            "Pol1shapeUp",
-            "Pol1shapeDown",
+            # "Pol1shapeUp",
+            # "Pol1shapeDown",
         ] + [
-            f"bin{i}shapeUp" for i in range(1, len(mass_bins_w))
+            f"QCDp_bin{i}shapeUp" for i in range(1, len(mass_bins_w))
         ] + [
-            f"bin{i}shapeDown" for i in range(1, len(mass_bins_w))
+            f"QCDp_bin{i}shapeDown" for i in range(1, len(mass_bins_w))
         ]
     )
 
@@ -387,12 +403,12 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
         systs = [
             "mcScaleUp",
             "mcScaleDown",
-            "Pol1shapeUp",
-            "Pol1shapeDown",
+            # "Pol1shapeUp",
+            # "Pol1shapeDown",
         ] + [
-            f"bin{i}shapeUp" for i in range(1, len(mass_bins_w))
+            f"QCDm_bin{i}shapeUp" for i in range(1, len(mass_bins_w))
         ] + [
-            f"bin{i}shapeDown" for i in range(1, len(mass_bins_w))
+            f"QCDm_bin{i}shapeDown" for i in range(1, len(mass_bins_w))
         ]
     )
 
