@@ -8,171 +8,135 @@ import utils
 import array as a
 import json
 import glob
+from multiprocessing import Pool, RLock
+
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Lepton correction program. To obtain corrections, please proceed as follows: \n 1. Produce histograms by setting option -H\n 2. Calculate Z mass peak position and width via -C\n 3. Produce friend tree with corrected lepton pt values via -E\n 4. Plot corrected distributions via -P")
-    parser.add_argument('-F', '--finalstate', default='mm', help='Final state: mm, ee, mmet or emet')
-    parser.add_argument('-I', '--inpath', default='/ceph/moh/CROWN_samples/EarlyRun3_V08/ntuples/2018/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/', help='path to input samples')
-    parser.add_argument('--overwrite', action='store_true', default=False, help='Set to overwrite existing files')
-    parser.add_argument('--test', action='store_true', default=False, help='set to put into test directory')
-    parser.add_argument('-H', '--histogram', action = 'store_true', default=False, help='Create binned histograms')
-    parser.add_argument('-C', '--calculation', action = 'store_true', default=False, help='Set histogram mode')
-    parser.add_argument('-E', '--evaluation', action = 'store_true', default=False, help='Set histogram mode')
-    parser.add_argument('-P', '--plot', action = 'store_true', default=False)
-    parser.add_argument('--corr', action= 'store_true', default=False)
-    parser.add_argument('--info', action= 'store_true', default=False)
-    parser.add_argument('-R', '--run', default='2', help='Run number. Either 2 (condsiders 2018 only) or 3 (for 2022)')
-    parser.add_argument('-V', '--version', default='v1')
-    parser.add_argument('--finalize', action='store_true', default=False)
-    parser.add_argument('-x', '--res-factor', default=1.)
+    parser = argparse.ArgumentParser(
+        description="""
+            Lepton correction program. To obtain corrections, please proceed 
+            as follows:\n 
+            1. Produce histograms by setting option -H\n 
+            2. Fit Z mass peak position and width via -F\n 
+            3. Produce smeared ntuples and histograms via -S\n 
+            4. Fit histograms with extra smearing factor via -C\n
+            5. Plot fit results and calculate extra smearing via -P
+            """)
+    parser.add_argument(
+        '-H',
+        '--histogram',
+        action='store_true',
+        default=False,
+        help='Create binned histograms'
+    )
+    parser.add_argument(
+        '-F',
+        '--fit',
+        action='store_true',
+        default=False,
+        help='Mass fit to histograms'
+    )
+    parser.add_argument(
+        '-S',
+        '--smear',
+        action='store_true',
+        default=False,
+        help='make ntuples for smearing factor'
+    )
+    parser.add_argument(
+        '-C',
+        '--calculation',
+        action='store_true',
+        default=False,
+        help='set to calculate extra smearing'
+    )
+    parser.add_argument(
+        '-P',
+        '--plot',
+        action='store_true',
+        default=False,
+        help='set to calculate extra smearing'
+    )
+    parser.add_argument(
+        '--corr',
+        action='store_true',
+        default=False
+    )
     parser.add_argument('--run_i', default=355862)
-    parser.add_argument('--run_f', default=357482) #357900
+    parser.add_argument('--run_f', default=357482)
     args = parser.parse_args()
     return args
 
 
-def get_paths(args, mode, kw = None):
-    # get ntuple or friends paths
-    if mode == 0:
-        # paths with uncorrected ntuples
-        if not args.corr:
-            if args.run=='2':
-                if args.finalstate=='mm':
-                    mc = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/ntuples/2018/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mm/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X_*.root']
-                    dt = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/ntuples/2018/SingleMuon_Run2018{run}-UL2018/mm/SingleMuon_Run2018{run}-UL2018_*.root'.format(run=r) for r in ['A', 'B', 'C', 'D']]         
-                elif args.finalstate=='ee':
-                    mc = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/ntuples/2018/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/ee/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X_*.root']
-                    dt = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/ntuples/2018/EGamma_Run2018{run}-UL2018/ee/EGamma_Run2018{run}-UL2018_*.root'.format(run=r) for r in ['A', 'B', 'C']]   
-                    dt += ['/ceph/moh/CROWN_samples/EarlyRun3_V12/ntuples/2018/EGamma_Run2018{run}-UL2018/ee/EGamma_Run2018{run}-UL2018_{i}.root'.format(run='D', i=i) for i in range(113)]
-                    dt += ['/ceph/moh/CROWN_samples/EarlyRun3_V12/ntuples/2018/EGamma_Run2018{run}-UL2018/ee/EGamma_Run2018{run}-UL2018_{i}.root'.format(run='D', i='113_ee')]
-                    dt += ['/ceph/moh/CROWN_samples/EarlyRun3_V12/ntuples/2018/EGamma_Run2018{run}-UL2018/ee/EGamma_Run2018{run}-UL2018_{i}.root'.format(run='D', i=i) for i in range(114, 117)]
-                    dt += ['/ceph/moh/CROWN_samples/EarlyRun3_V12/ntuples/2018/EGamma_Run2018{run}-UL2018/ee/EGamma_Run2018{run}-UL2018_{i}.root'.format(run='D', i='117_ee')]
-                    dt += ['/ceph/moh/CROWN_samples/EarlyRun3_V12/ntuples/2018/EGamma_Run2018{run}-UL2018/ee/EGamma_Run2018{run}-UL2018_{i}.root'.format(run='D', i=i) for i in range(118, 173)] 
-                else:
-                    print('Only Files with two leptons of the same kind in the finalstate should be considered for corrections. Aborting...')
-                    return
-            elif args.run=='3':
-                if args.finalstate=='mm':
-                    mc = ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root']
-                    dt = ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/SingleMuon_Run2022C-PromptReco-v1/mm/SingleMuon_Run2022C-PromptReco-v1_*.root']
-                    dt+= ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/Muon_Run2022C-PromptReco-v1/mm/Muon_Run2022C-PromptReco-v1_*.root']
-                    #dt+= ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/Muon_Run2022D-PromptReco-v1/mm/Muon_Run2022D-PromptReco-v1_*.root']
-                    #dt+= ['/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec_sf_EraC/2022/Muon_Run2022D-PromptReco-v2/mm/Muon_Run2022D-PromptReco-v2_*.root']
-                elif args.finalstate=='ee':
-                    mc = ['/ceph/moh/CROWN_samples/Run3V02/ntuples_xsec_sf/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/ee/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root']
-                    dt = ['/ceph/moh/CROWN_samples/Run3V02/ntuples_xsec_sf/2022/EGamma_Run2022C-PromptReco-v1/ee/EGamma_Run2022C-PromptReco-v1_*.root']
-                    dt+= ['/ceph/moh/CROWN_samples/Run3V02/ntuples_xsec_sf/2022/EGamma_Run2022D-PromptReco-v1/ee/EGamma_Run2022D-PromptReco-v1_*.root']
-                    dt+= ['/ceph/moh/CROWN_samples/Run3V02/ntuples_xsec_sf/2022/EGamma_Run2022D-PromptReco-v2/ee/EGamma_Run2022D-PromptReco-v2_*.root']
-                else:
-                    print('Only Files with two leptons of the same kind in the finalstate should be considered for corrections. Aborting...')
-                    return         
-            else:
-                print('Run specified is neither 2 nor 3. Aborting...')
-                return
-            return mc, dt
-        
-        # paths with corrected ntuples
-        if args.corr:
-            if args.run=='2':
-                if args.finalstate=='mm':
-                    mc = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/mu_corr_{v}/2018/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/mm/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X_*.root'.format(v=args.version)]
-                    dt = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/mu_corr_{v}/2018/SingleMuon_Run2018{run}-UL2018/mm/SingleMuon_Run2018{run}-UL2018_*.root'.format(run=r, v=args.version) for r in ['A', 'B', 'C', 'D']]
-                elif args.finalstate=='ee':
-                    mc = ['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X/ee/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8_RunIISummer20UL18NanoAODv9-106X_*.root'.format(v=args.version)]
-                    dt = [
-                        '/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018{run}-UL2018/ee/EGamma_Run2018{run}-UL2018_*.root'.format(run=r, v=args.version) for r in ['A', 'B', 'C', 'D']
-                        ]
-                    """
-                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i=i) for i in range(113)])
-                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i='113_ee')])
-                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i=i) for i in range(114, 117)])
-                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i='117_ee')])
-                    dt.append(['/ceph/moh/CROWN_samples/EarlyRun3_V12/friends/el_corr_{v}/2018/EGamma_Run2018D-UL2018/ee/EGamma_Run2018D-UL2018_{i}.root'.format(v=args.version, i=i) for i in range(118, 173)])
-                    """
-                else:
-                    print('Only Files with two leptons of the same kind in the finalstate should be considered for corrections. Aborting...')
-                    return      
-            elif args.run=='3':
-                res_factor_str = str(args.res_factor)
-                res_factor_str = res_factor_str.replace('.', 'p')
-                if args.finalstate=='mm':
-                    mc = ['/ceph/jdriesch/CROWN_samples/Run3V03/ntuples_xsec_sf_lep_corr_{v}_x{x}/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root'.format(v=args.version, x='opt')]
-                    dt = ['/ceph/jdriesch/CROWN_samples/Run3V03/ntuples_xsec_sf_lep_corr_{v}_x{x}/2022/SingleMuon_Run2022C-PromptReco-v1/mm/SingleMuon_Run2022C-PromptReco-v1_*.root'.format(v=args.version, x='opt')]
-                    dt+= ['/ceph/jdriesch/CROWN_samples/Run3V03/ntuples_xsec_sf_lep_corr_{v}_x{x}/2022/Muon_Run2022C-PromptReco-v1/mm/Muon_Run2022C-PromptReco-v1_*.root'.format(v=args.version, x='opt')]
-                    #dt+= ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/Muon_Run2022D-PromptReco-v1/mm/Muon_Run2022D-PromptReco-v1_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
-                    #dt+= ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/Muon_Run2022D-PromptReco-v2/mm/Muon_Run2022D-PromptReco-v2_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
-                elif args.finalstate=='ee':
-                    mc = ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/ee/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
-                    dt = ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/EGamma_Run2022C-PromptReco-v1/ee/EGamma_Run2022C-PromptReco-v1_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
-                    dt+= ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/EGamma_Run2022D-PromptReco-v1/ee/EGamma_Run2022D-PromptReco-v1_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
-                    dt+= ['/ceph/moh/CROWN_samples/Run3V02/friends/{muel}{corr}_{v}_x{x}/2022/EGamma_Run2022D-PromptReco-v2/ee/EGamma_Run2022D-PromptReco-v2_*.root'.format(muel='lep', corr='_corr', v=args.version, x=res_factor_str)]
-                else:
-                    print('Only Files with two leptons of the same kind in the finalstate should be considered for corrections. Aborting...')
-                    return                         
-            return mc, dt #/ceph/jdriesch/CROWN_samples/Run3V03/ntuples_xsec_sf_lep_corr_02_xopt/2022/SingleMuon_Run2022C-PromptReco-v1/mm/
-
-    # get correction file's paths
-    elif mode == 1:
-        if 'mm' in args.finalstate:
-            fs = 'mm'
-        else:
-            fs = 'ee'
-        path = 'correction_files/Run{run}/{fs}/{res}mz_{mcdt}_{bin1}_{bin2}_{v}{corr}.txt'.format(run=args.run, fs=fs, bin1=kw[0], bin2=kw[1], corr=kw[2], res = kw[3], mcdt = kw[4], v=args.version)
-        print("take correction file: ", path)
-        return path
-
 
 def calc_m(rdf, corr = ""):
-    rdf = rdf.Define("lv_1", "ROOT::Math::PtEtaPhiMVector p(pt_1"+corr+", eta_1, phi_1, mass_1); return p")
-    rdf = rdf.Define("lv_2", "ROOT::Math::PtEtaPhiMVector p(pt_2"+corr+", eta_2, phi_2, mass_2); return p")
+    """
+    function for calculation of pt and mass of a dilepton system
+
+    (ROOT.RDataFrame) rdf: dataframe
+    (str) corr: input flag for corrected values
+    """
     
-    rdf = rdf.Define("dimuon", "lv_1 + lv_2")
-    rdf = rdf.Define("pt_vis"+corr, "dimuon.Pt()")
-    rdf = rdf.Define("m_vis"+corr, "dimuon.M()")
+    rdf = rdf.Define(
+        "lv_1"+corr,
+        "ROOT::Math::PtEtaPhiMVector p(pt_1"+corr+", eta_1, phi_1, mass_1);"\
+        "return p"
+    )
+    rdf = rdf.Define(
+        "lv_2"+corr,
+        "ROOT::Math::PtEtaPhiMVector p(pt_2"+corr+", eta_2, phi_2, mass_2);"\
+        "return p"
+    )
+    
+    rdf = rdf.Define("dimuon"+corr, f"lv_1{corr} + lv_2{corr}")
+    rdf = rdf.Define("pt_vis"+corr, f"dimuon{corr}.Pt()")
+    rdf = rdf.Define("m_vis"+corr, f"dimuon{corr}.M()")
+    
     return rdf
 
 
-def plot_binned(rdf, mcdt, filters, corr='', weight='1.'):
-    rdf_filtered = rdf.Filter(filters)
-    #print(rdf_filtered.Count().GetValue())
+def load_tchain(rfiles, ch, corr=''):
+    """
+    function to load rdf
 
-    rdf_filtered_weight = rdf_filtered.Define("weight", weight)
+    (dict) rfiles: dictionary with channels and corresponding files
+    (str) ch: current channel
+    """
 
-    hist = rdf_filtered_weight.Histo1D((mcdt, 'm_vis'+corr, 200, 50, 130), 'm_vis'+corr, "weight")
-    num_entries = hist.GetEntries()
-    #hist.Scale(1./hist.Integral())
-    hist.SetXTitle("m_vis{} (GeV)".format(corr))
-    hist.SetYTitle("a.u.")
-
-    return hist, num_entries
-
-
-def make_hists(bins, args):
-    bin1, bin2 = list(bins.keys())[0], list(bins.keys())[1]
-    nbins1, nbins2 = len(bins[bin1])-1, len(bins[bin2])-1
-    n_events = np.zeros((nbins1, nbins2))
+    tchain = ROOT.TChain("ntuple")
+    sfchain = ROOT.TChain("ntuple")
+    puchain = ROOT.TChain("ntuple")
+    xsecchain = ROOT.TChain("ntuple")
+    lepchain = ROOT.TChain("ntuple")
+    for f in rfiles[ch]:
+        tchain.Add(f)
+        sfchain.Add(f.replace("ntuples", "friends/sf"))
+        puchain.Add(f.replace("ntuples", "friends/pu"))
+        xsecchain.Add(f.replace("ntuples", "friends/xsec"))
+        if corr=='_corr':
+            lepchain.Add(f.replace("ntuples", "friends/lepton"))
+    tchain.AddFriend(sfchain)
+    tchain.AddFriend(puchain)
+    tchain.AddFriend(xsecchain)
+    if corr=='_corr':
+        tchain.AddFriend(lepchain)
+        print("Added friend with lepton momentum corrections")
     
-    corr, corr1, corr2 = '', '', ''
+    return tchain
 
-    mc, dt = get_paths(args, mode=0)
-    print(mc)
 
-    ch_mc = ROOT.TChain("ntuple")
-    ch_dt = ROOT.TChain("ntuple")
+def select_events(rdf, ch, args):
+    """
+    function to perform event selection
 
-    for p in mc:
-        ch_mc.Add(p)
-
-    for p in dt:
-        ch_dt.Add(p)
-
-    rdf_mc = ROOT.RDataFrame(ch_mc)
-    rdf_dt = ROOT.RDataFrame(ch_dt)
+    (ROOT.RDataFrame) rdf: root RDataFrame with data or mc
+    (str) ch: curren channel
+    """
 
     event_selection = "(q_1*q_2 < 0)"
-    if args.finalstate == "mm":
+    if 'mm' in ch: # finalstate mm
         event_selection += " && (trg_single_mu24_1 || trg_single_mu24_2)"
-    elif args.finalstate == "ee":
+    elif 'ee' in ch: # finalstate ee
         event_selection += " && (trg_single_ele27_1 || trg_single_ele27_2)"
 
     if int(args.run_i) > 0:
@@ -180,346 +144,472 @@ def make_hists(bins, args):
     if int(args.run_f) > 0:
         event_selection += f" && (run <= {int(args.run_f)} || run == 1)"
 
-    rdf_mc = rdf_mc.Filter(event_selection)
-    rdf_dt = rdf_dt.Filter(event_selection)    
+    rdf = rdf.Filter(event_selection)
 
-    if args.corr:
-        if bin1=='pt':
-            corr1 = '_corr'
-            corr = '_corr'
-        if bin2=='pt':
-            corr2='_corr'
-            corr = '_corr'
+    # include weights for mc
+    if 'mc' in ch:
+        # weight = "genweight*sumwWeight*crossSectionPerEventWeight"\
+        #             "*puweight*sf_trk*sf_sta*sf_id*sf_iso*sf_trg"
+        weight = "genweight*sumwWeight*crossSectionPerEventWeight"\
+                    "*puweight*sf_sta*sf_id*sf_iso*sf_trg"
+    else:
+        weight = "1"
+
+    rdf = rdf.Define("weight", weight)
+
+    return rdf
 
 
-    outdir = 'hists/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}/'.format(run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version)
-    if not utils.usedir(outdir, args.overwrite):
-        return
+def make_hists(datasets, ch, bins, args, corr=''):
+    """
+    function for creating histograms
 
+    (dict) datasets: dictionary containing arrays w/ sample paths
+    (str) ch: current channel
+    (dict) bins: dictionary with bin edges for corrections
+    (parser) args: arguments from parser
+    """
 
-    with open(outdir+"bins.json", 'w') as fp:
-        json.dump(bins, fp)
+    # prepare dataframe
+    tchain = load_tchain(datasets, ch, corr)        
+    rdf = ROOT.RDataFrame(tchain)
+    rdf = select_events(rdf, ch, args)
+    print(rdf.Mean("puweight").GetValue())
 
-    for i in range(nbins1):
-        for j in tqdm(range(nbins2)):
-            file0 = ROOT.TFile(outdir+'{bin1}_{}_{bin2}_{}.root'.format(i,j, bin1=bin1, bin2=bin2), 'RECREATE')
+    # prepare storing
+    outdir = f'root_files/'
+    os.makedirs(outdir, exist_ok=True)
+    hists = []
 
-            bin1_l, bin1_r = bins[bin1][i], bins[bin1][i+1]
-            bin2_l, bin2_r = bins[bin2][j], bins[bin2][j+1]
+    for e in tqdm(range(len(bins['eta'])-1)):
+        for p in range(len(bins['pt'])-1):
 
             # filter for a muon in event in corresponding bins 
-            filter_template = "({bin}_{n}{corr} > {bin_l} && {bin}_{n}{corr} < {binr})"
+            eta_l, eta_r = bins['eta'][e], bins['eta'][e+1]
+            pt_l, pt_r = bins['pt'][p], bins['pt'][p+1]
 
-            filter1a = filter_template.format(bin=bin1, n=1, bin_l=bin1_l, binr = bin1_r, corr=corr1)
-            filter1b = filter_template.format(bin=bin2, n=1, bin_l=bin2_l, binr = bin2_r, corr=corr2)
+            f_eta_1 = f"(eta_1 > {eta_l} && eta_1 < {eta_r})"
+            f_pt_1 = f"(pt_1{corr} > {pt_l} && pt_1{corr} < {pt_r})"
+            f_eta_2 = f_eta_1.replace('eta_1', 'eta_2')
+            f_pt_2 = f_pt_1.replace('pt_1', 'pt_2')
             
-            filter2a = filter_template.format(bin=bin1, n=2, bin_l=bin1_l, binr = bin1_r, corr=corr1)
-            filter2b = filter_template.format(bin=bin2, n=2, bin_l=bin2_l, binr = bin2_r, corr=corr2)
+            rdf_filtered = rdf.Filter(
+                f"({f_eta_1} && {f_pt_1}) || ({f_eta_2} && {f_pt_2})"
+                )
 
-            filters = "({} && {}) || ({} && {})".format(filter1a, filter1b, filter2a, filter2b)
+            # make histogram
+            hist = rdf_filtered.Histo1D(
+                (f"eta{e}pt{p}", 'm_vis'+corr, 200, 50, 130),
+                'm_vis'+corr,
+                "weight"
+            )
+            hist.SetXTitle("m_vis{} (GeV)".format(corr))
+            hist.SetYTitle("a.u.")
+            hists.append(hist)
 
-            # plot di muon mass in filtered events
-            hist_mc, num_mc = plot_binned(rdf_mc, "mc", filters, corr, "genweight*sumwWeight*crossSectionPerEventWeight*sf_trk*sf_sta*sf_id*sf_iso*sf_trg")
-            hist_dt, num_dt = plot_binned(rdf_dt, "data", filters, corr)
-            n_events[i][j] = num_dt
-            if args.info:
-                print("###############################################################################")
-                print("{} < {} < {} ,  {} < {} < {}".format(bins[bin1][i], bin1, bins[bin1][i+1], bins[bin2][j], bin2, bins[bin2][j+1]))
-                print("mc entries: {} ,  dt entries: {}".format(num_mc, num_dt))
-                print("")
-            hist_mc.Write()
-            hist_dt.Write()
-            file0.Close()
-    np.savetxt(outdir+'dt_events.txt', n_events)
+    file0 = ROOT.TFile(outdir+f"{ch}_hists{corr}.root", 'RECREATE')
+    for hist in hists:
+        hist.Write()
+    file0.Close()
 
 
-def get_corrections(args, bins):
-    if args.corr:
-        corr='_corr'
-    else:
-        corr=''
-    bin1, bin2 = list(bins.keys())[0], list(bins.keys())[1]
-    nbins1, nbins2 = len(bins[bin1])-1, len(bins[bin2])-1
-    mz_mc, mz_dt, res_mz_mc, res_mz_dt = np.zeros((nbins1, nbins2)), np.zeros((nbins1, nbins2)), np.zeros((nbins1, nbins2)), np.zeros((nbins1, nbins2))
-    k = 0
+def plot_fits(n_eta, n_pt, corr=''):
+    """
+    function to fit mass histogram to bw x cb and save results
     
-    outdir = 'plots/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}/'.format(run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version)
-    if not utils.usedir(outdir, args.overwrite):
-        return
-    print("Calculating scale and resolution corrections")
-    for i in range(len(bins[bin1])-1):
-        for j in range(len(bins[bin2])-1):
-            
-            fit_results = utils.roofit_mass('hists/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}/{bin1}_{}_{bin2}_{}.root'.format(i, j, run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version), fitf='bwxcb', plot=outdir+'{}_{}'.format(i, j))
-            
-            # make sure that chi2 is not through the roof
-            c2 = 0
-            while fit_results['mc'][2]>70 or fit_results['dt'][2]>100:
-                fit_results = utils.roofit_mass('hists/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}/{bin1}_{}_{bin2}_{}.root'.format(i, j, run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version), fitf='bwxcb', plot=outdir+'{}_{}'.format(i, j))
-                c2+=1
-                if c2 > 10:
-                    print('Fit did not work for 10 consecutive times: Chi2/dof>70')
-                    return
-            mz_mc[i][j] = fit_results['mc'][0]
-            mz_dt[i][j] = fit_results['dt'][0]
-            res_mz_mc[i][j] = fit_results['mc'][1] # account for sigma_l, sigma_r
-            res_mz_dt[i][j] = fit_results['dt'][1]
-            k+=1
+    (dict) bins: dictionary with histogram bin edges
+    TODO add corrected hists, generalize for ee
+    """
+    mz_mc, res_mc = np.zeros((n_eta, n_pt)), np.zeros((n_eta, n_pt))
+    mz_dt, res_dt = np.zeros((n_eta, n_pt)), np.zeros((n_eta, n_pt))
 
-        print('done {} of {}'.format(k, nbins1*nbins2))  
+    hfile_mc = ROOT.TFile(f'root_files/mcmm_hists{corr}.root')
+    hfile_dt = ROOT.TFile(f'root_files/2022Cmm_hists{corr}.root')
+
+    plotdir = f"plots/unsmeared_massfits{corr}"
+    os.makedirs(plotdir, exist_ok=True)
+
+    arguments = []
+    for e in range(n_eta):
+        for p in range(n_pt):
+            arguments.append((
+                hfile_mc.Get(f"eta{e}pt{p}"),
+                hfile_dt.Get(f"eta{e}pt{p}"),
+                f'{plotdir}/eta{e}pt{p}',
+                'bwxcb',
+                False,
+                e,
+                p,
+            ))
+
+    pool = Pool(8, initargs=(RLock(),), initializer=tqdm.set_lock)
+    for results in tqdm(pool.imap_unordered(job_wrapper_fits, arguments)):
+        fit, fit_err, e, p = results
+        mz_mc[e][p], res_mc[e][p] = fit['mc'][0], fit['mc'][1]
+        mz_dt[e][p], res_dt[e][p] = fit['dt'][0], fit['dt'][1]
+
+    corr_dir = f"correction_files/"
+    np.savetxt(corr_dir+f"mc{corr}_response.txt", mz_mc)
+    np.savetxt(corr_dir+f"mc{corr}_resolution.txt", res_mc)
+    np.savetxt(corr_dir+f"dt{corr}_response.txt", mz_dt)
+    np.savetxt(corr_dir+f"dt{corr}_resolution.txt", res_dt)
+
+
+def make_ratio(n_eta, n_pt, corr=''):
+    hfile_mc = ROOT.TFile(f'root_files/mcmm_hists{corr}.root')
+    hfile_dt = ROOT.TFile(f'root_files/2022Cmm_hists{corr}.root')
+
+    for e in range(n_eta):
+        for p in range(n_pt):
+            plots = {
+                'mc': hfile_mc.Get(f'eta{e}pt{p}'),
+                'dt': hfile_dt.Get(f'eta{e}pt{p}')
+            }
+            chi2 = utils.plot_ratio(
+                plots=plots, 
+                title='ratio plot', 
+                outfile=f'plots/unsmeared_massfits{corr}/eta{e}pt{p}_ratio', 
+                xrange=[80,102]
+            )
+
+
+def make2d(bins, corr=''):
+    """
+    function for 2d plot of resolution and response ratios
+
+    (dict) args: parser
+    """
+    nbins_eta, nbins_pt = len(bins['eta'])-1, len(bins['pt'])-1
     
-    if not utils.usedir('correction_files/Run{}/{}/'.format(args.run, args.finalstate), args.overwrite):
-        return
-        
-    np.savetxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, '', 'mc']), mz_mc)
-    np.savetxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, '', 'dt']), mz_dt)
-
-    np.savetxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, 'res', 'mc']), res_mz_mc)
-    np.savetxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, 'res', 'dt']), res_mz_dt)
-
-
-    # make 2d plots
+    corr_dir = "correction_files/"
+    
+    mz_mc = np.loadtxt(corr_dir+f"mc{corr}_response.txt")
+    res_mc = np.loadtxt(corr_dir+f"mc{corr}_resolution.txt")
+    mz_dt = np.loadtxt(corr_dir+f"dt{corr}_response.txt")
+    res_dt = np.loadtxt(corr_dir+f"dt{corr}_resolution.txt")
+    
     ratio_mu = (91.1876+mz_dt)/(91.1876+mz_mc)
-    ratio_sigma = res_mz_dt/res_mz_mc * ratio_mu
-    labels1, labels2 = np.zeros(nbins1), np.zeros(nbins2)
+    # ratio_sigma = res_dt/res_mc * ratio_mu
+    ratio_sigma = res_dt/res_mc
+    labels1, labels2 = np.zeros(nbins_eta), np.zeros(nbins_pt)
+
+    for i in range(nbins_eta):
+        labels1[i] = .5*(bins['eta'][i] + bins['eta'][i+1])
+
+    for j in range(nbins_pt):
+        labels2[j] = .5*(bins['pt'][j] + bins['pt'][j+1])
+
+    mean_min, mean_max = 0.998, 1.002
+    std_min, std_max = 0.8, 1.2
+    utils.plot2d(
+        matrix=np.flip(ratio_mu, 0), 
+        outfile=f'plots/unsmeared_massfits{corr}/mu',
+        title=r'$\frac{M_Z (\mathrm{data})}{M_Z (\mathrm{mc})}$',
+        x=r'$p_\mathrm{T}$',
+        xbins=bins['pt'],
+        y=r'$\eta$',
+        ybins=bins['eta'],
+        cmin=mean_min,
+        cmax=mean_max,
+        xticks=np.around(labels2, 1),
+        yticks=labels1,
+    )
+
+    utils.plot2d(
+        matrix=np.flip(ratio_sigma, 0),
+        outfile=f'plots/unsmeared_massfits{corr}/sigma',
+        title=r'$\frac{\mathrm{res}(M_Z(\mathrm{data}))}{\mathrm{res}(M_Z (\mathrm{mc}))}$',
+        x=r'$p_\mathrm{T}$',
+        xbins=bins['pt'],
+        y=r'$\eta$',
+        ybins=bins['eta'],
+        cmin=std_min,
+        cmax=std_max,
+        xticks=np.around(labels2, 1),
+        yticks=labels1,
+    )
+
+
+ROOT.gInterpreter.Declare("float gaus(){return gRandom->Gaus(0,1);}")
+        
+
+def smear_pt(datasets, ch, bins, args, corr=''):
+    """
+    function to smear pt w/ additional smearing factor
     
-    for i in range(nbins1):
-        labels1[i] = .5*(bins[bin1][i] + bins[bin1][i+1])
+    (dict) datasets: dictionary with data samples
+    (str) ch: current channel
+    (dict) bins: dictionary with bin edges
+    (parser) args: parser
+    (str) corr: '' if not corrected and '_corr' if corrected
+    """
+    # prepare dataframe
+    tchain = load_tchain(datasets, ch)        
+    rdf = ROOT.RDataFrame(tchain)
+    rdf = select_events(rdf, ch, args)
 
-    for j in range(nbins2):
-        labels2[j] = .5*(bins[bin2][j] + bins[bin2][j+1])
+    # prepare saving
+    corr_dir = "correction_files/"
 
-    if args.finalstate == 'ee':
-        mean_min, mean_max = 0.98, 1.02
-        std_min, std_max = 0.8, 1.2
-    elif args.finalstate == 'mm':
-        mean_min, mean_max = 0.998, 1.002
-        std_min, std_max = 0.9, 1.1
-    else:
-        print("This finalstate should not be used to obtain lepton corrections")
-        return
-    utils.plot2d(ratio_mu, '{}mu{}.pdf'.format(outdir,corr), r'$\frac{M_Z (\mathrm{data})}{M_Z (\mathrm{mc})}$', r'$p_\mathrm{T}$', bins[bin2], r'$\eta$', bins[bin1], mean_min, mean_max, np.around(labels2, 1), labels1)
-    utils.plot2d(ratio_sigma, '{}sigma{}.pdf'.format(outdir,corr), r'$\frac{\mathrm{res}(M_Z(\mathrm{data}))}{\mathrm{res}(M_Z (\mathrm{mc}))}$', r'$p_\mathrm{T}$', bins[bin2], r'$\eta$', bins[bin1], std_min, std_max, np.around(labels2,1), labels1)
-
-
-ROOT.gInterpreter.Declare("""
-        float gaus(){
-            return gRandom->Gaus(0,1);
-        }
-        """)
-
-
-def apply_corrections(args, bins):
-    bin1, bin2 = list(bins.keys())[0], list(bins.keys())[1]
-    nbins1, nbins2 = len(bins[bin1])-1, len(bins[bin2])-1
-
-    if args.corr:
-        corr='_corr'
-    else:
-        corr=''
-
-    x = np.loadtxt('correction_files/Run{}/{}/sf_extra_mc_{}.txt'.format(args.run, args.finalstate, args.version))
-    # Load correction files
-    mz_mc, mz_dt = np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, '', 'mc'])), np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, '', 'dt']))
+    # load fit results for correction
+    mz_mc = np.loadtxt(corr_dir+f"mc{corr}_response.txt")
+    mz_dt = np.loadtxt(corr_dir+f"dt{corr}_response.txt")
     pt_sf = (91.1876+mz_mc) / (91.1876+mz_dt)
-    mz_res_mc, mz_res_dt = np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, 'res', 'mc'])), np.loadtxt(get_paths(args, mode=1, kw=[bin1, bin2, corr, 'res', 'dt'])) * pt_sf
+    res_dt = np.loadtxt(corr_dir+f"dt{corr}_resolution.txt")*pt_sf
+    res_mc = np.loadtxt(corr_dir+f"mc{corr}_resolution.txt")
 
-    period = args.inpath.split('/')[4]
-    process = args.inpath.split('/')[-2]
-    year = args.inpath.split('/')[-3]
+    # definition of smearing and scaling factors
+    rdf = rdf.Define('smear_1', '0')
+    rdf = rdf.Define('smear_2', '0')
+    rdf = rdf.Define('scale_1', '1')
+    rdf = rdf.Define('scale_2', '1')
 
-    inpath = args.inpath + "/" + args.finalstate + "/" + process
-    
-    if args.test:
-        outdir = '/ceph/jdriesch/CROWN_samples/test/'
-    else:
-        helpdir = '/ceph/jdriesch/CROWN_samples/{period}/ntuples_xsec_sf_{muel}{corr}_{v}_x{x}/{year}/{proc}/{f}/'
-        if args.finalize:
-            #res_factor_str = f"{float(args.res_factor):.2f}"
-            #res_factor_str = res_factor_str.replace('.', 'p')
-            res_factor_str = 'opt'
-            outdir = helpdir.format(period=period, muel='lep', corr='_corr', v=args.version, x=res_factor_str, year=year, proc=process, f=args.finalstate)
-        else:
-            if 'mm' in args.finalstate:
-                muel = 'mu_corr'
+    for e in range(len(bins['eta'])-1):
+        for p in range(len(bins['pt'])-1):
+
+            # mc resolution should not change if already larger than in data
+            if res_mc[e][p] > res_dt[e][p]:
+                res_sf = 1
             else:
-                muel = 'el_corr'
-            outdir = helpdir.format(period=period, muel=muel, corr=corr, v=args.version, year=year, proc=process, f=args.finalstate)
+                res_sf = res_dt[e][p] / res_mc[e][p]
+
+            # filters for correct pt / eta bin
+            f1 = f"(pt_1 > {bins['pt'][p]} && pt_1 < {bins['pt'][p+1]}) && "\
+                    f"(eta_1 > {bins['eta'][e]} && eta_1 < {bins['eta'][e+1]})"
+            f2 = f"(pt_2 > {bins['pt'][p]} && pt_2 < {bins['pt'][p+1]}) && "\
+                    f"(eta_2 > {bins['eta'][e]} && eta_2 < {bins['eta'][e+1]})"
+
+            # do not scale momentum in mc
+            if 'mc' in ch:
+                scl1 = '1'
+                scl2 = '1'
+
+            # scale momentum in data
+            else:
+                scl1 = 'double rsp_sf;'\
+                    f'if ({f1}) rsp_sf = {pt_sf[e][p]};'\
+                    f'else rsp_sf = scale_1;'\
+                    'return rsp_sf;'
+            
+                scl2 = 'double rsp_sf;'\
+                    f'if ({f2}) rsp_sf = {pt_sf[e][p]};'\
+                    f'else rsp_sf = scale_2;'\
+                    'return rsp_sf;'
+
+            # smear momentum in data and mc for evaluation of smearing factor
+            res1 = 'double res_sf;'\
+                f'if ({f1}) res_sf = {res_mc[e][p]}/91.1876*sqrt({res_sf**2}-1)*(float)(gaus());'\
+                f'else res_sf = smear_1;'\
+                'return res_sf;'
+
+            res2 = 'double res_sf;'\
+                f'if ({f2}) res_sf = {res_mc[e][p]}/91.1876*sqrt({res_sf**2}-1)*(float)(gaus());'\
+                f'else res_sf = smear_2;'\
+                'return res_sf;'
+            
+            # apply calculations to calculate smearing / scaling factors
+            rdf = rdf.Redefine('scale_1', scl1)
+            rdf = rdf.Redefine('scale_2', scl2)
+            rdf = rdf.Redefine('smear_1', res1)
+            rdf = rdf.Redefine('smear_2', res2)
+
+    # define basic output values
+    outputs = ['pt_1', 'pt_2', 'eta_1', 'eta_2', 'weight']
+
+    # apply different additional smearings, calculate outputs and save ntuples
+    for i in np.linspace(0, 4, 21).round(1):
+        istr = str(i).replace(".", "")
+        rdf = rdf.Define("pt_1_c"+istr, f'pt_1*scale_1*(1+{i}*smear_1)')
+        rdf = rdf.Define("pt_2_c"+istr, f'pt_2*scale_2*(1+{i}*smear_2)')
+
+        rdf = calc_m(rdf, '_c'+istr)
+        outputs += ["pt_1_c"+istr, "pt_2_c"+istr, "m_vis_c"+istr]
+
+    rdf.Snapshot('ntuple', f'root_files/{ch}_smeared_ntuples.root', outputs)
 
 
-    print("Input samples taken from: {}".format(inpath))
 
-    # for other processes than data: apply resolution correction
-    if (not ("Muon" in process)) and (not ("EGamma" in process)):
-        print("MC process: resolution corrections will be applied")
-        data=False
-    else:
-        print("Data process: scale corrections will be applied")
-        data=True
+def smeared_hists(ch, bins):
+    """
+    function that creates smeared histograms
 
-    if args.finalstate == "mm" or args.finalstate == 'ee':
-        print("Di-lepton finalstate: both leptons will be corrected")
-        dilepton=True
-    else:
-        print("Single-lepton finalstate: one lepton will be corrected")
-        dilepton=False
+    (str) ch: current channel
+    (dict) bins: dictionary with bin edges
+    (str) corr: '' if uncorrected, '_corr' if corrected
+    """
+    # open ntuple with smeared quantities in rdf
+    tf = ROOT.TFile(f'root_files/{ch}_smeared_hists.root', 'RECREATE')
+    rdf = ROOT.RDataFrame('ntuple', f'root_files/{ch}_smeared_ntuples.root')
+    
+    # create histograms in bins of eta and pt with different extra smearing i
+    for i in tqdm(np.linspace(0,4,21).round(1)):
+        istr = str(i).replace(".", "")
+    
+        for e in range(len(bins['eta'])-1):
+            for p in range(len(bins['pt'])-1):
+                
+                f1 = f"((pt_1_c{istr} > {bins['pt'][p]}) &&"\
+                        f"(pt_1_c{istr} < {bins['pt'][p+1]})) && "\
+                        f"((eta_1 > {bins['eta'][e]}) &&"\
+                        f"(eta_1 < {bins['eta'][e+1]}))"
+                f2 = f1.replace('pt_1', 'pt_2').replace('eta_1', 'eta_2')
 
-    print("Output samples will be saved in: {}".format(outdir))
-
-
-    # check if outdir exists and create directory if not 
-    if not utils.usedir(outdir, args.overwrite):
-        return
-
-    # get list of all files in the input directory
-    files = glob.glob(inpath + "_*.root")
-
-
-    for f in tqdm(files):
-        outfile = outdir + f.split("/")[-1]
-
-        rdf = ROOT.RDataFrame('ntuple', f)
-        original_cols = [str(col) for col in rdf.GetColumnNames()]
-
-        rdf = rdf.Define("pt_1_corr", "pt_1")
-        if dilepton:
-            rdf = rdf.Define("pt_2_corr", "pt_2")
-
-        for j in range(nbins1): 
-            for k in range(nbins2): 
-                bin1_l, bin1_r = bins[bin1][j], bins[bin1][j+1]
-                bin2_l, bin2_r = bins[bin2][k], bins[bin2][k+1]
-
-                # filter for a muon in event in corresponding bins
-                filter_template = "({bin}_{n} > {bin_l} && {bin}_{n} < {binr})"
-
-                filter1a = filter_template.format(bin=bin1, n=1, bin_l=bin1_l, binr = bin1_r)
-                filter1b = filter_template.format(bin=bin2, n=1, bin_l=bin2_l, binr = bin2_r)
-
-                if mz_res_mc[j][k] > mz_res_dt[j][k]:
-                    res_sf = 1
-                else:
-                    res_sf = mz_res_dt[j][k] / mz_res_mc[j][k]
-
-
-                if data:
-                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (91.1876 + {})/(91.1876 + {}); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(mz_mc[j][k]), str(mz_dt[j][k])))
-                else:
-                    rdf = rdf.Redefine("pt_1_corr", "double p; if ({} && {}) p=pt_1 * (1 + {}/91.1876*sqrt({}-1)*(float)(gaus())); else p=pt_1_corr; return p;".format(filter1a, filter1b, str(x[j][k]*mz_res_mc[j][k]), str((res_sf)**2)))
-
-
-                if dilepton:
-                    filter2a = filter_template.format(bin=bin1, n=2, bin_l=bin1_l, binr = bin1_r)
-                    filter2b = filter_template.format(bin=bin2, n=2, bin_l=bin2_l, binr = bin2_r)
+                rdf_help = rdf.Filter(f'({f1}) || ({f2})')
                     
-                    if data:
-                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * (91.1876 + {})/(91.1876 + {}); else p=pt_2_corr; return p;".format(filter2a, filter2b,  str(mz_mc[j][k]), str(mz_dt[j][k])))
-                    else:
-                        rdf = rdf.Redefine("pt_2_corr", "double p; if ({} && {}) p=pt_2 * (1 + {}/91.1876*sqrt({}-1)*(float)(gaus())); else p=pt_2_corr; return p;".format(filter2a, filter2b, str(x[j][k]*mz_res_mc[j][k]), str((res_sf)**2)))
+                hist = rdf_help.Histo1D(
+                    (f'm_vis_c{istr}_{e}{p}_{ch}', 'visible mass', 200, 50, 130),
+                    'm_vis_c'+istr,
+                    'weight'
+                )
+                hist.Write()
+    tf.Close()
+        
 
-        if dilepton:
-            rdf = calc_m(rdf, "_corr")
-            if args.finalize:
-                quants =  ["pt_1_corr", "pt_2_corr", "m_vis_corr", "pt_vis_corr"]
-            else:
-                quants =  ["pt_1_corr", "pt_2_corr", "eta_1", "eta_2", "phi_1", "phi_2", "mass_1", "mass_2", "pt_1", "pt_2", "m_vis", "m_vis_corr", "q_1", "q_2", "pt_vis", "pt_vis_corr"]
-                if args.finalstate=='mm':
-                    quants+=["trg_single_mu24_1", "trg_single_mu24_2"]
-                else:
-                    quants+=["trg_single_ele27_1", "trg_single_ele27_2"]
+def fit_smeared_hists(ch, e, p):
+    """
+    function to fit smeared hists and plot results
 
-        else:
-            if args.finalize:
-                quants =  ["pt_1_corr"]
-            else:
-                quants = ["pt_1_corr", "eta_1", "phi_1", "mass_1", "pt_1", "q_1"]
+    (str) ch: current channel
+    (int) e: eta bin
+    (int) p: pt bin
+    """
+    # load root file with histograms
+    tf = ROOT.TFile(f'root_files/{ch}_smeared_hists.root', 'READ')
 
-        # add recoil variables
-        if not ("WtoLNu" in outfile):
-            bosonphi = "phi_vis_c"
-            bosonpt = "pt_vis_c"
-        else:
-            bosonphi = "genbosonphi"
-            bosonpt = "genbosonpt"
+    plotdir = f"plots/smeared_massfits/{ch}"
+    os.makedirs(plotdir, exist_ok=True)
 
-        if args.finalstate == "ee" or args.finalstate == "mm":
-            rdf = rdf.Define("pt_vis_c_x", "pt_1_corr*cos(phi_1) + pt_2_corr*cos(phi_2)")
-            rdf = rdf.Define("pt_vis_c_y", "pt_1_corr*sin(phi_1) + pt_2_corr*sin(phi_2)")
-            rdf = rdf.Define("pt_vis_c", "sqrt(pt_vis_c_x*pt_vis_c_x + pt_vis_c_y*pt_vis_c_y)")
-            rdf = rdf.Define("phi_vis_c", "atan2(pt_vis_c_y, pt_vis_c_x)")
-        else:
-            rdf = rdf.Define("pt_vis_c", "pt_1_corr")
-            rdf = rdf.Define("phi_vis_c", "phi_1")
+    # perform fits and save resolutions and their unc.
+    xyerr = []
+    for i in np.linspace(0, 4, 21).round(1):
+        istr = str(i).replace('.', '')
+        hist = tf.Get(f'm_vis_c{istr}_{e}{p}_{ch}')
 
-        rdf = rdf.Define("bosonpt", f"{bosonpt}")
-        rdf = rdf.Define("bosonphi", f"{bosonphi}")
+        fit_results, fit_errors, _e, _p = utils.roofit_mass(
+            hist_mc = hist,
+            hist_dt = False, # for technical reasons
+            plot=f'{plotdir}/{e}{p}_{istr}',
+        )
 
-        rdf = rdf.Define("uPx", "met_uncorrected*cos(metphi_uncorrected) + pt_vis_c*cos(phi_vis_c)")
-        rdf = rdf.Define("uPy", "met_uncorrected*sin(metphi_uncorrected) + pt_vis_c*sin(phi_vis_c)")
+        xyerr.append([i, e, p, fit_results['mc'][1], fit_errors['mc'][1]])
 
-        rdf = rdf.Define("uP1_uncorrected", "- (uPx*cos("+bosonphi+") + uPy*sin("+bosonphi+"))")
-        rdf = rdf.Define("uP2_uncorrected", "uPx*sin("+bosonphi+") - uPy*cos("+bosonphi+")")
-
-        rdf = rdf.Define("pfuPx", "pfmet_uncorrected*cos(pfmetphi_uncorrected) + pt_vis_c*cos(phi_vis_c)")
-        rdf = rdf.Define("pfuPy", "pfmet_uncorrected*sin(pfmetphi_uncorrected) + pt_vis_c*sin(phi_vis_c)")
-
-        rdf = rdf.Define("pfuP1_uncorrected", "- (pfuPx*cos("+bosonphi+") + pfuPy*sin("+bosonphi+"))")
-        rdf = rdf.Define("pfuP2_uncorrected", "pfuPx*sin("+bosonphi+") - pfuPy*cos("+bosonphi+")")
-
-        met_cols = ["uP1_uncorrected", "uP2_uncorrected", "pfuP1_uncorrected", "pfuP2_uncorrected", "pt_vis_c", "phi_vis_c", "bosonpt", "bosonphi"]
-
-        #print(original_cols + quants + met_cols)
-        rdf.Snapshot("ntuple", outfile, original_cols + quants + met_cols)
-
-    print("Great success!")
+    np.savetxt(f'fit_results/xyerr_{ch}_{e}{p}.txt', xyerr)
 
 
+def plot_smearing(n_eta, n_pt):
+    """
+    function to plot results of fit to resolutions
 
-def plot(args, bins):
-    corr=''
-    if args.corr:
-        corr='_corr'
-    bin1, bin2 = list(bins.keys())[0], list(bins.keys())[1]
-    nbins1, nbins2 = len(bins[bin1])-1, len(bins[bin2])-1
-    outdir = 'plots/Run{run}/{fs}/ratio_plots{corr}_{bin1}_{bin2}_{v}/'.format(run=args.run, fs=args.finalstate, corr=corr, bin1=bin1, bin2=bin2, v=args.version)
-    if not utils.usedir(outdir, args.overwrite):
-        return
+    (int) n_eta: number of bins in eta
+    (int) n_pt: number of bins in pt
+    """
 
-    chi2 = np.zeros((nbins1, nbins2))
-    for i in range(nbins1):
-        for j in range(nbins2):
-            filename = 'hists/Run{run}/{fs}/{bin1}_{bin2}{corr}_{v}/{bin1}_{}_{bin2}_{}.root'.format(i, j, run=args.run, fs=args.finalstate, bin1=bin1, bin2=bin2, corr=corr, v=args.version)
-            file0 = ROOT.TFile(filename)
-            hist_mc, hist_dt = file0.Get('mc'), file0.Get('data')
-            hist_mc.Scale(1./hist_mc.Integral())
-            n_dt = round(hist_dt.Integral())
-            hist_dt.Scale(1./hist_dt.Integral())
-            hists = {'mc': hist_mc, 'dt': hist_dt}
-            outfile = outdir+'{b1}_{b2}.pdf'.format(b1=i, b2=j)
-            text = ['lepton 1 or 2:', '{} < #eta < {}'.format(bins[bin1][i], bins[bin1][i+1]), '{} GeV < pT < {} GeV'.format(bins[bin2][j], bins[bin2][j+1])]
-            chi2[i][j] = utils.plot_ratio(plots=hists, rcolors={'mc': ROOT.kBlue, 'dt': ROOT.kBlack}, title='ratio plot', outfile=outfile, evts=n_dt, text=text)
-    np.savetxt(outdir+'chi2.txt', chi2)
+    corr_dir = "correction_files/"
+    mz_mc = np.loadtxt(corr_dir+f"mc_response.txt")
+    mz_dt = np.loadtxt(corr_dir+f"dt_response.txt")
+    pt_sf = (91.1876+mz_mc) / (91.1876+mz_dt)
+    res_dt = np.loadtxt(corr_dir+f"dt_resolution.txt")*pt_sf
+    res_mc = np.loadtxt(corr_dir+f"mc_resolution.txt")
+
+    res_sf = np.zeros((n_eta, n_pt))
+    res_mc, res_dt = np.zeros((n_eta, n_pt)), np.zeros((n_eta, n_pt))
+
+    for e in range(n_eta):
+        for p in range(n_pt):
+            mc = np.loadtxt(f'fit_results/xyerr_mcmm_{e}{p}.txt')
+            dt = np.loadtxt(f'fit_results/xyerr_2022Cmm_{e}{p}.txt')
+            #print(dt[:,4])
+            x_sf, y_mc, y_dt = utils.plot_resol(
+                mc[:,0],
+                mc[:,3],
+                mc[:,4],
+                res_mc[e][p],
+                dt[:,3],
+                dt[:,4],
+                res_dt[e][p],
+                f'{e}{p}'
+            )
+            res_sf[e][p] = x_sf
+            res_mc[e][p] = y_mc
+            res_dt[e][p] = y_dt
+    np.savetxt('correction_files/res_sf.txt', res_sf)
+    np.savetxt('correction_files/mc_resolution_corr.txt', res_mc)
+    np.savetxt('correction_files/dt_resolution_corr.txt', res_dt)
     
+    
+def generate_files(arguments, nthreads):
+    pool = Pool(nthreads, initargs=(RLock(),), initializer=tqdm.set_lock)
+    for _ in tqdm(
+        pool.imap_unordered(job_wrapper_smeared_fits, arguments),
+        total=len(arguments),
+        desc="Total progess",
+        dynamic_ncols=True,
+        leave=True,
+        ):
+        pass
+
+
+def job_wrapper_fits(args):
+    return utils.roofit_mass(*args)
+
+
+def job_wrapper_smeared_fits(args):
+    return fit_smeared_hists(*args)
+
 
 if __name__=='__main__':
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
-    ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
+    ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
+    ROOT.ROOT.EnableImplicitMT(16)
     args = parse_args()
-
-    if 'mm' in args.finalstate:
-        bins = {'eta': [-2.4, -1.2, 0., 1.2, 2.4], 'pt': [25, 30, 35, 39, 42, 45, 49, 60, 120, 9999]}
-    else:
-        bins = {'eta': [-2.5, -1.49, 0., 1.49, 2.5], 'pt': [25, 30, 35, 39, 42, 45, 49, 60, 120, 9999]}
     
-    if args.histogram:
-        make_hists(bins, args)
+    basedir = '/ceph/jdriesch/CROWN_samples/Run3V07/ntuples/2022/'
+    muon = 'Muon_Run2022C-PromptNanoAODv10'
+    dy = 'DYto2L-2Jets_MLL-50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X'
+    datasets = {
+        '2022Cmm': [
+            f'{basedir}/Single{muon}/mm/Single{muon}_*.root',
+            f'{basedir}/{muon}/mm/{muon}*.root',
+        ],
+        'mcmm': [
+            f'{basedir}/{dy}/mm/{dy}*.root'
+        ]
+    }
 
-    if args.calculation:
-        get_corrections(args, bins)
-        #get_pt_rel_res(bins)
+    if args.corr:
+        corr = '_corr'
+    else:
+        corr = ''
+        
+    # smearing_factor(datasets, bins, args)
+    bins = {
+        'eta': [-2.4, -1.2, 0., 1.2, 2.4],
+        'pt': [25, 30, 35, 39, 42, 45, 49, 60, 120, 9999]
+    }
+    n_eta, n_pt = len(bins['eta'])-1, len(bins['pt'])-1
 
-    if args.evaluation:
-        apply_corrections(args, bins)
+    for ch in datasets.keys():
+        if args.histogram:
+            make_hists(datasets, ch, bins, args, corr)
+
+        if args.smear:
+            smear_pt(datasets, ch, bins, args)
+            smeared_hists(ch, bins)
+
+    if args.fit:
+        #plot_fits(n_eta, n_pt, corr)
+        #make_ratio(n_eta, n_pt, corr)
+        make2d(bins, corr)
+
+    for ch in datasets.keys():
+        if args.calculation:
+            arguments = []
+            nthreads = 16
+            for e in range(len(bins['eta'])-1):
+                for p in range(len(bins['pt'])-1):
+                    arguments.append((ch, e, p))
+
+            generate_files(arguments, nthreads)
 
     if args.plot:
-        plot(args, bins)
+        plot_smearing(n_eta, n_pt)
