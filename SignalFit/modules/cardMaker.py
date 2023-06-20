@@ -294,7 +294,8 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
             if proc.isMC and proc.name != "ewk":
                 nuis_pdf[proc.name] = 1.0
         nuisgroups["pdfscale"].append(nuis_pdf)
-    for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR", "PSWeight"]:
+    # for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR", "PSWeightISR", "PSWeightFSR", "PSWeightISRFSR"]:
+    for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR", "PSWeightISR", "PSWeightFSR"]:
         nuis_scale = Nuisance(name = syst, type = "shape")
         for proc in processes:
             if proc.isMC and proc.name != "ewk":
@@ -305,10 +306,14 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
     nuisgroups_out = OrderedDict()
     if systs:
         assert type(systs) == list, systs
+        while isinstance(systs[0], list):
+            systs = systs[0]
         for key in nuisgroups.keys():
             nuisgroups_out[key] = []
             for nuis in nuisgroups[key]:
+                print("### my syst is " + ' '.join(systs) + " and I'll check " + nuis.name)
                 if nuis.name in systs:
+                    print("### adding!")
                     nuisgroups_out[key].append(nuis)
             if len(nuisgroups_out[key]) < 1:
                 del nuisgroups_out[key]
@@ -441,7 +446,8 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
             if proc.isMC and proc.name != "ewk":
                 nuis_pdf[proc.name] = 1.0
         nuisgroups["pdfscale"].append(nuis_pdf)
-    for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR", "PSWeight"]:
+    # for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR", "PSWeightISR", "PSWeightFSR", "PSWeightISRFSR"]:
+    for syst in ["LHEPdfWeightAlphaS", "LHEScaleWeightMUF", "LHEScaleWeightMUR", "LHEScaleWeightMUFMUR", "PSWeightISR", "PSWeightFSR"]:
         nuis_scale = Nuisance(name = syst, type = "shape")
         for proc in processes:
             if proc.isMC and proc.name != "ewk":
@@ -452,6 +458,8 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
     nuisgroups_out = OrderedDict()
     if systs:
         assert type(systs) == list, systs
+        while isinstance(systs[0], list):
+            systs = systs[0]
         for key in nuisgroups.keys():
             nuisgroups_out[key] = []
             for nuis in nuisgroups[key]:
