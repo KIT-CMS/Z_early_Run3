@@ -106,9 +106,9 @@ def calc_acc(num_pw, num_nw, den_pw, den_nw):
 if __name__ == '__main__':
 
     paths = {
-        "Z": "/ceph/moh/CROWN_samples/Run3V02_gen/ntuples/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root",
-        "Wpos": "/ceph/moh/CROWN_samples/Run3V02_gen/ntuples/2022/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root",
-        "Wneg": "/ceph/moh/CROWN_samples/Run3V02_gen/ntuples/2022/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root",
+        "Z": "/ceph/moh/CROWN_samples/Run3V03_gen/ntuples/2022/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root",
+        "Wpos": "/ceph/moh/CROWN_samples/Run3V03_gen/ntuples/2022/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root",
+        "Wneg": "/ceph/moh/CROWN_samples/Run3V03_gen/ntuples/2022/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X/mm/WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X_*.root",
     }
 
     channels = {
@@ -163,7 +163,7 @@ if __name__ == '__main__':
         for channel, cuts in channels.items():
             del infos[signal][channel]["df"]
 
-    with open('acceptance.json', 'w') as f:
+    with open('acceptance_new.json', 'w') as f:
         f.write(json.dumps(infos, indent=4))
 
     print(">>> --> all done!")

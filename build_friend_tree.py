@@ -36,8 +36,7 @@ def friend_producer(rfile, dataset_proc):
     if not is_non_zero:
         return
 
-    # output_path = rfile.replace("ntuples", "friends/crosssection")
-    output_path = rfile.replace("ntuples", "ntuples_xsec")
+    output_path = rfile.replace("ntuples", "friends/xsec")
 
     if os.path.exists(output_path):
         print(f"friend_producer: {output_path} exists -> skip")
@@ -135,7 +134,7 @@ def friend_producer(rfile, dataset_proc):
     rdf.Snapshot(
         "ntuple",
         output_path,
-        original_cols + [
+        [
             "numberGeneratedEventsWeight",
             "sumwWeight",
             "sumwnormWeight",
@@ -162,9 +161,7 @@ def generate_friend_trees(dataset, ntuples, nthreads):
 
 
 if __name__ == "__main__":
-    # base_path = "/ceph/moh/CROWN_samples/Run3V03/ntuples/20*/*/*/*.root"
-    # base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples/20*/*/*/*.root"
-    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples/20*/*/*/*.root"
+    base_path = "/ceph/jdriesch/CROWN_samples/Run3V07/ntuples/2022/*/*/*.root"
     dataset = yaml.load(open("datasets.yaml"), Loader=yaml.Loader)
 
     ntuples = glob.glob(base_path)
