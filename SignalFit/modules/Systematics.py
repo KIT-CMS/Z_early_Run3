@@ -28,7 +28,9 @@ syst_groups = {
         "LHEScaleWeightMUFMUR",
     ],
     "PartonShower": [
-        "PSWeight",
+        "PSWeightISR",
+        "PSWeightFSR",
+        # "PSWeightISRFSR",
     ],
     "RecoilSyst": [
         "RecoilDoubleGauss",
