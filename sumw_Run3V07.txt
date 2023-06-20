@@ -1,0 +1,88 @@
+
+ZZ_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X
+  nevents: 1186860.0000000000
+  sumw: 1186860.0000000000
+  sumwnorm: 1186860.0000000000
+  negfrac: 0.0000000000
+  generator_weight: 1.0000000000
+
+
+TbarBQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8_Run3Summer22NanoAODv11-126X
+  nevents: 1488752.0000000000
+  sumw: 112859536.2674865723
+  sumwnorm: 1376732.0000000000
+  negfrac: 0.0376221157
+  generator_weight: 0.9247557686
+
+
+TbarWplus_DR_AtLeastOneLepton_TuneCP5_13p6TeV_powheg-pythia8_Run3Summer22NanoAODv11-126X
+  nevents: 1412032.0000000000
+  sumw: 50910141.3536453247
+  sumwnorm: 1411986.0000000000
+  negfrac: 0.0000162886
+  generator_weight: 0.9999674228
+
+
+TWminus_DR_AtLeastOneLepton_TuneCP5_13p6TeV_powheg-pythia8_Run3Summer22NanoAODv11-126X
+  nevents: 1485032.0000000000
+  sumw: 53440202.7922134399
+  sumwnorm: 1484978.0000000000
+  negfrac: 0.0000181814
+  generator_weight: 0.9999636371
+
+
+TBbarQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8_Run3Summer22NanoAODv11-126X
+  nevents: 2973675.0000000000
+  sumw: 370365261.9599914551
+  sumwnorm: 2737505.0000000000
+  negfrac: 0.0397101230
+  generator_weight: 0.9205797540
+
+
+WZ_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X
+  nevents: 7744881.0000000000
+  sumw: 7744881.0000000000
+  sumwnorm: 7744881.0000000000
+  negfrac: 0.0000000000
+  generator_weight: 1.0000000000
+
+
+TT_TuneCP5_13p6TeV_powheg-pythia8_Run3Summer22NanoAODv10-124X
+  nevents: 7503777.0000000000
+  sumw: 5670995307.9032592773
+  sumwnorm: 7439283.0000000000
+  negfrac: 0.0042974358
+  generator_weight: 0.9914051284
+
+
+WW_TuneCP5_13p6TeV-pythia8_Run3Winter22NanoAOD-122X
+  nevents: 15448627.0000000000
+  sumw: 15448750.4645668268
+  sumwnorm: 15448627.0000000000
+  negfrac: 0.0000000000
+  generator_weight: 1.0000000000
+
+
+DYto2L-2Jets_MLL-10to50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X
+  nevents: 71131525.0000000000
+  sumw: 2493967912000.6875000000
+  sumwnorm: 53143923.0000000000
+  negfrac: 0.1264390297
+  generator_weight: 0.7471219407
+
+
+WtoLNu-2Jets_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X
+  nevents: 80257100.0000000000
+  sumw: 14151296931582.2812500000
+  sumwnorm: 54537366.0000000000
+  negfrac: 0.1602333875
+  generator_weight: 0.6795332251
+
+
+DYto2L-2Jets_MLL-50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X
+  nevents: 71028905.0000000000
+  sumw: 1266460898694.6289062500
+  sumwnorm: 47291275.0000000000
+  negfrac: 0.1670983806
+  generator_weight: 0.6658032388
+
