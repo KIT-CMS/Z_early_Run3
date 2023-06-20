@@ -41,6 +41,7 @@ from config.shapes.variations import (
     mu_sf_weight,
     pdf_weight,
     pu_weight,
+    ps_weight,
 )
 
 from config.shapes.control_binning import get_control_binning
@@ -578,6 +579,8 @@ def main(args):
                 print(f"\t{syst.name}")
             for syst in pu_weight:
                 print(f"\t{syst.name}")
+            for syst in ps_weight:
+                print(f"\t{syst.name}")
             print("="*50)
             print("")
             # SF weights
@@ -613,6 +616,18 @@ def main(args):
                 ],
                 [
                     *pu_weight,
+                ],
+                enable_check=args.enable_booking_check,
+            )
+            # PS weights
+            um.book(
+                [
+                    unit
+                    for d in procMC
+                    for unit in nominals[args.era]["units"][ch_][d]
+                ],
+                [
+                    *ps_weight,
                 ],
                 enable_check=args.enable_booking_check,
             )

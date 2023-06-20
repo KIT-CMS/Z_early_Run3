@@ -1,20 +1,36 @@
 from ntuple_processor.variations import ReplaceWeight, ReplaceCut
 
+# mu_sf_weight = [
+#     ReplaceWeight("SFTrkUp", "sfWeight", ("sf_trk_up*sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkUp")),
+#     ReplaceWeight("SFTrkDn", "sfWeight", ("sf_trk_dn*sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkDn")),
+
+#     ReplaceWeight("SFStaUp", "sfWeight", ("sf_trk*sf_sta_up*sf_id*sf_iso*sf_trg", "sfWeightStaUp")),
+#     ReplaceWeight("SFStaDn", "sfWeight", ("sf_trk*sf_sta_dn*sf_id*sf_iso*sf_trg", "sfWeightStaDn")),
+
+#     ReplaceWeight("SFIDUp", "sfWeight", ("sf_trk*sf_sta*sf_id_up*sf_iso*sf_trg", "sfWeightIDUp")),
+#     ReplaceWeight("SFIDDn", "sfWeight", ("sf_trk*sf_sta*sf_id_dn*sf_iso*sf_trg", "sfWeightIDDn")),
+
+#     ReplaceWeight("SFIsoUp", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso_up*sf_trg", "sfWeightIsoUp")),
+#     ReplaceWeight("SFIsoDn", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso_dn*sf_trg", "sfWeightIsoDn")),
+
+#     ReplaceWeight("SFTrgUp", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso*sf_trg_up", "sfWeightTrgUp")),
+#     ReplaceWeight("SFTrgDn", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso*sf_trg_dn", "sfWeightTrgDn")),
+# ]
 mu_sf_weight = [
-    ReplaceWeight("SFTrkUp", "sfWeight", ("sf_trk_up*sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkUp")),
-    ReplaceWeight("SFTrkDn", "sfWeight", ("sf_trk_dn*sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkDn")),
+    ReplaceWeight("SFTrkUp", "sfWeight", ("sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkUp")),
+    ReplaceWeight("SFTrkDn", "sfWeight", ("sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkDn")),
 
-    ReplaceWeight("SFStaUp", "sfWeight", ("sf_trk*sf_sta_up*sf_id*sf_iso*sf_trg", "sfWeightStaUp")),
-    ReplaceWeight("SFStaDn", "sfWeight", ("sf_trk*sf_sta_dn*sf_id*sf_iso*sf_trg", "sfWeightStaDn")),
+    ReplaceWeight("SFStaUp", "sfWeight", ("sf_sta_up*sf_id*sf_iso*sf_trg", "sfWeightStaUp")),
+    ReplaceWeight("SFStaDn", "sfWeight", ("sf_sta_dn*sf_id*sf_iso*sf_trg", "sfWeightStaDn")),
 
-    ReplaceWeight("SFIDUp", "sfWeight", ("sf_trk*sf_sta*sf_id_up*sf_iso*sf_trg", "sfWeightIDUp")),
-    ReplaceWeight("SFIDDn", "sfWeight", ("sf_trk*sf_sta*sf_id_dn*sf_iso*sf_trg", "sfWeightIDDn")),
+    ReplaceWeight("SFIDUp", "sfWeight", ("sf_sta*sf_id_up*sf_iso*sf_trg", "sfWeightIDUp")),
+    ReplaceWeight("SFIDDn", "sfWeight", ("sf_sta*sf_id_dn*sf_iso*sf_trg", "sfWeightIDDn")),
 
-    ReplaceWeight("SFIsoUp", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso_up*sf_trg", "sfWeightIsoUp")),
-    ReplaceWeight("SFIsoDn", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso_dn*sf_trg", "sfWeightIsoDn")),
+    ReplaceWeight("SFIsoUp", "sfWeight", ("sf_sta*sf_id*sf_iso_up*sf_trg", "sfWeightIsoUp")),
+    ReplaceWeight("SFIsoDn", "sfWeight", ("sf_sta*sf_id*sf_iso_dn*sf_trg", "sfWeightIsoDn")),
 
-    ReplaceWeight("SFTrgUp", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso*sf_trg_up", "sfWeightTrgUp")),
-    ReplaceWeight("SFTrgDn", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso*sf_trg_dn", "sfWeightTrgDn")),
+    ReplaceWeight("SFTrgUp", "sfWeight", ("sf_sta*sf_id*sf_iso*sf_trg_up", "sfWeightTrgUp")),
+    ReplaceWeight("SFTrgDn", "sfWeight", ("sf_sta*sf_id*sf_iso*sf_trg_dn", "sfWeightTrgDn")),
 ]
 
 pdf_weight = [
@@ -31,12 +47,17 @@ pdf_weight = [
     ReplaceWeight("LHEScaleWeightMUFMURDown", "LHEScaleWeight", ("LHEScaleWeight0", "LHEScaleWeightMUFMURDown")),
 ]
 
-
 pu_weight = [
     ReplaceWeight("puWeightUp", "puweight", ("puweightUp", "puWeightUp")),
     ReplaceWeight("puWeightDn", "puweight", ("puweightDn", "puWeightDn")),
 ]
 
+ps_weight = [
+    ReplaceWeight("PSWeightISRUp", "PSWeight", ("PSWeight0", "PSWeightISRUp")),
+    ReplaceWeight("PSWeightISRDown", "PSWeight", ("PSWeight2", "PSWeightISRDown")),
+    ReplaceWeight("PSWeightFSRUp", "PSWeight", ("PSWeight1", "PSWeightFSRUp")),
+    ReplaceWeight("PSWeightFSRDown", "PSWeight", ("PSWeight3", "PSWeightFSRDown")),
+]
 # mt_cuts = [
 #     ReplaceCut("pfmtcut10", "pfmtcut", ("(sqrt(2.*pt_1_corr*pfmet_corr*(1.-cos(phi_1 - pfmetphi_corr)))) > 10.", "pfmtcut10")),
 #     ReplaceCut("pfmtcut20", "pfmtcut", ("(sqrt(2.*pt_1_corr*pfmet_corr*(1.-cos(phi_1 - pfmetphi_corr)))) > 20.", "pfmtcut20")),

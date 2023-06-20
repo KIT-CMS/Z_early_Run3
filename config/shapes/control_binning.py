@@ -60,8 +60,10 @@ uniformBinningDict = {
     #'pfmt_lepuncorr': [0, 20, 10],
     'pfmet_uncorrected': [0, 120, 20],
     'pfmet_corr': [0, 120, 20],
+    'pfmet_xycorr': [0, 120, 20],
     'pfmetphi_uncorrected': [(-np.pi), (np.pi), 40],
     'pfmetphi_corr': [(-np.pi), (np.pi), 40],
+    'pfmetphi_xycorr': [(-np.pi), (np.pi), 40],
     'm_toFit': [60, 120, 30],
     'm_toFit_lepuncorr': [60, 120, 30],
 
