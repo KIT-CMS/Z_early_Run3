@@ -18,8 +18,8 @@ def job_wrapper(args):
     return friend_producer(*args)
 
 def friend_producer(rfile, scalefactors):
-    output_path = rfile.replace("ntuples_xsec", "ntuples_xsec_sf_EraC")
-    # output_path = rfile.replace("ntuples", "friends/sf")
+    # output_path = rfile.replace("ntuples_xsec", "ntuples_xsec_sf_EraC")
+    output_path = rfile.replace("ntuples", "friends/sf")
 
     if os.path.exists(output_path):
         print(f"friend_producer: {output_path} exists -> skip")
@@ -146,7 +146,8 @@ def friend_producer(rfile, scalefactors):
     rdf.Snapshot(
         "ntuple",
         output_path,
-        original_cols + out_columns
+        # original_cols + out_columns
+        out_columns
     )
 
 def generate_friend_trees(scalefactors, ntuples, nthreads):
@@ -169,11 +170,12 @@ if __name__ == "__main__":
     ROOT.TH2.AddDirectory(ROOT.kFALSE)
     ROOT.TH3.AddDirectory(ROOT.kFALSE)
     ROOT.gROOT.SetBatch(True)
-    ROOT.ROOT.EnableImplicitMT(24)
+    # ROOT.ROOT.EnableImplicitMT(24)
 
     # base_path = "/ceph/moh/CROWN_samples/Run3V03/ntuples_xsec/2022/*/mm*/*.root"
     # base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec/2022/*/mm*/*.root"
-    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec/2022/*/mm*/*.root"
+    # base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec/2022/*/mm*/*.root"
+    base_path = "/ceph/jdriesch/CROWN_samples/Run3V07/ntuples/2022/*/mm*/*.root"
 
     scalefactors = OrderedDict({
         "trk": {

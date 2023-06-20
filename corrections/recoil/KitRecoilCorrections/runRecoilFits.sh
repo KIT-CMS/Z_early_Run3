@@ -1,7 +1,7 @@
 #! /bin/bash
 
-OUT=Run3V06_ptuncorr_outputs
-IN=/storage/9/jdriesch/earlyrun3/samples/Run3V06
+OUT=Run3V07_ptuncorr_outputs
+IN=/ceph/jdriesch/CROWN_samples/Run3V07
 METVAR=met_uncorrected
 METPHIVAR=metphi_uncorrected
 LUMI=5.035650234254

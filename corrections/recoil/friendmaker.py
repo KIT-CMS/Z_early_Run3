@@ -148,40 +148,6 @@ def prep(inpath):
     # friend.Add(frpath)
     # chain.AddFriend(friend)
     rdf = ROOT.RDataFrame(chain)
-    # rdf = ROOT.RDataFrame("ntuple", inpath)
-
-    # # check how many leptons in final state and adjust total leptonic momentum accordingly
-    # channel = inpath.split("/")[-2]
-
-    # # apply rochester corrections if muon involved (mm or mmet)
-    # # if "mm" in channel:
-    # #     cor = "_corr"
-    # # else:
-    # #     cor = ""
-    # cor = "_corr"
-
-    # # if not ("DYtoLL" in inpath or "WtoLNu" in inpath):
-    # if not ("WtoLNu" in inpath):
-    #     bosonphi = "phi_vis_c"
-    #     bosonpt = "pt_vis_c"
-    # else:
-    #     bosonphi = "genbosonphi"
-    #     bosonpt = "genbosonpt"
-
-    # if channel == "ee" or channel == "mm":
-    #     rdf = rdf.Define("pt_vis_c_x", "pt_1"+cor+"*cos(phi_1) + pt_2"+cor+"*cos(phi_2)")
-    #     rdf = rdf.Define("pt_vis_c_y", "pt_1"+cor+"*sin(phi_1) + pt_2"+cor+"*sin(phi_2)")
-    #     rdf = rdf.Define("pt_vis_c", "sqrt(pt_vis_c_x*pt_vis_c_x + pt_vis_c_y*pt_vis_c_y)")
-    #     rdf = rdf.Define("phi_vis_c", "atan2(pt_vis_c_y, pt_vis_c_x)")
-    # else:
-    #     rdf = rdf.Define("pt_vis_c", "pt_1"+cor+"")
-    #     rdf = rdf.Define("phi_vis_c", "phi_1")
-
-    # rdf = rdf.Define("uPx", met+"_uncorrected*cos("+met+"phi_uncorrected) + pt_vis_c*cos(phi_vis_c)") # sign is wrong but consistently -> met is correct
-    # rdf = rdf.Define("uPy", met+"_uncorrected*sin("+met+"phi_uncorrected) + pt_vis_c*sin(phi_vis_c)")
-
-    # rdf = rdf.Define("uP1_uncorrected", "- (uPx*cos("+bosonphi+") + uPy*sin("+bosonphi+"))") # maybe use reco-phi instead
-    # rdf = rdf.Define("uP2_uncorrected", "uPx*sin("+bosonphi+") - uPy*cos("+bosonphi+")")
 
     return rdf, chain  # , friend
 
@@ -243,10 +209,7 @@ def run(input_dict):
 
     doStatUnc = (syst_postfix == "")
 
-    if args.test:
-        outfile = infile.replace("/ntuples_xsec_sf_scaleres_pu_EraC/", "/test_friend_xsec_sf_EraC_lep_corr_01_x0p60_met_corr"+syst_postfix+"/")
-    else:
-        outfile = infile.replace("/ntuples_xsec_sf_scaleres_ptuncorr_pu_EraC/", "/friend_xsec_sf_scaleres_ptuncorr_lepunc_pu_EraC_met_corr"+syst_postfix+"/")
+    outfile = infile.replace("/ntuples/", "/friends/met"+syst_postfix+"/")
         
 
     outdir = outfile.replace(outfile.split('/')[-1], "")
@@ -271,11 +234,7 @@ def run(input_dict):
     zPtBinEdges = [0,1.0,2.0,3.0,4.0,5.0,6.0,7.5,10,12.5,15,17.5,20,22.5,25,27.5,30,32.5,35,37.5,40,42.5,45,47.5,50,52.5,55,57.5,60,65,70,75,80,90,100,125,150,1000]
     nBins = len(zPtBinEdges)-1
 
-    # make sure that variables are named consistently (for Run2 met is already corrected)
-    if "18" in year:
-        corrected = "_corrected"
-    else:
-        corrected = "_corr"
+    corr = "_corr"
 
     if channel == 'mmet':
         dataWorkspace, npars1, npars2 = load_fit_results(ws_dict["data_mm"], nBins)
@@ -302,32 +261,32 @@ def run(input_dict):
 
     # for other processes than DY: just use uncorrected values
     if not ("DYtoLL" in process or "WtoLNu" in process):
-        rdf = rdf.Define("uP1"+corrected+syst_postfix, "uP1_uncorrected")
-        rdf = rdf.Define("uP2"+corrected+syst_postfix, "uP2_uncorrected")
+        rdf = rdf.Define("uP1"+corr+syst_postfix, "uP1_uncorrected")
+        rdf = rdf.Define("uP2"+corr+syst_postfix, "uP2_uncorrected")
 
-        rdf = rdf.Define("pfuP1"+corrected+syst_postfix, "pfuP1_uncorrected")
-        rdf = rdf.Define("pfuP2"+corrected+syst_postfix, "pfuP2_uncorrected")
+        rdf = rdf.Define("pfuP1"+corr+syst_postfix, "pfuP1_uncorrected")
+        rdf = rdf.Define("pfuP2"+corr+syst_postfix, "pfuP2_uncorrected")
 
-        rdf = calculateMET(rdf, corrected, mettype="", postfix=syst_postfix)
-        rdf = calculateMET(rdf, corrected, mettype="pf", postfix=syst_postfix)
+        rdf = calculateMET(rdf, corr, mettype="", postfix=syst_postfix)
+        rdf = calculateMET(rdf, corr, mettype="pf", postfix=syst_postfix)
 
         cols_stat_unc = []
         if doStatUnc:
             for stat_unc_idx in range(npars1+npars2):
                 for updn in ["Up", "Dn"]:
-                    rdf = rdf.Define("uP1"+corrected+f"_stat{stat_unc_idx}{updn}", "uP1_uncorrected")
-                    rdf = rdf.Define("uP2"+corrected+f"_stat{stat_unc_idx}{updn}", "uP2_uncorrected")
+                    rdf = rdf.Define("uP1"+corr+f"_stat{stat_unc_idx}{updn}", "uP1_uncorrected")
+                    rdf = rdf.Define("uP2"+corr+f"_stat{stat_unc_idx}{updn}", "uP2_uncorrected")
 
-                    rdf = rdf.Define("pfuP1"+corrected+f"_stat{stat_unc_idx}{updn}", "pfuP1_uncorrected")
-                    rdf = rdf.Define("pfuP2"+corrected+f"_stat{stat_unc_idx}{updn}", "pfuP2_uncorrected")
+                    rdf = rdf.Define("pfuP1"+corr+f"_stat{stat_unc_idx}{updn}", "pfuP1_uncorrected")
+                    rdf = rdf.Define("pfuP2"+corr+f"_stat{stat_unc_idx}{updn}", "pfuP2_uncorrected")
                 
-                    rdf = calculateMET(rdf, corrected, mettype="", postfix=f"_stat{stat_unc_idx}{updn}")
-                    rdf = calculateMET(rdf, corrected, mettype="pf", postfix=f"_stat{stat_unc_idx}{updn}")
+                    rdf = calculateMET(rdf, corr, mettype="", postfix=f"_stat{stat_unc_idx}{updn}")
+                    rdf = calculateMET(rdf, corr, mettype="pf", postfix=f"_stat{stat_unc_idx}{updn}")
 
-                    cols_stat_unc.append("met"+corrected+f"_stat{stat_unc_idx}{updn}")
-                    cols_stat_unc.append("metphi"+corrected+f"_stat{stat_unc_idx}{updn}")
-                    cols_stat_unc.append("pfmet"+corrected+f"_stat{stat_unc_idx}{updn}")
-                    cols_stat_unc.append("pfmetphi"+corrected+f"_stat{stat_unc_idx}{updn}")
+                    cols_stat_unc.append("met"+corr+f"_stat{stat_unc_idx}{updn}")
+                    cols_stat_unc.append("metphi"+corr+f"_stat{stat_unc_idx}{updn}")
+                    cols_stat_unc.append("pfmet"+corr+f"_stat{stat_unc_idx}{updn}")
+                    cols_stat_unc.append("pfmetphi"+corr+f"_stat{stat_unc_idx}{updn}")
         
         cols_lepunc = []
         if syst_postfix=="":
@@ -338,10 +297,10 @@ def run(input_dict):
 
         if not os.path.exists(outfile) or args.overwrite:
             rdf.Snapshot("ntuple", outfile, [
-                "uP1"+corrected+syst_postfix, "uP2"+corrected+syst_postfix, 
-                "met"+corrected+syst_postfix, "metphi"+corrected+syst_postfix,
-                "pfuP1"+corrected+syst_postfix, "pfuP2"+corrected+syst_postfix, 
-                "pfmet"+corrected+syst_postfix, "pfmetphi"+corrected+syst_postfix
+                "uP1"+corr+syst_postfix, "uP2"+corr+syst_postfix, 
+                "met"+corr+syst_postfix, "metphi"+corr+syst_postfix,
+                "pfuP1"+corr+syst_postfix, "pfuP2"+corr+syst_postfix, 
+                "pfmet"+corr+syst_postfix, "pfmetphi"+corr+syst_postfix
             ] + cols_stat_unc + cols_lepunc)
             # rdf.Snapshot("ntuple", outfile, list(set(original_cols + [
             #     "uP1"+corrected+syst_postfix, "uP2"+corrected+syst_postfix, "met"+corrected+syst_postfix, "metphi"+corrected+syst_postfix,
@@ -372,30 +331,30 @@ def run(input_dict):
 
 
     # Actual correction
-    rdf = rdf.Define("uP1"+corrected+syst_postfix, "uP1_uncorrected")
-    rdf = rdf.Define("uP2"+corrected+syst_postfix, "uP2_uncorrected")
-    rdf = rdf.Define("pfuP1"+corrected+syst_postfix, "pfuP1_uncorrected")
-    rdf = rdf.Define("pfuP2"+corrected+syst_postfix, "pfuP2_uncorrected")
+    rdf = rdf.Define("uP1"+corr+syst_postfix, "uP1_uncorrected")
+    rdf = rdf.Define("uP2"+corr+syst_postfix, "uP2_uncorrected")
+    rdf = rdf.Define("pfuP1"+corr+syst_postfix, "pfuP1_uncorrected")
+    rdf = rdf.Define("pfuP2"+corr+syst_postfix, "pfuP2_uncorrected")
     cols_stat_unc_u = []
     if doStatUnc:
         for updn in ["Up", "Down"]:
             for stat_unc_idx in range(npars1+npars2):
-                rdf = rdf.Define("uP1"+corrected+f"_stat{stat_unc_idx}{updn}", "uP1_uncorrected")
-                rdf = rdf.Define("uP2"+corrected+f"_stat{stat_unc_idx}{updn}", "uP2_uncorrected")
-                rdf = rdf.Define("pfuP1"+corrected+f"_stat{stat_unc_idx}{updn}", "pfuP1_uncorrected")
-                rdf = rdf.Define("pfuP2"+corrected+f"_stat{stat_unc_idx}{updn}", "pfuP2_uncorrected")
-                cols_stat_unc_u.append("uP1"+corrected+f"_stat{stat_unc_idx}{updn}")
-                cols_stat_unc_u.append("uP2"+corrected+f"_stat{stat_unc_idx}{updn}")
-                cols_stat_unc_u.append("pfuP1"+corrected+f"_stat{stat_unc_idx}{updn}")
-                cols_stat_unc_u.append("pfuP2"+corrected+f"_stat{stat_unc_idx}{updn}")
+                rdf = rdf.Define("uP1"+corr+f"_stat{stat_unc_idx}{updn}", "uP1_uncorrected")
+                rdf = rdf.Define("uP2"+corr+f"_stat{stat_unc_idx}{updn}", "uP2_uncorrected")
+                rdf = rdf.Define("pfuP1"+corr+f"_stat{stat_unc_idx}{updn}", "pfuP1_uncorrected")
+                rdf = rdf.Define("pfuP2"+corr+f"_stat{stat_unc_idx}{updn}", "pfuP2_uncorrected")
+                cols_stat_unc_u.append("uP1"+corr+f"_stat{stat_unc_idx}{updn}")
+                cols_stat_unc_u.append("uP2"+corr+f"_stat{stat_unc_idx}{updn}")
+                cols_stat_unc_u.append("pfuP1"+corr+f"_stat{stat_unc_idx}{updn}")
+                cols_stat_unc_u.append("pfuP2"+corr+f"_stat{stat_unc_idx}{updn}")
 
     columns = [
-        "uP1"+corrected+syst_postfix,
-        "uP2"+corrected+syst_postfix,
+        "uP1"+corr+syst_postfix,
+        "uP2"+corr+syst_postfix,
         "uP1_uncorrected",
         "uP2_uncorrected",
-        "pfuP1"+corrected+syst_postfix,
-        "pfuP2"+corrected+syst_postfix,
+        "pfuP1"+corr+syst_postfix,
+        "pfuP2"+corr+syst_postfix,
         "pfuP1_uncorrected",
         "pfuP2_uncorrected",
         "pt_vis_corr", "pt_vis_corr_up", "pt_vis_corr_dn",
@@ -406,12 +365,12 @@ def run(input_dict):
     ] + cols_stat_unc_u
     fromrdf = rdf.AsNumpy(columns = columns)
     tordf = {
-        "uP1"+corrected+syst_postfix: fromrdf["uP1"+corrected+syst_postfix],
-        "uP2"+corrected+syst_postfix: fromrdf["uP2"+corrected+syst_postfix],
+        "uP1"+corr+syst_postfix: fromrdf["uP1"+corr+syst_postfix],
+        "uP2"+corr+syst_postfix: fromrdf["uP2"+corr+syst_postfix],
         "uP1_uncorrected": fromrdf["uP1_uncorrected"],
         "uP2_uncorrected": fromrdf["uP2_uncorrected"],
-        "pfuP1"+corrected+syst_postfix: fromrdf["pfuP1"+corrected+syst_postfix],
-        "pfuP2"+corrected+syst_postfix: fromrdf["pfuP2"+corrected+syst_postfix],
+        "pfuP1"+corr+syst_postfix: fromrdf["pfuP1"+corr+syst_postfix],
+        "pfuP2"+corr+syst_postfix: fromrdf["pfuP2"+corr+syst_postfix],
         "pfuP1_uncorrected": fromrdf["pfuP1_uncorrected"],
         "pfuP2_uncorrected": fromrdf["pfuP2_uncorrected"],
         "pt_vis_corr": fromrdf["pt_vis_corr"],
@@ -468,7 +427,7 @@ def run(input_dict):
             mc_uPValZlike = invertCdf(fromrdf["uP"+str(k+1)+"_uncorrected"][j], toCorr_cdf, toCorr_xuP, mc_cdf, mc_xuP) # TODO check order of matrix
             dt_uPValZlike = invertCdf(fromrdf["uP"+str(k+1)+"_uncorrected"][j], toCorr_cdf, toCorr_xuP, data_cdf, data_xuP)
 
-            tordf["uP"+str(k+1)+corrected+syst_postfix][j] += dt_uPValZlike - mc_uPValZlike
+            tordf["uP"+str(k+1)+corr+syst_postfix][j] += dt_uPValZlike - mc_uPValZlike
 
             # PF
             data_cdf_pf   = dataWorkspace_pf[k].function('sig_'+sBin+'_cdf_Int[u_'+sBin+'_prime|CDF]_Norm[u_'+sBin+'_prime]')
@@ -494,7 +453,7 @@ def run(input_dict):
             mc_uPValZlike_pf = invertCdf(fromrdf["pfuP"+str(k+1)+"_uncorrected"][j], toCorr_cdf_pf, toCorr_xuP_pf, mc_cdf_pf, mc_xuP_pf)
             dt_uPValZlike_pf = invertCdf(fromrdf["pfuP"+str(k+1)+"_uncorrected"][j], toCorr_cdf_pf, toCorr_xuP_pf, data_cdf_pf, data_xuP_pf)
 
-            tordf["pfuP"+str(k+1)+corrected+syst_postfix][j] += dt_uPValZlike_pf - mc_uPValZlike_pf
+            tordf["pfuP"+str(k+1)+corr+syst_postfix][j] += dt_uPValZlike_pf - mc_uPValZlike_pf
 
             if doStatUnc:
                 for updn in ["Up", "Down"]:
@@ -525,7 +484,7 @@ def run(input_dict):
                         mc_uPValZlike = invertCdf(fromrdf["uP"+str(k+1)+"_uncorrected"][j], toCorr_cdf, toCorr_xuP, mc_cdf, mc_xuP)
                         dt_uPValZlike = invertCdf(fromrdf["uP"+str(k+1)+"_uncorrected"][j], toCorr_cdf, toCorr_xuP, data_cdf, data_xuP)
 
-                        tordf["uP"+str(k+1)+corrected+f"_stat{stat_unc_idx}{updn}"][j] += dt_uPValZlike - mc_uPValZlike
+                        tordf["uP"+str(k+1)+corr+f"_stat{stat_unc_idx}{updn}"][j] += dt_uPValZlike - mc_uPValZlike
 
                         # PF
                         data_cdf_pf   = dataWorkspace_pf[k].function(f"sig_{sBin}_eig_{sBin}_ipar_{ipar}_{updn}_cdf_Int[u_{sBin}_prime|CDF]_Norm[u_{sBin}_prime]")
@@ -551,7 +510,7 @@ def run(input_dict):
                         mc_uPValZlike_pf = invertCdf(fromrdf["pfuP"+str(k+1)+"_uncorrected"][j], toCorr_cdf_pf, toCorr_xuP_pf, mc_cdf_pf, mc_xuP_pf)
                         dt_uPValZlike_pf = invertCdf(fromrdf["pfuP"+str(k+1)+"_uncorrected"][j], toCorr_cdf_pf, toCorr_xuP_pf, data_cdf_pf, data_xuP_pf)
 
-                        tordf["pfuP"+str(k+1)+corrected+f"_stat{stat_unc_idx}{updn}"][j] += dt_uPValZlike_pf - mc_uPValZlike_pf
+                        tordf["pfuP"+str(k+1)+corr+f"_stat{stat_unc_idx}{updn}"][j] += dt_uPValZlike_pf - mc_uPValZlike_pf
 
                         stat_unc_idx += 1
 
@@ -560,19 +519,19 @@ def run(input_dict):
 
 
     rdf_tosave = ROOT.RDF.MakeNumpyDataFrame(tordf)
-    rdf_tosave = calculateMET(rdf_tosave, corrected, mettype="", postfix=syst_postfix)
-    rdf_tosave = calculateMET(rdf_tosave, corrected, mettype="pf", postfix=syst_postfix)
+    rdf_tosave = calculateMET(rdf_tosave, corr, mettype="", postfix=syst_postfix)
+    rdf_tosave = calculateMET(rdf_tosave, corr, mettype="pf", postfix=syst_postfix)
 
     cols_stat_unc = []
     if doStatUnc:
         for updn in ["Up", "Down"]:
             for stat_unc_idx in range(npars1+npars2):
-                rdf_tosave = calculateMET(rdf_tosave, corrected, mettype="", postfix=f"_stat{stat_unc_idx}{updn}")
-                rdf_tosave = calculateMET(rdf_tosave, corrected, mettype="pf", postfix=f"_stat{stat_unc_idx}{updn}")
-                cols_stat_unc.append("met"+corrected+f"_stat{stat_unc_idx}{updn}")
-                cols_stat_unc.append("metphi"+corrected+f"_stat{stat_unc_idx}{updn}")
-                cols_stat_unc.append("pfmet"+corrected+f"_stat{stat_unc_idx}{updn}")
-                cols_stat_unc.append("pfmetphi"+corrected+f"_stat{stat_unc_idx}{updn}")
+                rdf_tosave = calculateMET(rdf_tosave, corr, mettype="", postfix=f"_stat{stat_unc_idx}{updn}")
+                rdf_tosave = calculateMET(rdf_tosave, corr, mettype="pf", postfix=f"_stat{stat_unc_idx}{updn}")
+                cols_stat_unc.append("met"+corr+f"_stat{stat_unc_idx}{updn}")
+                cols_stat_unc.append("metphi"+corr+f"_stat{stat_unc_idx}{updn}")
+                cols_stat_unc.append("pfmet"+corr+f"_stat{stat_unc_idx}{updn}")
+                cols_stat_unc.append("pfmetphi"+corr+f"_stat{stat_unc_idx}{updn}")
     
     cols_lepunc = []
     if syst_postfix=="":
@@ -583,8 +542,8 @@ def run(input_dict):
 
     if not os.path.exists(outfile) or args.overwrite:
         rdf_tosave.Snapshot("ntuple", outfile, [
-            "uP1"+corrected+syst_postfix, "uP2"+corrected+syst_postfix, "met"+corrected+syst_postfix, "metphi"+corrected+syst_postfix,
-            "pfuP1"+corrected+syst_postfix, "pfuP2"+corrected+syst_postfix, "pfmet"+corrected+syst_postfix, "pfmetphi"+corrected+syst_postfix
+            "uP1"+corr+syst_postfix, "uP2"+corr+syst_postfix, "met"+corr+syst_postfix, "metphi"+corr+syst_postfix,
+            "pfuP1"+corr+syst_postfix, "pfuP2"+corr+syst_postfix, "pfmet"+corr+syst_postfix, "pfmetphi"+corr+syst_postfix
         ] + cols_stat_unc + cols_lepunc)
         # rdf_tosave.Snapshot("ntuple", outfile, list(set(original_cols + [
         #     "uP1"+corrected+syst_postfix, "uP2"+corrected+syst_postfix, "met"+corrected+syst_postfix, "metphi"+corrected+syst_postfix,
@@ -621,6 +580,9 @@ if __name__=='__main__':
     args = parse_args()
     ROOT.gROOT.SetBatch(True) 
     #ROOT.ROOT.EnableImplicitMT(32)
+
+    infiles = '/ceph/jdriesch/CROWN_samples/Run3V07/ntuples/2022/*/mm*/*.root'
+
     ws_dicts = [
         {
             "data_mm":  "/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/KitRecoilCorrections/Run3V06_ptuncorr_outputs/met_uncorrected_data_triple_muon_sigAndBck/", 

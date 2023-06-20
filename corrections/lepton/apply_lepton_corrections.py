@@ -9,19 +9,38 @@ import glob
 from multiprocessing import Pool, RLock
 
 def calc_m(rdf, corr="", dilep=True):
+    """
+    function to calculate quantities of visible leptons
+    
+    (ROOT.RDataFrame) rdf: dataframe
+    (str) corr: '' if uncorrected
+    (bool) dilep: True if dilepton, False if single lepton
+    """
+    # construct visible four momentum
     if dilep:
-        rdf = rdf.Define(f"lv_1{corr}", f"ROOT::Math::PtEtaPhiMVector p(pt_1{corr}, eta_1, phi_1, mass_1); return p;")
-        rdf = rdf.Define(f"lv_2{corr}", f"ROOT::Math::PtEtaPhiMVector p(pt_2{corr}, eta_2, phi_2, mass_2); return p;")
-        rdf = rdf.Define(f"dilep{corr}", f"lv_1{corr} + lv_2{corr}")
+        rdf = rdf.Define(
+            f"lv_1{corr}", 
+            f"ROOT::Math::PtEtaPhiMVector p(pt_1{corr}, eta_1, phi_1, mass_1);"\
+            f"return p;"
+            )
+        rdf = rdf.Define(
+            f"lv_2{corr}", 
+            f"ROOT::Math::PtEtaPhiMVector p(pt_2{corr}, eta_2, phi_2, mass_2);"\
+            f"return p;")
+        rdf = rdf.Define(f"four_mom_vis{corr}", f"lv_1{corr} + lv_2{corr}")
 
     else:
-        rdf = rdf.Define(f"lv_1{corr}", f"ROOT::Math::PtEtaPhiMVector p(pt_1{corr}, eta_1, phi_1, mass_1); return p;")
-        rdf = rdf.Define(f"dilep{corr}", f"lv_1{corr}")
+        rdf = rdf.Define(
+            f"lv_1{corr}", 
+            f"ROOT::Math::PtEtaPhiMVector p(pt_1{corr}, eta_1, phi_1, mass_1);"\
+            f"return p;"
+            )
+        rdf = rdf.Define(f"four_mom_vis{corr}", f"lv_1{corr}")
 
-    rdf = rdf.Define(f"pt_vis{corr}", f"dilep{corr}.Pt()")
-    rdf = rdf.Define(f"m_vis{corr}", f"dilep{corr}.M()")
-    rdf = rdf.Define(f"phi_vis{corr}", f"dilep{corr}.Phi()")
-    rdf = rdf.Define(f"rap_vis{corr}", f"dilep{corr}.Rapidity()")
+    rdf = rdf.Define(f"pt_vis{corr}", f"four_mom_vis{corr}.Pt()")
+    rdf = rdf.Define(f"m_vis{corr}", f"four_mom_vis{corr}.M()")
+    rdf = rdf.Define(f"phi_vis{corr}", f"four_mom_vis{corr}.Phi()")
+    rdf = rdf.Define(f"rap_vis{corr}", f"four_mom_vis{corr}.Rapidity()")
     return rdf
 
 
@@ -35,7 +54,7 @@ def job_wrapper(args):
     return apply_corrections(*args)
 
 def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
-    output_path = f.replace("ntuples_xsec_sf", "ntuples_xsec_sf_scaleres_ptuncorr")
+    output_path = f.replace("ntuples", "friends/lepton")
 
     if os.path.isfile(output_path):
         f_tmp = None
@@ -46,10 +65,12 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
         if f_tmp and not f_tmp.IsZombie():
             return 1
     
-    rdf = ROOT.RDataFrame('ntuple', f)
-
-    # extract original columns for later snapshot
-    original_cols = [str(col) for col in rdf.GetColumnNames()]
+    # load rdf 
+    tch, xy_friend = ROOT.TChain("ntuple"), ROOT.TChain("ntuple")
+    tch.Add(f)
+    xy_friend.Add(f.replace("ntuples", "friends/xy"))
+    tch.AddFriend(xy_friend)
+    rdf = ROOT.RDataFrame(tch)
     
     # check if data
     is_data = (rdf.Sum("is_data").GetValue()>0)
@@ -219,8 +240,8 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
     rdf = rdf.Define("uP1_uncorrected", f"- (uPx*cos({bosonphi}) + uPy*sin({bosonphi}))")
     rdf = rdf.Define("uP2_uncorrected", f"uPx*sin({bosonphi}) - uPy*cos({bosonphi})")
 
-    rdf = rdf.Define("pfuPx", "pfmet_uncorrected*cos(pfmetphi_uncorrected) + pt_vis*cos(phi_vis)") # changed from pt_vis_c and phi_vis_c
-    rdf = rdf.Define("pfuPy", "pfmet_uncorrected*sin(pfmetphi_uncorrected) + pt_vis*sin(phi_vis)")
+    rdf = rdf.Define("pfuPx", "pfmet_xycorr*cos(pfmetphi_xycorr) + pt_vis*cos(phi_vis)") # changed from pt_vis_c and phi_vis_c
+    rdf = rdf.Define("pfuPy", "pfmet_xycorr*sin(pfmetphi_xycorr) + pt_vis*sin(phi_vis)")
 
     rdf = rdf.Define("pfmetx_lepcorr", "pfuPx - pt_vis_corr*cos(phi_vis_corr)")
     rdf = rdf.Define("pfmety_lepcorr", "pfuPy - pt_vis_corr*sin(phi_vis_corr)")
@@ -241,11 +262,10 @@ def apply_corrections(f, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt):
     outdir = output_path.replace(output_path.split('/')[-1],"")
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    #print(original_cols + quants + met_cols)
-    rdf.Snapshot("ntuple", output_path, original_cols + quants + met_cols)
 
-    #print("Great success!")
-#"""
+    rdf.Snapshot("ntuple", output_path, quants + met_cols)
+
+
 def generate_files(arguments, nthreads):
     pool = Pool(nthreads, initargs=(RLock(),), initializer=tqdm.set_lock)
     for _ in tqdm(
@@ -256,28 +276,24 @@ def generate_files(arguments, nthreads):
         leave=True,
         ):
         pass
-#"""
+
 
 if __name__=='__main__':
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
-    #ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
-    ROOT.ROOT.EnableImplicitMT(16)
-    #ROOT.gROOT.SetBatch(True)
+    ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
 
+    ROOT.gROOT.SetBatch(True)
 
-    # base_path = "/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_EraC/20*/*/*/*.root"
-    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_EraC/2022/*/*/*.root"
+    base_path = "/ceph/jdriesch/CROWN_samples/Run3V07/ntuples/2022/*/mm*/*.root"
     ntuples = glob.glob(base_path)
     # Load correction files
-    x = np.loadtxt('correction_files/Run3/mm/res_sf_extra.txt')
-    mz_mc = np.loadtxt('correction_files/Run3/mm/mz_mc.txt')
-    mz_dt = np.loadtxt('correction_files/Run3/mm/mz_dt.txt')
+    x = np.loadtxt('correction_files/Run3/mm/res_sf.txt')
+    mz_mc = np.loadtxt('correction_files/Run3/mm/mc_response.txt')
+    mz_dt = np.loadtxt('correction_files/Run3/mm/dt_response.txt')
     pt_sf = (91.1876+mz_mc) / (91.1876+mz_dt)
-    mz_res_mc = np.loadtxt('correction_files/Run3/mm/resmz_mc.txt')
-    mz_res_dt = np.loadtxt('correction_files/Run3/mm/resmz_dt.txt') * pt_sf
+    mz_res_mc = np.loadtxt('correction_files/Run3/mm/mc_resolution.txt')
+    mz_res_dt = np.loadtxt('correction_files/Run3/mm/dt_resolution.txt') * pt_sf
     
     nthreads = 16
     arguments = [(ntuple, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt) for ntuple in ntuples]
     generate_files(arguments, nthreads)
-    #for n in tqdm(ntuples):
-    #    apply_corrections(n, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt)

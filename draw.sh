@@ -34,6 +34,7 @@ lumi_list="0.624516690,0.735540770,1.559658372,0.148169025,69.515629423,10.80260
 
 # if this value is not 0 it will normalize the data to the MC
 matchData=0
+# matchData=10
 
 # if 1 it will seperate variables by things you can define in control_binning.py (useful for QCD template)
 seperateVariables=0
@@ -51,8 +52,8 @@ extra_args=""
 #     postfix=$(basename $ntuple_dir)
 #     postfix=${postfix/ntuples_xsec_sf_/"_"}
 
-    # ntuple_dir="/work/jdriesch/earlyrun3/samples/Run3V04/ntuples_xsec_sf_scaleres_EraC"
-    ntuple_dir="/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_ptuncorr_pu_EraC"
+    # ntuple_dir="/work/jdriesch/gcsamples/Run3V04/ntuples_xsec_sf_scaleres_EraC"
+    ntuple_dir="/ceph/jdriesch/CROWN_samples/Run3V07/ntuples"
     # postfix="_NoSF"
     # postfix="_SF"
     # postfix="_met_corr"
@@ -135,19 +136,29 @@ extra_args=""
         --subera $subera \
         --applySF \
         --mm-friend-directory \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_double \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_sigOnly \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_zrap0 \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_zrap1 \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_zrap2 \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_double \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_sigOnly \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_zrap0 \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_zrap1 \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_zrap2 \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/lepton \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/pu \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/sf \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/xsec \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/xy \
         --mmet-friend-directory \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_double \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_sigOnly \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_zrap0 \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_zrap1 \
-            /storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_pu_EraC_met_corr_zrap2 \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_double \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_sigOnly \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_zrap0 \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_zrap1 \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/met_zrap2 \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/lepton \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/pu \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/sf \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/xsec \
+            /ceph/jdriesch/CROWN_samples/Run3V07/friends/xy \
 
     elif [ $type == "plot" ]
     then

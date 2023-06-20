@@ -2,6 +2,7 @@ import ROOT
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import scipy.optimize as opt
 
 def get_canvas(num):
     height = int(np.sqrt(num))
@@ -27,7 +28,8 @@ def plot_canvas(plots, title, filename, style, line=None):
     c.SaveAs(filename)
 
 
-def plot_ratio(plots, rcolors, title, outfile, text=['','',''], evts=-1, xrange=[80,102]):
+def plot_ratio(plots, title, outfile, text=['','',''], xrange=[80,102]):
+    plots['mc'].Scale(plots['dt'].Integral()/plots['mc'].Integral())
     c = ROOT.TCanvas("c", title, 800, 700)
     ROOT.gROOT.SetBatch(1)
     pad1 = ROOT.TPad("pad1", "pad1", 0,0.3,1,1)
@@ -94,8 +96,8 @@ def plot_ratio(plots, rcolors, title, outfile, text=['','',''], evts=-1, xrange=
     line.SetLineWidth(2)
     line.Draw("same")
     c.cd()
-    c.SaveAs(outfile)    
-    c.SaveAs(outfile.split(".pdf")[0]+".png")
+    c.SaveAs(outfile+'.pdf')    
+    c.SaveAs(outfile+".png")
     return test_chi2
 
 
@@ -164,43 +166,42 @@ def plot_same(plots, rcolors, title, outfile, text={}, ratio=False):
     c.SaveAs(outfile.split(".pdf")[0]+".png")
 
 
-def plot2d(matrix, outfile, title, x, xbins, y, ybins, cmin, cmax):
-    nbins1, nbins2 = len(xbins)-1, len(ybins)-1
+def plot2d(matrix, outfile, title, x, xbins, y, ybins, cmin, cmax, xticks, yticks):
+    nbinsx, nbinsy = len(xbins)-1, len(ybins)-1
 
     fig, ax = plt.subplots()
     #plt.margins(x=0, y=0)
-    plt.imshow(np.transpose(matrix))
+    # plt.imshow(np.transpose(matrix))
+    plt.imshow(matrix)
     plt.colorbar()
     plt.clim(cmin, cmax)
     plt.xlabel(x)
     plt.ylabel(y)
     plt.title(title)
-    #print(ax.get_xticks(), ax.get_xticklabels())
-    #print(np.arange(len(xbins)+1), np.append(np.round(xbins,2),100000))
-    ax.set_xticks(np.arange(-0.5, len(xbins)-0.5, step=1))
-    ax.set_xticklabels(np.round(xbins,2))
-    #print(ax.get_xticks(), ax.get_xticklabels())
-    
-    ax.set_yticks(np.arange(-0.5, len(ybins)-0.5, step=1))
-    ax.set_yticklabels(np.round(np.flip(ybins),2))
-    for i in range(nbins1):
-        for j in range(nbins2):
-            test = ax.text(i, j, round(matrix[i][j],3), ha='center', va='center', color='w')
+    ax.set_xticks(np.arange(len(xticks)))
+    ax.set_xticklabels(np.round(xticks,2))    
+    ax.set_yticks(np.arange(len(yticks)))
+    ax.set_yticklabels(np.round(np.flip(yticks),2))
+
+    for i in range(nbinsx):
+        for j in range(nbinsy):
+            test = ax.text(i, j, round(matrix[j][i],3), ha='center', va='center', color='w')
     print(outfile)
 
-    plt.savefig(outfile)
+    plt.savefig(outfile+'.pdf')
+    plt.savefig(outfile+'.png')
     plt.clf()
 
 
-def roofit_mass(filename, plot=False, fitf='bwxcb', pdf=False):
+def roofit_mass(hist_mc, hist_dt, plot=False, fitf='bwxcb', pdf=False, e=0, p=0):
     ROOT.RooMsgService.instance().setSilentMode(True)
+    ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
     results, errors, plots = {}, {}, {}
-    file0 = ROOT.TFile(filename)
-    hist_mc, hist_dt = file0.Get('mc'), file0.Get('data')
-    
-    hist_mc.Scale(hist_dt.Integral()/hist_mc.Integral())
-    #hist_dt.Scale(1./hist_dt.Integral())
+    if not hist_dt:
+        hist_mc.Scale(1000) # scaled to fb
+    else:
+        hist_mc.Scale(hist_dt.Integral()/hist_mc.Integral())
     #hist_mc.Sumw2(True)
     #hist_dt.Sumw2(True)
     
@@ -224,6 +225,10 @@ def roofit_mass(filename, plot=False, fitf='bwxcb', pdf=False):
     ws = ROOT.RooWorkspace('ws')
 
     for d in ['dt', 'mc']:
+
+        if not hists[d]:
+            continue
+
         if fitf=='vgt':
             Z_mass = ROOT.RooRealVar("Z_mass", "Z_mass", 91.1876, 60, 120)
             Z_width = ROOT.RooRealVar("Z_width", "Z_widthan", 2.4952, 2.4952, 2.4952)
@@ -306,6 +311,7 @@ def roofit_mass(filename, plot=False, fitf='bwxcb', pdf=False):
                 func.plotOn(frame, ROOT.RooFit.LineColor(ROOT.kBlack))
                 chi2 = frame.chiSquare(6) 
 
+        # print(d)
         results[d] = [mean.getVal(), n_sigma*sigma.getVal(), chi2]
         errors[d] = [mean.getAsymErrorHi(), n_sigma*sigma.getAsymErrorHi()]
         #errors[d] = [Z_mass.getAsymErrorLo(), sigma.getAsymErrorLo()]
@@ -328,16 +334,18 @@ def roofit_mass(filename, plot=False, fitf='bwxcb', pdf=False):
         cmsTex.SetTextFont(42)
         i=0
         stats = ROOT.TPaveText(0.65, 0.65, 0.88, 0.88, "br ARC NDC")
-        stats.AddText("M(Z) = {} ({})".format(round(results['dt'][0],3), round(errors[d][0],3)))
-        stats.AddText("res(M) = {} ({})".format(round(results['dt'][1],3), round(errors[d][1],3)))
-        stats.AddText("chi2/dof = {}".format(round(results['dt'][2],2)))
-        stats.AddLine(.0,.5,1.,.5)
-        stats.AddText("M(Z) = {} ({})".format(round(results['mc'][0],3), round(errors[d][0],3)))
-        stats.GetListOfLines().Last().SetTextColor(ROOT.kBlue)
-        stats.AddText("res(M) = {} ({})".format(round(results['mc'][1],3), round(errors[d][1],3)))
-        stats.GetListOfLines().Last().SetTextColor(ROOT.kBlue)
-        stats.AddText("chi2/dof = {}".format(round(results['mc'][2],2)))
-        stats.GetListOfLines().Last().SetTextColor(ROOT.kBlue)
+        if hist_dt:
+            stats.AddText("M(Z) = {} ({})".format(round(results['dt'][0],3), round(errors[d][0],3)))
+            stats.AddText("res(M) = {} ({})".format(round(results['dt'][1],3), round(errors[d][1],3)))
+            stats.AddText("chi2/dof = {}".format(round(results['dt'][2],2)))
+            stats.AddLine(.0,.5,1.,.5)
+        if hist_mc:
+            stats.AddText("M(Z) = {} ({})".format(round(results['mc'][0],3), round(errors[d][0],3)))
+            stats.GetListOfLines().Last().SetTextColor(ROOT.kBlue)
+            stats.AddText("res(M) = {} ({})".format(round(results['mc'][1],3), round(errors[d][1],3)))
+            stats.GetListOfLines().Last().SetTextColor(ROOT.kBlue)
+            stats.AddText("chi2/dof = {}".format(round(results['mc'][2],2)))
+            stats.GetListOfLines().Last().SetTextColor(ROOT.kBlue)
 
         stats.Draw("SAME")
         c1.Update()
@@ -346,8 +354,56 @@ def roofit_mass(filename, plot=False, fitf='bwxcb', pdf=False):
 
     if pdf:
         return ws, results['mc'][0]
-    return results
+    
+    return results, errors, e, p
 
+
+def func(x, m, x0):
+     return np.sqrt((m * x)**2 + x0**2)
+
+
+def plot_resol(smear, ress_mc, errs_mc, res_mc, ress_dt, errs_dt, res_dt, name):
+
+    plt.errorbar(smear, ress_mc, errs_mc, label='mc', marker='+', linestyle="")
+    eps=0.0000000001
+    par_mc, pcov = opt.curve_fit(
+        func, 
+        smear, 
+        ress_mc, 
+        #bounds=((0, min(ress_mc[0], res_mc)), (np.inf, max(ress_mc[0], res_mc)))
+        )
+    
+    plt.errorbar(smear, ress_dt, errs_dt, label='dt', marker='+', linestyle="")
+    par_dt, pcov = opt.curve_fit(
+        func, 
+        smear, 
+        ress_dt, 
+        #bounds=((0, min(ress_dt[0], res_dt)), (np.inf, max(ress_dt[0], res_dt)))
+        )
+    x = np.linspace(0, 4, 1000)
+    y_mc = func(x, *par_mc)
+    y_dt = func(x, *par_dt)
+
+    if y_dt[0] < y_mc[0]:
+        x_sf = 1
+    else:
+        x_sf = x[np.where(y_mc > y_dt[0])[0][0]]
+    print(x_sf, y_dt[0])
+
+    plt.plot(x, y_mc, label='fit to mc')
+    plt.plot(x, y_dt, label='fit to data')
+    plt.plot(x, np.ones_like(x)*y_dt[0], label='data resolution')
+    plt.plot(x, np.ones_like(x)*y_mc[0], label='mc resolution')
+    plt.plot(x_sf, y_dt[0], label='additional smearing', marker='x', linestyle="")
+    plt.legend()
+
+    plt.text(0.1, 3, 'smearing: {}'.format(round(x_sf,3)))
+    plt.text(0.1, 2.7, 'gradient: {}'.format(round(par_dt[0],3)))
+    plt.xlabel('smearing factor of pt')
+    plt.ylabel('additional smearing of m_vis')
+    plt.savefig(f'plots/smeared_fits/{name}.png')
+    plt.clf()
+    return x_sf, y_mc[0], y_dt[0]
 
 
 def usedir(directory, overwrite = False):

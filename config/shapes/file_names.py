@@ -16,33 +16,32 @@ common_files_2018 = {
 
 common_files_2022 = {
     "DY": [
-        "DYJetsToLL_M-10to50_TuneCP5_13p6TeV-madgraphMLM-pythia8-Run3Winter22MiniAOD-122X",
-        "DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X",
+        "DYto2L-2Jets_MLL-10to50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X",
+        "DYto2L-2Jets_MLL-50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X",
     ],
     "W": [
-        "WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X",
+        "WtoLNu-2Jets_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X",
     ],
     "TT": [
-        "TTTo2J1L1Nu_CP5_13p6TeV_powheg-pythia8-Run3Winter22MiniAOD-122X",
-        "TTTo2L2Nu_CP5_13p6TeV_powheg-pythia8-Run3Winter22MiniAOD-122X",
+        "TT_TuneCP5_13p6TeV_powheg-pythia8_Run3Summer22NanoAODv10-124X",
     ],
     "ST": [
-        "TbarBQ_t-channel_4FS_CP5_13p6TeV_powheg-madspin-pythia8-Run3Winter22MiniAOD-122X",
-        "TBbarQ_t-channel_4FS_CP5_13p6TeV_powheg-madspin-pythia8-Run3Winter22MiniAOD-122X",
-        "TbarWplus_DR_AtLeastOneLepton_CP5_13p6TeV_powheg-pythia8-Run3Winter22MiniAOD-122X",
-        "TWminus_DR_AtLeastOneLepton_CP5_13p6TeV_powheg-pythia8-Run3Winter22MiniAOD-122X",
+        "TbarBQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8_Run3Summer22NanoAODv11-126X",
+        "TbarWplus_DR_AtLeastOneLepton_TuneCP5_13p6TeV_powheg-pythia8_Run3Summer22NanoAODv11-126X",
+        "TBbarQ_t-channel_4FS_TuneCP5_13p6TeV_powheg-madspin-pythia8_Run3Summer22NanoAODv11-126X",
+        "TWminus_DR_AtLeastOneLepton_TuneCP5_13p6TeV_powheg-pythia8_Run3Summer22NanoAODv11-126X",
     ],
     "VV": [
-        "WW_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X",
-        "WZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X",
-        "ZZ_TuneCP5_13p6TeV-pythia8-Run3Winter22MiniAOD-122X",
+        "WW_TuneCP5_13p6TeV-pythia8_Run3Winter22NanoAOD-122X",
+        "WZ_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X",
+        "ZZ_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X",
     ],
     "DYtau": [
-        "DYJetsToLL_M-10to50_TuneCP5_13p6TeV-madgraphMLM-pythia8-Run3Winter22MiniAOD-122X",
-        "DYJetsToLL_M-50_TuneCP5_13p6TeV-madgraphMLM-pythia8-Run3Winter22MiniAOD-122X",
+        "DYto2L-2Jets_MLL-10to50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X",
+        "DYto2L-2Jets_MLL-50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X",
     ],
     "Wtau": [
-        "WJetsToLNu_TuneCP5_13p6TeV-madgraphMLM-pythia8-Run3Winter22MiniAOD-122X",
+        "WtoLNu-2Jets_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X",
     ],
 }
 
@@ -51,10 +50,8 @@ files = {
         "mm": dict(
             {
                 "data": [
-                    "SingleMuon_Run2022C-PromptNanoAODv10_v1-v1",
-                    # "SingleMuon_Run2022C-PromptReco-v1",
-                    # "Muon_Run2022C-PromptReco-v1",
-                    "Muon_Run2022C-PromptNanoAODv10_v1-v1",
+                    "SingleMuon_Run2022C-PromptNanoAODv10",
+                    "Muon_Run2022C-PromptNanoAODv10",
                     # "Muon_Run2022D-PromptReco-v1",
                     # "Muon_Run2022D-PromptReco-v2",
                 ],
@@ -75,8 +72,8 @@ files = {
             {
                 "data": [
                     # "SingleMuon_Run2022C-PromptReco-v1",
-                    "SingleMuon_Run2022C-PromptNanoAODv10_v1-v1",
-                    "Muon_Run2022C-PromptNanoAODv10_v1-v1",
+                    "SingleMuon_Run2022C-PromptNanoAODv10",
+                    "Muon_Run2022C-PromptNanoAODv10",
                     # "SingleMuon_Run2022C-PromptReco-v1",
                     # "Muon_Run2022D-PromptReco-v1",
                     # "Muon_Run2022D-PromptReco-v2",

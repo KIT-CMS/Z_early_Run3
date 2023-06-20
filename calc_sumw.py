@@ -19,7 +19,7 @@ def job_wrapper(args):
     return calc(*args)
 
 def calc(path, dataset_proc):
-    df = uproot.concatenate(f'{path}/*/*.root:ntuple', num_workers = 8, library='pd')
+    df = uproot.concatenate(f'{path}/mm/*.root:ntuple', num_workers = 8, library='pd')
     nevents = len(df.index)
 
     # assert nevents == dataset_proc["nevents"]
@@ -50,7 +50,7 @@ def calc_sumw(dataset, ntuples, nthreads):
         pass
 
 if __name__ == "__main__":
-    base_path = "/ceph/moh/CROWN_samples/Run3V03_sumw/ntuples/2022/*"
+    base_path = "/ceph/jdriesch/CROWN_samples/Run3V07_sumw/ntuples/2022/*"
     dataset = yaml.load(open("datasets.yaml"), Loader=yaml.Loader)
 
     ntuples = glob.glob(base_path)

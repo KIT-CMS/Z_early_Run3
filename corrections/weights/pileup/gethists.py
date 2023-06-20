@@ -17,7 +17,7 @@ def makehists(fdict, rfile, hrange):
         chain = ROOT.TChain("ntuple")
         for f in fdict[ch]:
             chain.Add(f)
-            #print(f)
+            print(f)
         rdf = ROOT.RDataFrame(chain)
         for var in hrange.keys():
             print(var)
@@ -246,15 +246,17 @@ if __name__=='__main__':
     
     w_hists = 'weights.root'
 
-    basedir = '/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_pu_EraC/2022'
-    #basedir =  '/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_EraC/2022'
-    muon = 'Muon_Run2022C-PromptReco-v1'
-    dy = 'DYtoLL_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X'
-    wj = 'WtoLNu_NoTau_CP5_13p6TeV_amcatnloFXFX-pythia8-Run3Winter22MiniAOD-122X'
+    basedir = '/ceph/jdriesch/CROWN_samples/Run3V07/ntuples/2022'
+    
+    muon = 'Muon_Run2022C-PromptNanoAODv10'
+    dy = 'DYto2L-2Jets_MLL-50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X'
+    wj = 'WtoLNu-2Jets_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X'
     fdict = {
         'data': [
-            f'{basedir}/Single{muon}/mm/Single{muon}_*.root', #add mmet in the future
+            f'{basedir}/Single{muon}/mm/Single{muon}_*.root',
+            f'{basedir}/Single{muon}/mmet/Single{muon}_*.root',
             f'{basedir}/{muon}/mm/{muon}*.root',
+            f'{basedir}/{muon}/mmet/{muon}*.root',
         ],
         'mc': [
             f'{basedir}/{dy}/mm/{dy}*.root',

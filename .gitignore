@@ -5,8 +5,9 @@ __pycache__/
 # folders and files
 .gitignore.swp
 log/
-output/
-plots/
+output*/
+plots*/
+fit_results/
 # C extensions
 *.so
 
