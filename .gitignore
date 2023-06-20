@@ -5,8 +5,8 @@ __pycache__/
 # folders and files
 .gitignore.swp
 log/
-output/
-plots/
+output*/
+plots*/
 # C extensions
 *.so
 
