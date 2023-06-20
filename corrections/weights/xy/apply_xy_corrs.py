@@ -4,7 +4,7 @@ import os
 from tqdm import tqdm
 import numpy as np
 import array as a
-import json
+import yaml
 import glob
 from multiprocessing import Pool, RLock
 
@@ -12,8 +12,8 @@ from multiprocessing import Pool, RLock
 def job_wrapper(args):
     return apply_corrections(*args)
 
-def apply_corrections(f, corr_file):
-    output_path = f.replace("ntuples_xsec_sf_scaleres_ptuncorr_pu_EraC", "friend_xsec_sf_scaleres_ptuncorr_EraC_xycorr")    
+def apply_corrections(f, corr_dict):
+    output_path = f.replace("ntuples", "friends/xy")
     if os.path.isfile(output_path):
         f_tmp = None
         try:
@@ -23,15 +23,8 @@ def apply_corrections(f, corr_file):
         if f_tmp and not f_tmp.IsZombie():
             return 1  
     
-    with open(corr_file) as cf:
-        corr_dict = json.load(cf)
-
     chain = ROOT.TChain("ntuple")
     chain.Add(f)
-    friend = ROOT.TChain("ntuple")
-    friend.Add(f.replace("ntuples_xsec_sf_scaleres_ptuncorr_pu_EraC", "friend_xsec_sf_scaleres_ptuncorr_lepunc_pu_EraC_met_corr"))
-
-    chain.AddFriend(friend)
 
     rdf = ROOT.RDataFrame(chain)
     
@@ -39,16 +32,19 @@ def apply_corrections(f, corr_file):
     is_data = (rdf.Sum("is_data").GetValue()>0)
     # is_sigw = ("WtoLNu" in f and "mmet" in f)
 
-    rdf = rdf.Define("pfmet_corr_x", "pfmet_corr * cos(pfmetphi_corr)")
-    rdf = rdf.Define("pfmet_corr_y", "pfmet_corr * sin(pfmetphi_corr)")
+    rdf = rdf.Define("pfmet_x", "pfmet_uncorrected * cos(pfmetphi_uncorrected)")
+    rdf = rdf.Define("pfmet_y", "pfmet_uncorrected * sin(pfmetphi_uncorrected)")
 
     if is_data: 
         ch = 'data'
     else:
         ch = 'mc'
+    
+    with open(corr_dict[ch], 'r') as cf:
+        corr_yaml = yaml.load(cf, Loader=yaml.Loader)
 
-    rdf = rdf.Define("pfmet_xycorr_x", f"pfmet_corr_x - (({corr_dict[ch+'_x']['m']}) * npvGood + ({corr_dict[ch+'_x']['c']}))")
-    rdf = rdf.Define("pfmet_xycorr_y", f"pfmet_corr_y - (({corr_dict[ch+'_y']['m']}) * npvGood + ({corr_dict[ch+'_y']['c']}))")
+    rdf = rdf.Define("pfmet_xycorr_x", f"pfmet_x - (({corr_yaml['_x']['m']}) * npvGood + ({corr_yaml['_x']['c']}))")
+    rdf = rdf.Define("pfmet_xycorr_y", f"pfmet_y - (({corr_yaml['_y']['m']}) * npvGood + ({corr_yaml['_y']['c']}))")
 
     rdf = rdf.Define("pfmet_xycorr", "sqrt(pfmet_xycorr_x * pfmet_xycorr_x + pfmet_xycorr_y * pfmet_xycorr_y)")
     rdf = rdf.Define("pfmetphi_xycorr", "atan2(pfmet_xycorr_y, pfmet_xycorr_x)")
@@ -82,21 +78,18 @@ if __name__=='__main__':
 
 
     # Load ntuples
-    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_ptuncorr_pu_EraC/2022/*/*/*.root"
-    # base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/friend_xsec_sf_scaleres_ptuncorr_lepunc_pu_EraC_met_corr/2022/*/*/*.root"
+    base_path = "/ceph/jdriesch/CROWN_samples/Run3V07/ntuples/2022/*/mm*/*.root"
     ntuples = glob.glob(base_path)
 
     # Load weight files
-    corr_file = 'corr.json'
-
-    hrange = {
-        'pfmetphi_corr': [-np.pi, np.pi, 100],
+    corr_dict = {
+        'data': 'corrections/2022C/MET.yaml',
+        'mc': 'corrections/Run3Summer22NanoAODv11-126X/MET.yaml',
     }
 
     nthreads = 16
-    arguments = [(ntuple, corr_file) for ntuple in ntuples]
+    arguments = [(ntuple, corr_dict) for ntuple in ntuples]
     # print(arguments[0])
-    # apply_corrections(ntuples[0], puweights, hrange)
 
     generate_files(arguments, nthreads)
     #for n in tqdm(ntuples):

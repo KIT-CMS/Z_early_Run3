@@ -14,7 +14,7 @@ def job_wrapper(args):
     return apply_corrections(*args)
 
 def apply_corrections(f, wfile, hrange):
-    output_path = f.replace("ntuples_xsec_sf_scaleres_ptuncorr", "ntuples_xsec_sf_scaleres_ptuncorr_pu")
+    output_path = f.replace("ntuples", "friends/pu")
     
     if os.path.isfile(output_path):
         f_tmp = None
@@ -36,14 +36,11 @@ def apply_corrections(f, wfile, hrange):
 
     rdf = ROOT.RDataFrame('ntuple', f)
 
-    # extract original columns for later snapshot
-    original_cols = [str(col) for col in rdf.GetColumnNames()]
-    
     # check if data
     is_data = (rdf.Sum("is_data").GetValue()>0) 
     
     rdf = rdf.Define('puweight', '0')
-    quants = original_cols + ["puweight", "puweightUp", "puweightDn"]
+    quants = ["puweight", "puweightUp", "puweightDn"]
         
     for var in hrange.keys():
         bins = np.linspace(hrange[var][0], hrange[var][1], hrange[var][2]+1)
@@ -100,12 +97,12 @@ def generate_files(arguments, nthreads):
 if __name__=='__main__':
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     #ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
-    ROOT.ROOT.EnableImplicitMT(16)
-    #ROOT.gROOT.SetBatch(True)
+    # ROOT.ROOT.EnableImplicitMT(16)
+    ROOT.gROOT.SetBatch(True)
 
 
     # Load ntuples
-    base_path = "/storage/9/jdriesch/earlyrun3/samples/Run3V06/ntuples_xsec_sf_scaleres_ptuncorr_EraC/2022/*/*/*.root"
+    base_path = "/ceph/jdriesch/CROWN_samples/Run3V07/ntuples/2022/*/mm*/*.root"
     ntuples = glob.glob(base_path)
 
     # Load weight files
