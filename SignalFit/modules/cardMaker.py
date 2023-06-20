@@ -311,9 +311,7 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
         for key in nuisgroups.keys():
             nuisgroups_out[key] = []
             for nuis in nuisgroups[key]:
-                print("### my syst is " + ' '.join(systs) + " and I'll check " + nuis.name)
                 if nuis.name in systs:
-                    print("### adding!")
                     nuisgroups_out[key].append(nuis)
             if len(nuisgroups_out[key]) < 1:
                 del nuisgroups_out[key]
