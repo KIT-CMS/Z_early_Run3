@@ -99,20 +99,28 @@ def get_all_variables(doZpt, doQCD, doLepCorrBins):
     if doZpt:
         variable_dict = {
             "mm": [
-                "uP1_uncorrected", "uP2_uncorrected", "pfuP1_uncorrected", "pfuP2_uncorrected", "bosonpt", "bosonrap"
+                ## "uP1_uncorrected", "uP2_uncorrected", "bosonpt", "bosonrap"
+                # "bosonpt", "bosonrap",
+                # "pfuP1_uncorrected", "pfuP2_uncorrected",
 
-                # "pfmet_uncorrected", "pfmt_uncorrected", "pfuP1_uncorrected", "pfuP2_uncorrected",
-                # "pfmet_corr", "pfmt_corr", "pfuP1_corr", "pfuP2_corr",
+                ## "pfmet_uncorrected", "pfmt_uncorrected", "pfuP1_uncorrected", "pfuP2_uncorrected",
+                ## "pfmet_corr", "pfmt_corr", "pfuP1_corr", "pfuP2_corr",
             ],
             "mmet": [
-                "uP1_uncorrected_pos", "uP2_uncorrected_pos", "pfuP1_uncorrected_pos", "pfuP2_uncorrected_pos", "bosonpt_pos", "bosonrap_pos",
-                "uP1_uncorrected_neg", "uP2_uncorrected_neg", "pfuP1_uncorrected_neg", "pfuP2_uncorrected_neg", "bosonpt_neg", "bosonrap_neg",
+                ## "uP1_uncorrected_pos", "uP2_uncorrected_pos", "bosonpt_pos", "bosonrap_pos",
+                ## "uP1_uncorrected_neg", "uP2_uncorrected_neg", "bosonpt_neg", "bosonrap_neg",
+                
+                #"bosonpt_pos", "bosonrap_pos",
+                "bosonpt_neg", "bosonrap_neg",
+                
+                #"pfuP1_uncorrected_pos", "pfuP2_uncorrected_pos",
+                #"pfuP1_uncorrected_neg", "pfuP2_uncorrected_neg",
 
-                # "pfmet_uncorrected_pos", "pfuP1_uncorrected_pos", "pfuP2_uncorrected_pos",
-                # "pfmet_corr_pos", "pfmt_corr_pos", "pfuP1_corr_pos", "pfuP2_corr_pos",
+                ## "pfmet_uncorrected_pos", "pfuP1_uncorrected_pos", "pfuP2_uncorrected_pos",
+                ## "pfmet_corr_pos", "pfmt_corr_pos", "pfuP1_corr_pos", "pfuP2_corr_pos",
 
-                # "pfmet_uncorrected_neg", "pfuP1_uncorrected_neg", "pfuP2_uncorrected_neg",
-                # "pfmet_corr_neg", "pfmt_corr_neg", "pfuP1_corr_neg", "pfuP2_corr_neg",
+                ## "pfmet_uncorrected_neg", "pfuP1_uncorrected_neg", "pfuP2_uncorrected_neg",
+                ## "pfmet_corr_neg", "pfmt_corr_neg", "pfuP1_corr_neg", "pfuP2_corr_neg",
             ],
             "ee": [],
             "emet": [],
