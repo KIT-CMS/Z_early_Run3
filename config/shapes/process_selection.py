@@ -65,8 +65,7 @@ def MC_base_process_selection(channel, era, runPlot, totalLumi, run_list, run_lu
             lumi_weight(era, runPlot, totalLumi, run_list, run_lumi, norm1invpb),
         ]
         if applySF:
-            # MC_base_process_weights += [("sf_trk*sf_sta*sf_id*sf_iso*sf_trg", "sfWeight")]
-            MC_base_process_weights += [("sf_sta*sf_id*sf_iso*sf_trg", "sfWeight")]
+            MC_base_process_weights += [("sf_trk*sf_sta*sf_id*sf_iso*sf_trg", "sfWeight")]
         return Selection(name="MC base", weights=MC_base_process_weights)
     elif channel in ["emet"]:
         MC_base_process_weights = [
@@ -89,8 +88,7 @@ def MC_base_process_selection(channel, era, runPlot, totalLumi, run_list, run_lu
             lumi_weight(era, runPlot, totalLumi, run_list, run_lumi, norm1invpb),
         ]
         if applySF:
-            # MC_base_process_weights += [("sf_trk*sf_sta*sf_id*sf_iso*sf_trg", "sfWeight")]
-            MC_base_process_weights += [("sf_sta*sf_id*sf_iso*sf_trg", "sfWeight")]
+            MC_base_process_weights += [("sf_trk*sf_sta*sf_id*sf_iso*sf_trg", "sfWeight")]
             # MC_base_process_weights += [("sf_trk*sf_sta*sf_id*sf_iso", "sfWeight")]  # Z counting
         return Selection(name="MC base", weights=MC_base_process_weights)
     elif channel in ["ee"]:

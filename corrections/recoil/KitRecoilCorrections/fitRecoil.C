@@ -89,7 +89,7 @@ void fitRecoil(
     Bool_t sigOnly = 1, // 1=> signal event only, 0=> add background
     Bool_t doElectron = 0, // 0=> Muon channels, 1=> Electron channels
     Double_t inputType = 0, // Which dataset to run on 0=> Data, 1=> Z->ll MC, 2=> W+ jets MC, 3=> W- jets MC
-    std::string inputDirectory = "/storage/9/jdriesch/earlyrun3/samples/Run3V06",
+    std::string inputDirectory = "/ceph/jdriesch/CROWN_samples/Run3V07",
     std::string metVar = "pfmet_uncorrected",
     std::string metPhiVar = "pfmetphi_uncorrected",
     TString outputDir = "./", // output directory

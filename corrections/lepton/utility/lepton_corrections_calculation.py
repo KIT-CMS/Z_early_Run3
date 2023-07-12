@@ -148,10 +148,8 @@ def select_events(rdf, ch, args):
 
     # include weights for mc
     if 'mc' in ch:
-        # weight = "genweight*sumwWeight*crossSectionPerEventWeight"\
-        #             "*puweight*sf_trk*sf_sta*sf_id*sf_iso*sf_trg"
         weight = "genweight*sumwWeight*crossSectionPerEventWeight"\
-                    "*puweight*sf_sta*sf_id*sf_iso*sf_trg"
+                    "*puweight*sf_trk*sf_sta*sf_id*sf_iso*sf_trg"
     else:
         weight = "1"
 
@@ -597,8 +595,8 @@ if __name__=='__main__':
             smeared_hists(ch, bins)
 
     if args.fit:
-        #plot_fits(n_eta, n_pt, corr)
-        #make_ratio(n_eta, n_pt, corr)
+        plot_fits(n_eta, n_pt, corr)
+        make_ratio(n_eta, n_pt, corr)
         make2d(bins, corr)
 
     for ch in datasets.keys():

@@ -576,7 +576,7 @@ if __name__=='__main__':
     infiles = '/ceph/jdriesch/CROWN_samples/Run3V07/ntuples/2022/*/mm*/*.root'
 
     basepath = '/work/jdriesch/earlyrun3/Z_early_Run3/corrections/recoil/'\
-        'KitRecoilCorrections/Run3V07_ptuncorr_outputs/'
+        'KitRecoilCorrections/Run3V07/'
 
     ws_dicts = [
         {

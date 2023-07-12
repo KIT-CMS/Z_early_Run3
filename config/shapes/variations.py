@@ -1,36 +1,20 @@
 from ntuple_processor.variations import ReplaceWeight, ReplaceCut
 
-# mu_sf_weight = [
-#     ReplaceWeight("SFTrkUp", "sfWeight", ("sf_trk_up*sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkUp")),
-#     ReplaceWeight("SFTrkDn", "sfWeight", ("sf_trk_dn*sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkDn")),
-
-#     ReplaceWeight("SFStaUp", "sfWeight", ("sf_trk*sf_sta_up*sf_id*sf_iso*sf_trg", "sfWeightStaUp")),
-#     ReplaceWeight("SFStaDn", "sfWeight", ("sf_trk*sf_sta_dn*sf_id*sf_iso*sf_trg", "sfWeightStaDn")),
-
-#     ReplaceWeight("SFIDUp", "sfWeight", ("sf_trk*sf_sta*sf_id_up*sf_iso*sf_trg", "sfWeightIDUp")),
-#     ReplaceWeight("SFIDDn", "sfWeight", ("sf_trk*sf_sta*sf_id_dn*sf_iso*sf_trg", "sfWeightIDDn")),
-
-#     ReplaceWeight("SFIsoUp", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso_up*sf_trg", "sfWeightIsoUp")),
-#     ReplaceWeight("SFIsoDn", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso_dn*sf_trg", "sfWeightIsoDn")),
-
-#     ReplaceWeight("SFTrgUp", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso*sf_trg_up", "sfWeightTrgUp")),
-#     ReplaceWeight("SFTrgDn", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso*sf_trg_dn", "sfWeightTrgDn")),
-# ]
 mu_sf_weight = [
-    ReplaceWeight("SFTrkUp", "sfWeight", ("sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkUp")),
-    ReplaceWeight("SFTrkDn", "sfWeight", ("sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkDn")),
+    ReplaceWeight("SFTrkUp", "sfWeight", ("sf_trk_up*sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkUp")),
+    ReplaceWeight("SFTrkDn", "sfWeight", ("sf_trk_dn*sf_sta*sf_id*sf_iso*sf_trg", "sfWeightTrkDn")),
 
-    ReplaceWeight("SFStaUp", "sfWeight", ("sf_sta_up*sf_id*sf_iso*sf_trg", "sfWeightStaUp")),
-    ReplaceWeight("SFStaDn", "sfWeight", ("sf_sta_dn*sf_id*sf_iso*sf_trg", "sfWeightStaDn")),
+    ReplaceWeight("SFStaUp", "sfWeight", ("sf_trk*sf_sta_up*sf_id*sf_iso*sf_trg", "sfWeightStaUp")),
+    ReplaceWeight("SFStaDn", "sfWeight", ("sf_trk*sf_sta_dn*sf_id*sf_iso*sf_trg", "sfWeightStaDn")),
 
-    ReplaceWeight("SFIDUp", "sfWeight", ("sf_sta*sf_id_up*sf_iso*sf_trg", "sfWeightIDUp")),
-    ReplaceWeight("SFIDDn", "sfWeight", ("sf_sta*sf_id_dn*sf_iso*sf_trg", "sfWeightIDDn")),
+    ReplaceWeight("SFIDUp", "sfWeight", ("sf_trk*sf_sta*sf_id_up*sf_iso*sf_trg", "sfWeightIDUp")),
+    ReplaceWeight("SFIDDn", "sfWeight", ("sf_trk*sf_sta*sf_id_dn*sf_iso*sf_trg", "sfWeightIDDn")),
 
-    ReplaceWeight("SFIsoUp", "sfWeight", ("sf_sta*sf_id*sf_iso_up*sf_trg", "sfWeightIsoUp")),
-    ReplaceWeight("SFIsoDn", "sfWeight", ("sf_sta*sf_id*sf_iso_dn*sf_trg", "sfWeightIsoDn")),
+    ReplaceWeight("SFIsoUp", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso_up*sf_trg", "sfWeightIsoUp")),
+    ReplaceWeight("SFIsoDn", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso_dn*sf_trg", "sfWeightIsoDn")),
 
-    ReplaceWeight("SFTrgUp", "sfWeight", ("sf_sta*sf_id*sf_iso*sf_trg_up", "sfWeightTrgUp")),
-    ReplaceWeight("SFTrgDn", "sfWeight", ("sf_sta*sf_id*sf_iso*sf_trg_dn", "sfWeightTrgDn")),
+    ReplaceWeight("SFTrgUp", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso*sf_trg_up", "sfWeightTrgUp")),
+    ReplaceWeight("SFTrgDn", "sfWeight", ("sf_trk*sf_sta*sf_id*sf_iso*sf_trg_dn", "sfWeightTrgDn")),
 ]
 
 pdf_weight = [

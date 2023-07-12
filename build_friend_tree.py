@@ -42,9 +42,6 @@ def friend_producer(rfile, dataset_proc):
         print(f"friend_producer: {output_path} exists -> skip")
         return
 
-    # if not os.path.exists(os.path.dirname(output_path)):
-    #     os.makedirs(os.path.dirname(output_path), exist_ok=False)
-
     if not os.path.exists(output_path):
         os.makedirs(output_path, exist_ok=False)
 
@@ -166,9 +163,6 @@ if __name__ == "__main__":
 
     ntuples = glob.glob(base_path)
     ntuples_wo_data = ntuples.copy()
-    # for ntuple in ntuples:
-    #     if "Run20" in ntuple:
-    #         ntuples_wo_data.remove(str(ntuple))
     nthreads = 64
     if nthreads > len(ntuples_wo_data):
         nthreads = len(ntuples_wo_data)

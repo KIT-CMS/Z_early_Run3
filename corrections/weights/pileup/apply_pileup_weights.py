@@ -81,7 +81,7 @@ def apply_corrections(f, wfile, hrange):
 
     rdf.Snapshot("ntuple", output_path, quants)
 
-#"""
+
 def generate_files(arguments, nthreads):
     pool = Pool(nthreads, initargs=(RLock(),), initializer=tqdm.set_lock)
     for _ in tqdm(
@@ -92,12 +92,11 @@ def generate_files(arguments, nthreads):
         leave=True,
         ):
         pass
-#"""
+
 
 if __name__=='__main__':
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
     #ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
-    # ROOT.ROOT.EnableImplicitMT(16)
     ROOT.gROOT.SetBatch(True)
 
 
@@ -115,8 +114,4 @@ if __name__=='__main__':
     }    
     nthreads = 16
     arguments = [(ntuple, rfile_w, hrange) for ntuple in ntuples]
-    # print(arguments[0])
-    # apply_corrections(ntuples[0], puweights, hrange)
     generate_files(arguments, nthreads)
-    #for n in tqdm(ntuples):
-    #    apply_corrections(n, x, mz_mc, mz_dt, pt_sf, mz_res_mc, mz_res_dt)
