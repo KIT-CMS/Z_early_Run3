@@ -8,6 +8,7 @@ log/
 output*/
 plots*/
 fit_results/
+corrections/lepton/**/*.txt
 # C extensions
 *.so
 
