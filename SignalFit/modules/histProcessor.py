@@ -136,9 +136,8 @@ def ProcessHists(
             for p in processes:
                 if p == "data" and syst != "Nominal":
                     continue
-                if p == "EWK" and ("LHEPdfWeight" in syst or "LHEScaleWeight" in syst):
+                if p == "EWK" and ("LHEPdfWeight" in syst or "LHEScaleWeight" in syst or "PSWeight" in syst):
                     continue
-
                 name_base = f"h_{p.lower()}_{fit_variable}"
                 h_renamed = None
                 if p == "EWK":
@@ -179,7 +178,7 @@ def ProcessHists(
                     if onlyShapeTheo:
                         assert h_renamed_up.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_up.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
                         assert h_renamed_dn.Integral(0, -1) - h_renamed_no.Integral(0, -1) < 1.e-6, f"{h_renamed_dn.Integral(0, -1)} {h_renamed_no.Integral(0, -1)}"
-                elif syst in ["LHEPdfWeightAlphaSUp", "LHEPdfWeightAlphaSDown", "LHEScaleWeightMUFUp", "LHEScaleWeightMUFDown", "LHEScaleWeightMURUp", "LHEScaleWeightMURDown", "LHEScaleWeightMUFMURUp", "LHEScaleWeightMUFMURDown", "PSWeightUp", "PSWeightDown"]:
+                elif syst in ["LHEPdfWeightAlphaSUp", "LHEPdfWeightAlphaSDown", "LHEScaleWeightMUFUp", "LHEScaleWeightMUFDown", "LHEScaleWeightMURUp", "LHEScaleWeightMURDown", "LHEScaleWeightMUFMURUp", "LHEScaleWeightMUFMURDown", "PSWeightISRUp", "PSWeightISRDown", "PSWeightFSRUp", "PSWeightFSRDown", "PSWeightISRFSRUp", "PSWeightISRFSRDown"]:
                     h_renamed_no = hists_all[h_renamed.GetName().replace(f"_{syst}", "")].Clone(h_renamed.GetName()+"Nominal")
                     n_renamed_no = h_renamed_no.Integral(0, -1)
                     h_renamed_sy = h_renamed.Clone(h_renamed.GetName())
@@ -278,8 +277,12 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
         ] + [
-            "PSWeightUp",
-            "PSWeightDown",
+            "PSWeightISRUp",
+            "PSWeightISRDown",
+            "PSWeightFSRUp",
+            "PSWeightFSRDown",
+            # "PSWeightISRFSRUp",
+            # "PSWeightISRFSRDown",
         ] + [
             "LepCorrUp",
             "LepCorrDn",
@@ -327,8 +330,12 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
         ] + [
-            "PSWeightUp",
-            "PSWeightDown",
+            "PSWeightISRUp",
+            "PSWeightISRDown",
+            "PSWeightFSRUp",
+            "PSWeightFSRDown",
+            # "PSWeightISRFSRUp",
+            # "PSWeightISRFSRDown",
         ] + [
             "puWeightUp",
             "puWeightDn",
@@ -371,8 +378,12 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "LHEScaleWeightMUFMURUp",
             "LHEScaleWeightMUFMURDown",
         ] + [
-            "PSWeightUp",
-            "PSWeightDown",
+            "PSWeightISRUp",
+            "PSWeightISRDown",
+            "PSWeightFSRUp",
+            "PSWeightFSRDown",
+            # "PSWeightISRFSRUp",
+            # "PSWeightISRFSRDown",
         ] + [
             "puWeightUp",
             "puWeightDn",
