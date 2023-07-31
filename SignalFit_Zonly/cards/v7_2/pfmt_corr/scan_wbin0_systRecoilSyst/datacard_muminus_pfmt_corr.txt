@@ -1,0 +1,25 @@
+imax 1 number of channels
+jmax 4 number of processes -1
+kmax * number of nuisance parameters
+
+Observation -1
+
+shapes data_obs                       * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systRecoilSyst.root h_data_pfmt_corr_neg                              
+shapes lepminus_sig                   * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systRecoilSyst.root h_w_pfmt_corr_neg                                  h_w_pfmt_corr_neg_$SYSTEMATIC
+shapes leplep_sig                     * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systRecoilSyst.root h_dy_pfmt_corr_neg                                 h_dy_pfmt_corr_neg_$SYSTEMATIC
+shapes tt                             * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systRecoilSyst.root h_tt_pfmt_corr_neg                                 h_tt_pfmt_corr_neg_$SYSTEMATIC
+shapes ewk                            * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systRecoilSyst.root h_ewk_pfmt_corr_neg                                h_ewk_pfmt_corr_neg_$SYSTEMATIC
+shapes qcd_muminus                    * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systRecoilSyst.root h_qcd_pfmt_corr_neg                                h_qcd_pfmt_corr_neg_$SYSTEMATIC
+
+bin                                      bin1            bin1            bin1            bin1            bin1           
+process                                  lepminus_sig    leplep_sig      tt              ewk             qcd_muminus    
+process                                  0               -1              1               2               -2             
+rate                                     -1.0            -1.0            -1.0            -1.0            -1.0           
+
+RecoilDoubleGauss              shape           1.0             1.0             -               -               -              
+RecoilSigOnlyFit               shape           1.0             1.0             -               -               -              
+RecoilZrap0                    shape           1.0             1.0             -               -               -              
+RecoilZrap1                    shape           1.0             1.0             -               -               -              
+RecoilZrap2                    shape           1.0             1.0             -               -               -              
+
+recoil                         group = RecoilDoubleGauss RecoilSigOnlyFit RecoilZrap0 RecoilZrap1 RecoilZrap2

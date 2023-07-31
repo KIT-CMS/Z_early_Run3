@@ -48,7 +48,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         # qcd
         elif bool(re.match(r"expproc_qcd_\w*fit$", hkey)):
             hnames_qcd.append( hkey )
-    assert len(hnames_sig)>=1, "There should be at least one sig histogram in file: {}".format(ifilename)
+    assert len(hnames_sig_z)>=1, "There should be at least one sig histogram in file: {}".format(ifilename)
     print(f"W signals: {hnames_sig}")
     print(f"Z signals: {hnames_sig_z}")
     print(f"QCD:       {hnames_qcd}")

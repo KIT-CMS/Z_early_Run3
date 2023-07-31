@@ -1,0 +1,19 @@
+imax 1 number of channels
+jmax 2 number of processes -1
+kmax * number of nuisance parameters
+
+Observation -1
+
+shapes data_obs                       * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systSFTrk.root h_data_m_toFit                                    
+shapes leplep_sig                     * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systSFTrk.root h_dy_m_toFit                                       h_dy_m_toFit_$SYSTEMATIC
+shapes tt                             * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systSFTrk.root h_tt_m_toFit                                       h_tt_m_toFit_$SYSTEMATIC
+shapes ewk                            * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/root/v7_2/output_shapes_pfmt_corr_wbin0_systSFTrk.root h_ewk_m_toFit                                      h_ewk_m_toFit_$SYSTEMATIC
+
+bin                                      bin1            bin1            bin1           
+process                                  leplep_sig      tt              ewk            
+process                                  0               1               2              
+rate                                     -1.0            -1.0            -1.0           
+
+SFTrk                          shape           1.0             1.0             1.0            
+
+effsys                         group = SFTrk

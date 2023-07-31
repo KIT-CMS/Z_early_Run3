@@ -1,0 +1,14 @@
+imax 1 number of channels
+jmax 0 number of processes -1
+kmax * number of nuisance parameters
+
+Observation -1
+
+shapes lepminus_sig                   * /work/jdriesch/earlyrun3/Z_early_Run3/SignalFit_Zonly/cards/v7_2/pfmt_corr/scan_wbin0_systAll/xsec_muminus.root xsec_muminus_inAcc                                 xsec_muminus_inAcc_$SYSTEMATIC
+
+bin                                      bin1           
+process                                  lepminus_sig   
+process                                  0              
+rate                                     -1.0           
+
+
