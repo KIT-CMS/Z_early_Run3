@@ -68,7 +68,7 @@ if doInclusive:
 
                 # _                = MakePostPlot(filename, "muplus",  "prefit",  mass_bins,   f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL,                                  is5TeV=do5TeV)
                 # _                = MakePostPlot(filename, "muminus", "prefit",  mass_bins,   f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL, startbin = len(mass_bins),       is5TeV=do5TeV)
-                _                = MakePostPlot(filename, "mumu",    "prefit",  mass_bins_z, f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL, startbin = len(mass_bins)*2 - 1, is5TeV=do5TeV)
+                _                = MakePostPlot(filename, "mumu",    "prefit",  mass_bins_z, f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL, startbin = 1, is5TeV=do5TeV)
 
                 if syst_name != "All":
                     continue
@@ -76,7 +76,7 @@ if doInclusive:
                 nevts = OrderedDict()
                 # nevts['muplus']  = MakePostPlot(filename, "muplus",  "postfit", mass_bins,   f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL,                                  is5TeV=do5TeV)
                 # nevts['muminus'] = MakePostPlot(filename, "muminus", "postfit", mass_bins,   f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL, startbin = len(mass_bins),       is5TeV=do5TeV)
-                nevts['mumu']    = MakePostPlot(filename, "mumu",    "postfit", mass_bins_z, f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL, startbin = len(mass_bins)*2 - 1, is5TeV=do5TeV)
+                nevts['mumu']    = MakePostPlot(filename, "mumu",    "postfit", mass_bins_z, f"{version}_{fit_var_short}_wbin{idx}_syst{syst_name}", showPULL, startbin = 1, is5TeV=do5TeV)
 
                 # result2json(filename, "lepplus_sig_mu",  f"{workdir}/impacts_lepplus_{version}_{fit_var_short}_wbin{idx}_syst{syst_name}.json")
                 # result2json(filename, "lepminus_sig_mu", f"{workdir}/impacts_lepminus_{version}_{fit_var_short}_wbin{idx}_syst{syst_name}.json")
@@ -109,28 +109,28 @@ if doInclusive:
                 #plotImpacts(f"{workdir}/impacts_WchgAsym_{version}_{fit_var_short}_wbin{idx}_syst{syst_name}.json",  f"impacts_WchgAsym_{version}_{fit_var_short}_wbin{idx}_syst{syst_name}")
 
                 impacts = OrderedDict()
-                _                   = DumpGroupImpacts(filename, "qcd_muplus_mu")
-                _                   = DumpGroupImpacts(filename, "qcd_muminus_mu")
-                impacts['lepplus']  = DumpGroupImpacts(filename, "lepplus_sig_mu")
-                impacts['lepminus'] = DumpGroupImpacts(filename, "lepminus_sig_mu")
+                # _                   = DumpGroupImpacts(filename, "qcd_muplus_mu")
+                # _                   = DumpGroupImpacts(filename, "qcd_muminus_mu")
+                # impacts['lepplus']  = DumpGroupImpacts(filename, "lepplus_sig_mu")
+                # impacts['lepminus'] = DumpGroupImpacts(filename, "lepminus_sig_mu")
                 impacts['leplep']   = DumpGroupImpacts(filename, "leplep_sig_mu")
-                impacts['Wp']       = DumpGroupImpacts(filename, "Wplus_sig_sumxsec",           "nuisance_group_impact_sumpois")
-                impacts['Wm']       = DumpGroupImpacts(filename, "Wminus_sig_sumxsec",          "nuisance_group_impact_sumpois")
-                impacts['Winc']     = DumpGroupImpacts(filename, "Winc_sig_sumxsec",            "nuisance_group_impact_sumpois")
+                # impacts['Wp']       = DumpGroupImpacts(filename, "Wplus_sig_sumxsec",           "nuisance_group_impact_sumpois")
+                # impacts['Wm']       = DumpGroupImpacts(filename, "Wminus_sig_sumxsec",          "nuisance_group_impact_sumpois")
+                # impacts['Winc']     = DumpGroupImpacts(filename, "Winc_sig_sumxsec",            "nuisance_group_impact_sumpois")
                 impacts['Zinc']     = DumpGroupImpacts(filename, "Zinc_sig_sumxsec",            "nuisance_group_impact_sumpois")
-                impacts['WpOverZ']  = DumpGroupImpacts(filename, "WplusZRatio_ratiometaratio",  "nuisance_group_impact_ratiometapois")
-                impacts['WmOverZ']  = DumpGroupImpacts(filename, "WminusZRatio_ratiometaratio", "nuisance_group_impact_ratiometapois")
-                impacts['WOverZ']   = DumpGroupImpacts(filename, "WZRatio_ratiometaratio",      "nuisance_group_impact_ratiometapois")
-                impacts['WpOverWm'] = DumpGroupImpacts(filename, "WchgRatio_ratiometaratio",    "nuisance_group_impact_ratiometapois")
-                impacts['WAsym']    = DumpGroupImpacts(filename, "WchgAsym_chargemetaasym",  "nuisance_group_impact_chargemetapois")
+                # impacts['WpOverZ']  = DumpGroupImpacts(filename, "WplusZRatio_ratiometaratio",  "nuisance_group_impact_ratiometapois")
+                # impacts['WmOverZ']  = DumpGroupImpacts(filename, "WminusZRatio_ratiometaratio", "nuisance_group_impact_ratiometapois")
+                # impacts['WOverZ']   = DumpGroupImpacts(filename, "WZRatio_ratiometaratio",      "nuisance_group_impact_ratiometapois")
+                # impacts['WpOverWm'] = DumpGroupImpacts(filename, "WchgRatio_ratiometaratio",    "nuisance_group_impact_ratiometapois")
+                # impacts['WAsym']    = DumpGroupImpacts(filename, "WchgAsym_chargemetaasym",  "nuisance_group_impact_chargemetapois")
 
                 impacts_subset = OrderedDict()
-                impacts_subset['lepplus']  = DumpGroupImpacts(filename, "lepplus_sig_mu")
-                impacts_subset['lepminus'] = DumpGroupImpacts(filename, "lepminus_sig_mu")
+                # impacts_subset['lepplus']  = DumpGroupImpacts(filename, "lepplus_sig_mu")
+                # impacts_subset['lepminus'] = DumpGroupImpacts(filename, "lepminus_sig_mu")
                 impacts_subset['leplep']   = DumpGroupImpacts(filename, "leplep_sig_mu")
-                impacts_subset['WpOverZ']  = DumpGroupImpacts(filename, "WplusZRatio_ratiometaratio",  "nuisance_group_impact_ratiometapois")
-                impacts_subset['WmOverZ']  = DumpGroupImpacts(filename, "WminusZRatio_ratiometaratio", "nuisance_group_impact_ratiometapois")
-                impacts_subset['WpOverWm'] = DumpGroupImpacts(filename, "WchgRatio_ratiometaratio",    "nuisance_group_impact_ratiometapois")
+                # impacts_subset['WpOverZ']  = DumpGroupImpacts(filename, "WplusZRatio_ratiometaratio",  "nuisance_group_impact_ratiometapois")
+                # impacts_subset['WmOverZ']  = DumpGroupImpacts(filename, "WminusZRatio_ratiometaratio", "nuisance_group_impact_ratiometapois")
+                # impacts_subset['WpOverWm'] = DumpGroupImpacts(filename, "WchgRatio_ratiometaratio",    "nuisance_group_impact_ratiometapois")
 
                 ## print out the nevts information
                 print("\n\n")
@@ -144,56 +144,61 @@ if doInclusive:
                 print("\n\n")
                 print(FormatTable(impacts_subset, caption=f"Systematic uncertainties in percentage", label = f"tab:impacts", precision=2, tdrStyle=True))
                 starts_mT.append( mass_bins[0])
-                val_lep_pos, err_lep_pos = GetPOIValue(filename, "lepplus_sig_mu")
-                val_lep_neg, err_lep_neg = GetPOIValue(filename, "lepminus_sig_mu")
+                # val_lep_pos, err_lep_pos = GetPOIValue(filename, "lepplus_sig_mu")
+                # val_lep_neg, err_lep_neg = GetPOIValue(filename, "lepminus_sig_mu")
                 val_leplep,  err_leplep  = GetPOIValue(filename, "leplep_sig_mu")
-                val_qcd_pos, err_qcd_pos = GetPOIValue(filename, "qcd_muplus_mu")
-                val_qcd_neg, err_qcd_neg = GetPOIValue(filename, "qcd_muminus_mu")
-                vals_lep_pos.append( val_lep_pos )
-                errs_lep_pos.append( err_lep_pos )
-                vals_lep_neg.append( val_lep_neg )
-                errs_lep_neg.append( err_lep_neg )
+                # val_qcd_pos, err_qcd_pos = GetPOIValue(filename, "qcd_muplus_mu")
+                # val_qcd_neg, err_qcd_neg = GetPOIValue(filename, "qcd_muminus_mu")
+                # vals_lep_pos.append( val_lep_pos )
+                # errs_lep_pos.append( err_lep_pos )
+                # vals_lep_neg.append( val_lep_neg )
+                # errs_lep_neg.append( err_lep_neg )
                 vals_leplep .append( val_leplep  )
                 errs_leplep .append( err_leplep  )
-                vals_qcd_pos.append( val_qcd_pos )
-                errs_qcd_pos.append( err_qcd_pos )
-                vals_qcd_neg.append( val_qcd_neg )
-                errs_qcd_neg.append( err_qcd_neg )
+                # vals_qcd_pos.append( val_qcd_pos )
+                # errs_qcd_pos.append( err_qcd_pos )
+                # vals_qcd_neg.append( val_qcd_neg )
+                # errs_qcd_neg.append( err_qcd_neg )
 
         if nscans > 1:
             # compare POIs
             vals_mT = np.array(starts_mT)
-            vals_lep_pos = np.array(vals_lep_pos)
-            errs_lep_pos = np.array(errs_lep_pos)
-            vals_lep_neg = np.array(vals_lep_neg)
-            errs_lep_neg = np.array(errs_lep_neg)
+            # vals_lep_pos = np.array(vals_lep_pos)
+            # errs_lep_pos = np.array(errs_lep_pos)
+            # vals_lep_neg = np.array(vals_lep_neg)
+            # errs_lep_neg = np.array(errs_lep_neg)
             vals_leplep  = np.array(vals_leplep)
             errs_leplep  = np.array(errs_leplep)
-            vals_qcd_pos = np.array(vals_qcd_pos)
-            errs_qcd_pos = np.array(errs_qcd_pos)
-            vals_qcd_neg = np.array(vals_qcd_neg)
-            errs_qcd_neg = np.array(errs_qcd_neg)
+            # vals_qcd_pos = np.array(vals_qcd_pos)
+            # errs_qcd_pos = np.array(errs_qcd_pos)
+            # vals_qcd_neg = np.array(vals_qcd_neg)
+            # errs_qcd_neg = np.array(errs_qcd_neg)
 
             # scale back to 1
-            vals_lep_pos = vals_lep_pos / vals_lep_pos[0]
-            vals_lep_neg = vals_lep_neg / vals_lep_neg[0]
+            # vals_lep_pos = vals_lep_pos / vals_lep_pos[0]
+            # vals_lep_neg = vals_lep_neg / vals_lep_neg[0]
             vals_leplep  = vals_leplep  / vals_leplep [0]
-            vals_qcd_pos = vals_qcd_pos / vals_qcd_pos[0]
-            vals_qcd_neg = vals_qcd_neg / vals_qcd_neg[0]
+            # vals_qcd_pos = vals_qcd_pos / vals_qcd_pos[0]
+            # vals_qcd_neg = vals_qcd_neg / vals_qcd_neg[0]
 
+            # labels = [
+            #     "W^{+} #rightarrow l^{+}#nu",
+            #     "W^{-} #rightarrow l^{-}#bar{#nu}",
+            #     "Z #rightarrow l^{+}l^{-}",
+            #     "QCD l^{+}",
+            #     "QCD l^{-}"
+            # ]
             labels = [
-                "W^{+} #rightarrow l^{+}#nu",
-                "W^{-} #rightarrow l^{-}#bar{#nu}",
                 "Z #rightarrow l^{+}l^{-}",
-                "QCD l^{+}",
-                "QCD l^{-}"
             ]
             markers = [20, 22, 23, 34, 33]
             colors = [ROOT.kBlue, ROOT.kRed, ROOT.kGreen+2, ROOT.kMagenta, ROOT.kCyan+1]
             ComparePOIs(
                 vals_mT,
-                [vals_lep_pos, vals_lep_neg, vals_leplep, vals_qcd_pos, vals_qcd_neg],
-                [errs_lep_pos, errs_lep_neg, errs_leplep, errs_qcd_pos, errs_qcd_neg],
+                # [vals_lep_pos, vals_lep_neg, vals_leplep, vals_qcd_pos, vals_qcd_neg],
+                # [errs_lep_pos, errs_lep_neg, errs_leplep, errs_qcd_pos, errs_qcd_neg],
+                [vals_leplep],
+                [errs_leplep],
                 labels, colors, markers,
                 f"poi_vs_wbin_{version}_{fit_var_short}",
                 is5TeV = False

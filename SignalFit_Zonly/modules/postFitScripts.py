@@ -225,7 +225,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         outputname = f"{prepost}_w_{channel}_{suffix}"
     else:
         # z's
-        xlabel = "m_{ll} (GeV)"
+        xlabel = "m_{\mu\mu} (GeV)"
         outputname = f"{prepost}_z_{channel}_{suffix}"
     if x_label != "":
         xlabel = x_label
@@ -275,7 +275,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
             hdata,
             hs_gmc
         ],
-        ["Observed"]+labels_mc,
+        ["Data"]+labels_mc,
         drawconfigs.xmin,
         drawconfigs.xmax,
         drawconfigs.xlabel,
@@ -343,7 +343,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
             hdata,
             hs_gmc
         ],
-        ["Observed"]+labels_mc,
+        ["Data"]+labels_mc,
         drawconfigs.xmin,
         drawconfigs.xmax,
         drawconfigs.xlabel,

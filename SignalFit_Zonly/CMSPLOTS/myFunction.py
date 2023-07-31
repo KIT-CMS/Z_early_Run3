@@ -643,9 +643,9 @@ def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outpu
 
         h2.Draw()
 
-        legend2 = TLegend(0.17, 0.8, 0.4, 0.9)
+        legend2 = TLegend(0.17, 0.77, 0.4, 0.87)
         legend2.SetBorderSize(0)
-        legend2.SetTextSize(0.05)
+        legend2.SetTextSize(.10)
         legend2.SetTextFont(42)
         legend2.SetFillColor(0)
 
