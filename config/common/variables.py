@@ -173,11 +173,11 @@ def get_all_variables(doZpt, doQCD, doLepCorrBins):
     ]
 
     met_vars = [
-        "met_uncorrected", "metphi_uncorrected", "mt_uncorrected",
-        "met_corr", "metphi_corr", "mt_corr",
+        # "met_uncorrected", "metphi_uncorrected", "mt_uncorrected",
+        # "met_corr", "metphi_corr", "mt_corr",
 
-        "uP1_uncorrected", "uP2_uncorrected",
-        "uP1_corr", "uP2_corr",
+        # "uP1_uncorrected", "uP2_uncorrected",
+        # "uP1_corr", "uP2_corr",
 
         "pfmet_uncorrected", "pfmetphi_uncorrected", "pfmt_uncorrected",
         "pfmet_corr", "pfmetphi_corr",  "pfmt_corr",
