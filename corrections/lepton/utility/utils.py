@@ -394,14 +394,17 @@ def plot_resol(smear, ress_mc, errs_mc, res_mc, ress_dt, errs_dt, res_dt, name):
     plt.plot(x, y_dt, label='fit to data')
     plt.plot(x, np.ones_like(x)*y_dt[0], label='data resolution')
     plt.plot(x, np.ones_like(x)*y_mc[0], label='mc resolution')
-    plt.plot(x_sf, y_dt[0], label='additional smearing', marker='x', linestyle="")
+    xmin, xmax, ymin, ymax = plt.axis()
+    plt.plot([x_sf, x_sf], [ymin,ymax], label='additional smearing', color="grey", linestyle="dashed")
     plt.legend()
-
-    plt.text(0.1, 3, 'smearing: {}'.format(round(x_sf,3)))
-    plt.text(0.1, 2.7, 'gradient: {}'.format(round(par_dt[0],3)))
+    plt.text(2, ymax + 0.04 * (ymax - ymin), 'smearing: {}'.format(round(x_sf,3)))
+    plt.ylim(ymin,ymax)
+    # plt.text(0.1, 2.7, 'gradient: {}'.format(round(par_dt[0],3)))
+    plt.grid()
     plt.xlabel('smearing factor of pt')
     plt.ylabel('additional smearing of m_vis')
     plt.savefig(f'plots/smeared_fits/{name}.png')
+    plt.savefig(f'plots/smeared_fits/{name}.pdf')
     plt.clf()
     return x_sf, y_mc[0], y_dt[0]
 

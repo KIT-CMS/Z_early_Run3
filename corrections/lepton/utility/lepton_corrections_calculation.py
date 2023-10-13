@@ -494,13 +494,14 @@ def fit_smeared_hists(ch, e, p):
     np.savetxt(f'fit_results/xyerr_{ch}_{e}{p}.txt', xyerr)
 
 
-def plot_smearing(n_eta, n_pt):
+def plot_smearing(bins):
     """
     function to plot results of fit to resolutions
 
     (int) n_eta: number of bins in eta
     (int) n_pt: number of bins in pt
     """
+    n_eta, n_pt = len(bins['eta'])-1, len(bins['pt'])-1
 
     corr_dir = "correction_files/"
     mz_mc = np.loadtxt(corr_dir+f"mc_response.txt")
@@ -509,6 +510,7 @@ def plot_smearing(n_eta, n_pt):
     res_dt = np.loadtxt(corr_dir+f"dt_resolution.txt")*pt_sf
     res_mc = np.loadtxt(corr_dir+f"mc_resolution.txt")
 
+    labels1, labels2 = np.zeros(n_eta), np.zeros(n_pt)
     res_sf = np.zeros((n_eta, n_pt))
     res_mc, res_dt = np.zeros((n_eta, n_pt)), np.zeros((n_eta, n_pt))
 
@@ -533,6 +535,26 @@ def plot_smearing(n_eta, n_pt):
     np.savetxt('correction_files/res_sf.txt', res_sf)
     np.savetxt('correction_files/mc_resolution_corr.txt', res_mc)
     np.savetxt('correction_files/dt_resolution_corr.txt', res_dt)
+
+    for i in range(n_eta):
+        labels1[i] = .5*(bins['eta'][i] + bins['eta'][i+1])
+
+    for j in range(n_pt):
+        labels2[j] = .5*(bins['pt'][j] + bins['pt'][j+1])
+
+    utils.plot2d(
+        matrix=np.flip(res_sf, 0),
+        outfile=f'plots/res_sf',
+        title='Resolution scale factors',
+        x=r'$p_\mathrm{T}$',
+        xbins=bins['pt'],
+        y=r'$\eta$',
+        ybins=bins['eta'],
+        cmin=0,
+        cmax=2,
+        xticks=np.around(labels2, 1),
+        yticks=labels1,
+    )
     
     
 def generate_files(arguments, nthreads):
@@ -610,4 +632,4 @@ if __name__=='__main__':
             generate_files(arguments, nthreads)
 
     if args.plot:
-        plot_smearing(n_eta, n_pt)
+        plot_smearing(bins)
