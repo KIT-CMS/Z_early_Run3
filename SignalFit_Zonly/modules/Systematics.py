@@ -17,6 +17,7 @@ syst_groups = {
         "SFID",
         "SFIso",
         "SFTrg",
+        "SFPrefire",
     ],
     "PDF": [
         f"LHEPdfWeight{ipdf}" for ipdf in range(1, 101)

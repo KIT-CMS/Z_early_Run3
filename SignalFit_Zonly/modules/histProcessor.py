@@ -265,6 +265,8 @@ def ProcessHistsAll(ifile, ifile_qcd, ofile, mass_bins_w, mass_bins_z, fit_varia
             "SFIsoDn",
             "SFTrgUp",
             "SFTrgDn",
+            "SFPrefireUp",
+            "SFPrefireDn",
         ] + [
             f"LHEPdfWeight{ipdf}" for ipdf in range(1, 101)
         ] + [

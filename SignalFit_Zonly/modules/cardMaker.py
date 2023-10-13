@@ -227,11 +227,11 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
     # and the impacts on each process
     nuisgroups = OrderedDict()
 
-    nuis_lumi = Nuisance(name = "lumi_" + era, type = "lnN")
-    for proc in processes:
-        if proc.isMC:
-            nuis_lumi[proc.name] = unc_lumi[nuis_lumi.name]
-    nuisgroups["lumi"] = [nuis_lumi]
+    # nuis_lumi = Nuisance(name = "lumi_" + era, type = "lnN")
+    # for proc in processes:
+    #     if proc.isMC:
+    #         nuis_lumi[proc.name] = unc_lumi[nuis_lumi.name]
+    # nuisgroups["lumi"] = [nuis_lumi]
 
     nuisgroups["mcsec"] = []
     for proc in processes:
@@ -242,7 +242,7 @@ def MakeWJetsCards(fname_mc, fname_qcd, channel, rebinned = False, is5TeV = Fals
 
     # efficiency systematics
     nuisgroups["effsys"] = []
-    for syst in ["SFTrk", "SFSta", "SFID", "SFIso", "SFTrg"]:
+    for syst in ["SFTrk", "SFSta", "SFID", "SFIso", "SFTrg", "SFPrefire"]:
         nuisgroups["effsys"].append(Nuisance(name = syst, type = "shape"))
     for proc in processes:
         if not proc.isQCD:
@@ -394,11 +394,11 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
     # and the impacts on each process
     nuisgroups = OrderedDict()
 
-    nuis_lumi = Nuisance(name = "lumi_" + era, type = "lnN")
-    for proc in processes:
-        if proc.isMC:
-            nuis_lumi[proc.name] = unc_lumi[nuis_lumi.name]
-    nuisgroups["lumi"] = [nuis_lumi]
+    # nuis_lumi = Nuisance(name = "lumi_" + era, type = "lnN")
+    # for proc in processes:
+    #     if proc.isMC:
+    #         nuis_lumi[proc.name] = unc_lumi[nuis_lumi.name]
+    # nuisgroups["lumi"] = [nuis_lumi]
 
     nuisgroups["mcsec"] = []
     for proc in processes:
@@ -409,7 +409,7 @@ def MakeZJetsCards(fname, channel, rebinned = False, is5TeV = False, outdir = "c
 
     # efficiency systematics
     nuisgroups["effsys"] = []
-    for syst in ["SFTrk", "SFSta", "SFID", "SFIso", "SFTrg"]:
+    for syst in ["SFTrk", "SFSta", "SFID", "SFIso", "SFTrg", "SFPrefire"]:
         nuisgroups["effsys"].append(Nuisance(name = syst, type = "shape"))
     for proc in processes:
         if not proc.isQCD:

@@ -24,7 +24,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
     print("suffix: ", suffix)
     print("ifile:  ", ifilename)
 
-    ifile = ROOT.TFile(ifilename)
+    ifile = ROOT.TFile(ifilename, 'read')
 
     horgdata = ifile.Get("obs")
 
@@ -138,7 +138,9 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         diff = horgdata.GetBinContent(ibin + startbin - 1) - hexpfull.GetBinContent(ibin + startbin - 1)
         # take the sigma as sqrt(data**2 + templates**2)
         # not 100% sure if this is the correct way to calculate pull
-        sig = math.sqrt(horgdata.GetBinError(ibin + startbin - 1)**2 + hexpfull.GetBinError(ibin + startbin - 1)**2)
+        # sig = math.sqrt(horgdata.GetBinError(ibin + startbin - 1)**2 + hexpfull.GetBinError(ibin + startbin - 1)**2)
+        sig = hexpfull.GetBinError(ibin + startbin - 1)
+        # sig = horgdata.GetBinError(ibin + startbin - 1)
         hpull.SetBinContent(ibin, diff/(sig+1e-6))
 
     # deal with the uncertainty bar
@@ -244,13 +246,13 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         else:
             ratiopanel_label = f"Syst. unc. ({syst_name})"
 
-    yrmin = 0.95
-    yrmax = 1.05
-    ypullmin = -3.99
-    ypullmax = 3.99
+    yrmin = 0.9601
+    yrmax = 1.0399
+    ypullmin = -9.99
+    ypullmax = 8.99
     if "prefit" in prepost:
-        yrmin = 0.85
-        yrmax = 1.15
+        yrmin = 0.8501
+        yrmax = 1.1499
         ypullmin = -9.99
         ypullmax = 9.99
 
@@ -268,7 +270,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         addUnderflow=False,
         yrmin=yrmin,
         yrmax=yrmax,
-        yrlabel = "Obs/Pred"
+        yrlabel = "Data/Pred"
     )
     DrawHistos(
         [
@@ -315,7 +317,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
     ymaxs_logy = {
         "muplus": 3.5e9,
         "muminus": 3.5e9,
-        "mumu": 1.0e9,
+        "mumu": 5.0e6,
     }
     ymins_logy = {
         "muplus": 0.5e3,
@@ -336,7 +338,7 @@ def MakePostPlot(ifilename: str, channel: str, prepost: str, bins: np.array, suf
         addUnderflow=False,
         yrmin=yrmin,
         yrmax=yrmax,
-        yrlabel = "Obs/Pred"
+        yrlabel = "Data/Pred"
     )
     DrawHistos(
         [

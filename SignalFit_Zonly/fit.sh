@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-export iteration='v7_3'
+export iteration='v7_6_ps'
 export fit_variable='pfmt_corr'
 export datacard_name='card_mu'
 export script_dir="$PWD"

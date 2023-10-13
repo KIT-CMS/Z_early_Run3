@@ -289,7 +289,7 @@ class DrawConfig(object):
 
         self.outputname = kwargs.get('outputname', 'test')
 
-def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outputname, dology=True, showratio=False, dologx=False, lheader=None, donormalize=False, binomialratio=False, yrmax=2.0, yrmin=0.0, yrlabel=None, MCOnly=False, leftlegend=False, mycolors=[], legendPos=[], legendNCols=1, legendTextSize = 0.04, linestyles=[], markerstyles=[], showpull=False, doNewman=False, doPearson=False, ignoreHistError=False, ypullmin=-3.99, ypullmax=3.99, drawashist=False, padsize=(2, 0.9, 1.1), setGridx=False, setGridy=False, drawoptions=[], legendoptions=[], ratiooptions=[], dologz=False, doth2=False, ratiobase=0, redrawihist=-1, extraText=None, noCMS=False, noLumi=False, nMaxDigits=None, addOverflow=False, addUnderflow=False, plotdiff=False, hratiopanel = None, doratios=None, hpulls=None, W_ref = 600, is5TeV = False, ratiopanel_label = None):
+def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outputname, dology=True, showratio=False, dologx=False, lheader=None, donormalize=False, binomialratio=False, yrmax=2.0, yrmin=0.0, yrlabel=None, MCOnly=False, leftlegend=False, mycolors=[], legendPos=[], legendNCols=1, legendTextSize = 0.04, linestyles=[], markerstyles=[], showpull=False, doNewman=False, doPearson=False, ignoreHistError=False, ypullmin=-3.99, ypullmax=3.99, drawashist=False, padsize=(2, 1., 1.1), setGridx=False, setGridy=False, drawoptions=[], legendoptions=[], ratiooptions=[], dologz=False, doth2=False, ratiobase=0, redrawihist=-1, extraText=None, noCMS=False, noLumi=False, nMaxDigits=None, addOverflow=False, addUnderflow=False, plotdiff=False, hratiopanel = None, doratios=None, hpulls=None, W_ref = 600, is5TeV = False, ratiopanel_label = None): #padsize changed from (2, 0.9, 1.1)
     # set the tdr style
     tdrstyle.setTDRStyle()
     # not sure why need this...
@@ -446,7 +446,7 @@ def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outpu
         y0_l -= 0.03
 
     if not leftlegend:
-        legend = TLegend(x0_l, y0_l, x1_l, y1_l)
+        legend = TLegend(x0_l+0.01, y0_l, x1_l+0.01, y1_l)
     else:
         legend = TLegend(x0_l-0.40, y0_l, x1_l-0.40, y1_l)
     if lheader and lheader != "":
@@ -619,10 +619,10 @@ def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outpu
         h2.GetXaxis().SetTitleSize(0.050/(padsize2+0.3*padsize3))
         h2.GetXaxis().SetLabelSize(0.045/(padsize2+0.3*padsize3))
         h2.GetYaxis().SetTitleSize(0.050/(padsize2+0.3*padsize3))
-        h2.GetYaxis().SetLabelSize(0.045/(padsize2+0.3*padsize3))
+        h2.GetYaxis().SetLabelSize(0.04/(padsize2+0.3*padsize3))
         h2.GetYaxis().SetTitleOffset(1.35*(padsize2+0.35*padsize3)*(600.0/W))
 
-        h2.GetYaxis().SetNdivisions(8)
+        h2.GetYaxis().SetNdivisions(6)
         h2.GetYaxis().CenterTitle()
         if yrlabel:
             ytitle = yrlabel
@@ -643,7 +643,7 @@ def DrawHistos(myhistos, mylabels, xmin, xmax, xlabel, ymin, ymax, ylabel, outpu
 
         h2.Draw()
 
-        legend2 = TLegend(0.17, 0.77, 0.4, 0.87)
+        legend2 = TLegend(0.17, 0.83, 0.4, 0.93)
         legend2.SetBorderSize(0)
         legend2.SetTextSize(.10)
         legend2.SetTextFont(42)

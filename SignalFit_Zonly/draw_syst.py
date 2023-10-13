@@ -215,6 +215,7 @@ if __name__  == "__main__":
                     "SFID",
                     "SFIso",
                     "SFTrg",
+                    "SFPrefire",
                 ],
                 "SFTrk": [
                     "SFTrk"
@@ -237,6 +238,7 @@ if __name__  == "__main__":
                     "SFID",
                     "SFIso",
                     "SFTrg",
+                    "SFPrefire",
                 ],
                 "SFTrk": [
                     "SFTrk"
@@ -274,6 +276,7 @@ if __name__  == "__main__":
                     "SFID",
                     "SFIso",
                     "SFTrg",
+                    "SFPrefire",
                 ],
                 "SFTrk": [
                     "SFTrk"

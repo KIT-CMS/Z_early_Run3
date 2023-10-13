@@ -17,11 +17,11 @@ doInclusive = True
 
 # boolean flag to config if the pull
 # distribution should be included in the plots
-showPULL = True
+showPULL = False
 if doInclusive:
     sqrtS = "13p6TeV"
     do5TeV = False
-    lumi_unc = 0.03
+    lumi_unc = 0.023
 
     version = sys.argv[1]
     doAsimov = ("Asimov" in version)
