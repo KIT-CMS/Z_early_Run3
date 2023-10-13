@@ -141,6 +141,24 @@ def friend_producer(rfile, scalefactors):
         out_columns.append(sf_name+"_up")
         out_columns.append(sf_name+"_dn")
 
+    # prefiring issue
+    pref_sf = "(1 - 0.9 * h_pref->GetBinContent(h_pref->FindBin( (float)(eta_1) )))"
+    pref_sf_up = "(1 - 0.9 * (h_pref->GetBinContent(h_pref->FindBin( (float)(eta_1) )) - 1.2 * h_pref->GetBinError(h_pref->FindBin( (float)(eta_1) ))))"
+    pref_sf_dn = "(1 - 0.9 * (h_pref->GetBinContent(h_pref->FindBin( (float)(eta_1) )) + 1.2 * h_pref->GetBinError(h_pref->FindBin( (float)(eta_1) ))))"
+
+    if isdilepton:
+        pref_sf += "* (1 - 0.9 * h_pref->GetBinContent(h_pref->FindBin( (float)(eta_2) )))"
+        pref_sf_up += "* (1 - 0.9 * (h_pref->GetBinContent(h_pref->FindBin( (float)(eta_2) )) - 1.2 * h_pref->GetBinError(h_pref->FindBin( (float)(eta_2) ))))"
+        pref_sf_dn += "* (1 - 0.9 * (h_pref->GetBinContent(h_pref->FindBin( (float)(eta_2) )) + 1.2 * h_pref->GetBinError(h_pref->FindBin( (float)(eta_2) ))))"
+
+    rdf = rdf.Define("sf_prefire", pref_sf)
+    rdf = rdf.Define("sf_prefire_up", pref_sf_up)
+    rdf = rdf.Define("sf_prefire_dn", pref_sf_dn)
+    
+    out_columns.append("sf_prefire")
+    out_columns.append("sf_prefire_up")
+    out_columns.append("sf_prefire_dn")
+
 
     rdf.Snapshot(
         "ntuple",
@@ -207,6 +225,16 @@ if __name__ == "__main__":
         scalefactors[type]['mc'] = h_mc_name
         scalefactors[type]['sf'] = h_sf_name
     ROOT.gROOT.ProcessLine('f_eff->Close();')
+    
+    # prefire file
+    ROOT.gROOT.ProcessLine('TFile* f_pref = TFile::Open("data/L1mu_prefiringvseta_2022C.root");')
+    ROOT.gROOT.ProcessLine('TH1D* h_pref = (TH1D*)f_pref->Get("L1mu_prefvseta_num");')
+    ROOT.gROOT.ProcessLine('TH1D* h_pref_den = (TH1D*)f_pref->Get("L1mu_prefvseta_den");')
+    ROOT.gROOT.ProcessLine('h_pref->Rebin(2);')
+    ROOT.gROOT.ProcessLine('h_pref_den->Rebin(2);')
+    ROOT.gROOT.ProcessLine('h_pref->Sumw2();')
+    ROOT.gROOT.ProcessLine('h_pref->Divide(h_pref_den);')
+    ROOT.gROOT.ProcessLine('f_pref->Close();')
 
     ntuples = glob.glob(base_path)
     ntuples_wo_data = ntuples.copy()
