@@ -32,9 +32,10 @@ common_files_2022 = {
         "TWminus_DR_AtLeastOneLepton_TuneCP5_13p6TeV_powheg-pythia8_Run3Summer22NanoAODv11-126X",
     ],
     "VV": [
-        "WW_TuneCP5_13p6TeV-pythia8_Run3Winter22NanoAOD-122X",
+        "WW_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X",
         "WZ_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X",
         "ZZ_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X",
+        "EWKZ2Jets_ZToLL_M-50_TuneCP5_PSweights_13TeV-madgraph-pythia8_RunIIAutumn18NanoAODv5-Nano1June2019",
     ],
     "DYtau": [
         "DYto2L-2Jets_MLL-10to50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-126X",

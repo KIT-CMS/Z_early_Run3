@@ -24,6 +24,19 @@ DYto2L-2Jets_MLL-50_TuneCP5_13p6TeV_amcatnloFXFX-pythia8_Run3Summer22NanoAODv11-
   sumwnorm: 47291275.0000000000
   negfrac: 0.1670983806
   generator_weight: 0.6658032388
+EWKZ2Jets_ZToLL_M-50_TuneCP5_PSweights_13TeV-madgraph-pythia8_RunIIAutumn18NanoAODv5-Nano1June2019:
+  dbs: /EWKZ2Jets_ZToLL_M-50_TuneCP5_PSweights_13TeV-madgraph-pythia8/RunIIAutumn18NanoAODv5-Nano1June2019_102X_upgrade2018_realistic_v19-v1/NANOAODSIM
+  era: 2022
+  generator_weight: 1.0
+  nevents: 928000
+  nfiles: 2
+  nick: EWKZ2Jets_ZToLL_M-50_TuneCP5_PSweights_13TeV-madgraph-pythia8_RunIIAutumn18NanoAODv5-Nano1June2019
+  sample_type: diboson
+  xsec: 7.101 #6.215
+  sumw: 926619.4947897095
+  sumwnorm: 926828.0000000000
+  negfrac: 0.0006314655
+  generator_weight: 0.9987370690
 Muon_Run2022C-PromptNanoAODv10:
   dbs: /Muon/Run2022C-PromptNanoAODv10_v1-v1/NANOAOD
   era: 2022
@@ -126,6 +139,19 @@ WW_TuneCP5_13p6TeV-pythia8_Run3Winter22NanoAOD-122X:
   xsec: 173.4
   sumw: 15448750.4645668268
   sumwnorm: 15448627.0000000000
+  negfrac: 0.0000000000
+  generator_weight: 1.0000000000
+WW_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X:
+  dbs: /WW_TuneCP5_13p6TeV_pythia8/Run3Summer22NanoAODv11-126X_mcRun3_2022_realistic_v2-v2/NANOAODSIM
+  era: 2022
+  generator_weight: 1.0
+  nevents: 15474424
+  nfiles: 11
+  nick: WW_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X
+  sample_type: diboson
+  xsec: 116.8
+  sumw: 15474547.9898170233
+  sumwnorm: 15474424.0000000000
   negfrac: 0.0000000000
   generator_weight: 1.0000000000
 WZ_TuneCP5_13p6TeV_pythia8_Run3Summer22NanoAODv11-126X:
