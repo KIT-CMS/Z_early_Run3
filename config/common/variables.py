@@ -184,6 +184,8 @@ def get_all_variables(doZpt, doQCD, doLepCorrBins):
 
         "pfuP1_uncorrected", "pfuP2_uncorrected",
         "pfuP1_corr", "pfuP2_corr",
+        
+        "pfmet_xycorr", "pfmetphi_xycorr",
     ]
 
     final_vars_mm = [
@@ -219,11 +221,11 @@ def get_all_variables(doZpt, doQCD, doLepCorrBins):
     ]
 
     variable_dict = {
-        "mm": final_vars_mm,
+        # "mm": final_vars_mm,
         # "mmet": final_vars_mmet,
-        "mmet": final_vars_mmet_syst,
+        # "mmet": final_vars_mmet_syst,
 
-        # "mm": common_vars_mm + met_vars,
+        "mm": common_vars_mm + met_vars,
         # "mmet": common_vars_mmet + met_vars,
 
         # "mm": common_vars_mm + met_vars,  # + ["nTrackerLayers_1", "nStations_1"],
