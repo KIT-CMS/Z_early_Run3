@@ -162,10 +162,12 @@ def plot(rfile, hrange, outname):
             h_dt, 
             h_dy,
             labels = ['Data', 'MC'],
-            title = var,
             outfile = f"plots/{var}{outname}.pdf",
             xrange = [hrange[var][0], hrange[var][1]],
-            ratiorange = [.5, 1.5]
+            ratiorange = [.5, 1.5],
+            lumi='(2022, 13.6 TeV)',
+            text=['', '', 'normalized to 1'],
+            var=var
         )
 
     tf.Close()
@@ -175,8 +177,11 @@ def plot(rfile, hrange, outname):
 def make_hists_for_comparison(fdict):
     for ch in fdict.keys():
         chain = ROOT.TChain("ntuple")
+        pu = ROOT.TChain("ntuple")
         for f in fdict[ch]:
             chain.Add(f)
+            pu.Add(f.replace("ntuples", "friends/pu"))
+        chain.AddFriend(pu)
         rdf = ROOT.RDataFrame(chain)
 
         if ch == "wj":
@@ -199,6 +204,7 @@ def make_hists_for_comparison(fdict):
             )
             xrange = [0,120]
             title = "Transverse_Mass"
+            xtitle = "m_T (GeV)"
             rrange = [.9, 1.1]
 
         else:
@@ -214,6 +220,7 @@ def make_hists_for_comparison(fdict):
             )
             xrange = [60,120]
             title = "Visible_Mass"
+            xtitle = "m_{#mu#mu} (GeV)"
             rrange = [.98, 1.02]
 
         tf = ROOT.TFile('tmp.root', "RECREATE")
@@ -230,10 +237,12 @@ def make_hists_for_comparison(fdict):
             h, 
             h_w,
             labels = ['MC', 'weighted MC'],
-            title = title,
+            title = '',
             outfile = f"plots/{title}.pdf",
+            lumi='(2022, 13.6 TeV)',
             xrange = xrange,
-            ratiorange = rrange      
+            ratiorange = rrange,
+            var=xtitle
         )
         tf.Close()
 
